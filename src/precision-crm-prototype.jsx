@@ -9,7 +9,7 @@ import {
   ChevronRight, Eye, Settings, ArrowRight, Search, Building2,
   Mail, MapPin, DollarSign, Briefcase, BookOpen, StickyNote,
   Lock, Shield, Upload, Download, Columns, UserPlus, ToggleLeft,
-  ToggleRight, LogOut
+  ToggleRight, LogOut, Bell
 } from "lucide-react";
 
 // ============================================================
@@ -89,23 +89,64 @@ const CONTACT_CALLS = {
   10: [],
 };
 
+const NOTE_TYPES = [
+  { key: "general", label: "General", bg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-400" },
+  { key: "follow_up", label: "Follow-up", bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
+  { key: "meeting", label: "Meeting", bg: "bg-violet-100", text: "text-violet-700", dot: "bg-violet-500" },
+  { key: "pricing", label: "Pricing", bg: "bg-emerald-100", text: "text-emerald-700", dot: "bg-emerald-500" },
+  { key: "internal", label: "Internal", bg: "bg-sky-100", text: "text-sky-700", dot: "bg-sky-500" },
+];
+
+const REMINDER_PRESETS = [
+  { key: "1d", label: "1 Day" },
+  { key: "2d", label: "2 Days" },
+  { key: "3d", label: "3 Days" },
+  { key: "1w", label: "1 Week" },
+  { key: "2w", label: "2 Weeks" },
+  { key: "1m", label: "1 Month" },
+];
+
+function getReminderDate(presetKey, fromDate) {
+  const d = fromDate ? new Date(fromDate) : new Date("2026-02-05");
+  const map = { "1d": 1, "2d": 2, "3d": 3, "1w": 7, "2w": 14, "1m": 30 };
+  d.setDate(d.getDate() + (map[presetKey] || 0));
+  return d;
+}
+
+function formatReminderDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${dd}/${mm}/${yy}`;
+}
+
+function noteTypeConfig(typeKey) {
+  return NOTE_TYPES.find(t => t.key === typeKey) || NOTE_TYPES[0];
+}
+
 const CONTACT_NOTES = {
   1: [
-    { id: 1, text: "Key decision-maker for all building supplies. Prefers email communication.", date: "15 Jan", author: "Sarah Mitchell" },
-    { id: 2, text: "Met at Sydney trade show – very engaged, asked about volume discounts.", date: "10 Jan", author: "Sarah Mitchell" },
+    { id: 1, text: "Key decision-maker for all building supplies. Prefers email communication.", date: "15 Jan", author: "Sarah Mitchell", type: "general" },
+    { id: 2, text: "Met at Sydney trade show - very engaged, asked about volume discounts.", date: "10 Jan", author: "Sarah Mitchell", type: "general" },
+    { id: 3, text: "David wants revised quote by Thursday - check margin with finance.", date: "4 Feb", author: "Sarah Mitchell", type: "pricing", reminder: "2026-02-06" },
   ],
   2: [
-    { id: 1, text: "Lisa reports to ops director Michael Chen. Get Michael on next call.", date: "30 Jan", author: "Sarah Mitchell" },
+    { id: 1, text: "Lisa reports to ops director Michael Chen. Get Michael on next call.", date: "30 Jan", author: "Sarah Mitchell", type: "internal" },
+    { id: 2, text: "Chase Lisa on fleet maintenance quote - needs response by Friday.", date: "3 Feb", author: "Sarah Mitchell", type: "follow_up", reminder: "2026-02-07" },
   ],
   3: [
-    { id: 1, text: "Mark prefers phone over email. Best reached before 10am.", date: "1 Feb", author: "Sarah Mitchell" },
+    { id: 1, text: "Mark prefers phone over email. Best reached before 10am.", date: "1 Feb", author: "Sarah Mitchell", type: "general" },
+    { id: 2, text: "Demo confirmed Thursday 2pm - prepare site equipment slides.", date: "4 Feb", author: "Sarah Mitchell", type: "meeting", reminder: "2026-02-06" },
   ],
   4: [],
   5: [
-    { id: 1, text: "Been quiet since December. May be reviewing other suppliers – re-engage urgently.", date: "28 Jan", author: "Sarah Mitchell" },
+    { id: 1, text: "Been quiet since December. May be reviewing other suppliers - re-engage urgently.", date: "28 Jan", author: "Sarah Mitchell", type: "follow_up", reminder: "2026-02-05" },
   ],
   7: [
-    { id: 1, text: "Steve managing 3 commercial sites in Melbourne. Potential for multi-site deal.", date: "3 Feb", author: "Marcus Webb" },
+    { id: 1, text: "Steve managing 3 commercial sites in Melbourne. Potential for multi-site deal.", date: "3 Feb", author: "Marcus Webb", type: "general" },
+    { id: 2, text: "Get pricing for 3-site hardware package from supplier.", date: "4 Feb", author: "Marcus Webb", type: "pricing", reminder: "2026-02-10" },
   ],
   8: [],
   9: [],
@@ -113,11 +154,13 @@ const CONTACT_NOTES = {
 };
 
 const FOLLOW_UPS = [
-  { id: 1, contact: "David Harrison", company: "Apex Building Solutions", time: "9:00 AM", note: "Interested in bulk order – send pricing", priority: "high" },
+  { id: 1, contact: "David Harrison", company: "Apex Building Solutions", time: "9:00 AM", note: "Interested in bulk order - send pricing", priority: "high" },
   { id: 2, contact: "Lisa Tran", company: "Pacific Coast Logistics", time: "10:30 AM", note: "Follow up on quote sent Monday", priority: "medium" },
-  { id: 3, contact: "Mark O'Brien", company: "Southern Cross Engineering", time: "1:00 PM", note: "Demo scheduled – confirm attendees", priority: "high" },
+  { id: 3, contact: "Mark O'Brien", company: "Southern Cross Engineering", time: "1:00 PM", note: "Demo scheduled - confirm attendees", priority: "high" },
   { id: 4, contact: "Priya Sharma", company: "Metro Health Services", time: "2:30 PM", note: "Check contract renewal timeline", priority: "low" },
-  { id: 5, contact: "Tom Kessler", company: "Greenfield Agricultural", time: "3:30 PM", note: "Reconnect – went quiet last month", priority: "medium" },
+  { id: 5, contact: "Tom Kessler", company: "Greenfield Agricultural", time: "3:30 PM", note: "Reconnect - went quiet last month", priority: "medium" },
+  { id: 6, contact: "David Harrison", company: "Apex Building Solutions", time: "--", note: "Revised quote margin check with finance", priority: "high", fromNote: true, noteType: "pricing", reminder: "06/02/26" },
+  { id: 7, contact: "Tom Kessler", company: "Greenfield Agricultural", time: "--", note: "Re-engage - may be reviewing other suppliers", priority: "medium", fromNote: true, noteType: "follow_up", reminder: "05/02/26" },
 ];
 
 const LOST_REASONS = [
@@ -559,9 +602,17 @@ function NewDealModal({ onClose, onSave, defaultContact }) {
 function QuickNoteModal({ onClose, currentUser }) {
   const [contact, setContact] = useState("");
   const [noteText, setNoteText] = useState("");
+  const [noteType, setNoteType] = useState("general");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderPreset, setReminderPreset] = useState("");
+  const [reminderCustom, setReminderCustom] = useState("");
   const [saved, setSaved] = useState(false);
 
   const selectedContact = contact ? CONTACTS.find(c => String(c.id) === String(contact)) : null;
+
+  const computedReminder = reminderEnabled
+    ? (reminderCustom || (reminderPreset ? getReminderDate(reminderPreset).toISOString().split("T")[0] : ""))
+    : "";
 
   function handleSave() {
     if (!selectedContact || !noteText.trim()) return;
@@ -572,6 +623,8 @@ function QuickNoteModal({ onClose, currentUser }) {
       text: noteText.trim(),
       date: "Just now",
       author: currentUser?.name || "Unknown",
+      type: noteType,
+      ...(computedReminder ? { reminder: computedReminder } : {}),
     });
     setSaved(true);
     setTimeout(() => onClose(), 1200);
@@ -588,30 +641,86 @@ function QuickNoteModal({ onClose, currentUser }) {
             <select value={contact} onChange={e => setContact(e.target.value)}
               className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent">
               <option value="">Select contact...</option>
-              {CONTACTS.map(c => <option key={c.id} value={c.id}>{c.name} – {c.company}</option>)}
+              {CONTACTS.map(c => <option key={c.id} value={c.id}>{c.name} - {c.company}</option>)}
             </select>
           </div>
           {selectedContact && (
             <div className="flex items-center gap-2 px-3 py-2 bg-stone-50 rounded-lg border border-stone-200">
               <Building2 size={14} className="text-slate-400" />
-              <span className="text-xs text-slate-600">{selectedContact.company} · {selectedContact.location}</span>
+              <span className="text-xs text-slate-600">{selectedContact.company} \u00b7 {selectedContact.location}</span>
             </div>
           )}
+          {/* Note Type Selector */}
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-2">Note Type</label>
+            <div className="flex flex-wrap gap-1.5">
+              {NOTE_TYPES.map(t => (
+                <button key={t.key} onClick={() => setNoteType(t.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition
+                    ${noteType === t.key ? `${t.bg} ${t.text} border-current` : "bg-white text-slate-500 border-stone-200 hover:border-stone-300"}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-600 mb-1.5">Note *</label>
             <textarea value={noteText} onChange={e => setNoteText(e.target.value)} rows={3}
               placeholder="What do you need to remember about this contact?"
               className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none" />
           </div>
+          {/* Reminder Toggle + Options */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 px-1">
+              <button onClick={() => { setReminderEnabled(!reminderEnabled); if (reminderEnabled) { setReminderPreset(""); setReminderCustom(""); } }}
+                className={`w-10 h-6 rounded-full transition-colors flex items-center ${reminderEnabled ? "bg-amber-500 justify-end" : "bg-stone-300 justify-start"}`}>
+                <div className="w-5 h-5 bg-white rounded-full shadow mx-0.5" />
+              </button>
+              <div className="flex items-center gap-2">
+                <Bell size={15} className={reminderEnabled ? "text-amber-500" : "text-slate-400"} />
+                <span className="text-sm font-medium text-slate-700">Remind me</span>
+              </div>
+            </div>
+            {reminderEnabled && (
+              <div className="space-y-2 pl-1">
+                <div className="flex flex-wrap gap-1.5">
+                  {REMINDER_PRESETS.map(p => (
+                    <button key={p.key} onClick={() => { setReminderPreset(p.key); setReminderCustom(""); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition
+                        ${reminderPreset === p.key && !reminderCustom ? "bg-amber-100 text-amber-700 border-amber-300" : "bg-white text-slate-500 border-stone-200 hover:border-stone-300"}`}>
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">or pick a date:</span>
+                  <input type="date" value={reminderCustom} onChange={e => { setReminderCustom(e.target.value); setReminderPreset(""); }}
+                    className="px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+                </div>
+                {computedReminder && (
+                  <p className="text-xs text-amber-600 flex items-center gap-1.5">
+                    <Bell size={12} /> Reminder set for {formatReminderDate(computedReminder)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
           {selectedContact && (CONTACT_NOTES[selectedContact.id] || []).length > 0 && (
             <div>
               <p className="text-xs font-medium text-slate-400 mb-1.5">Previous notes for {selectedContact.name}</p>
               <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                {(CONTACT_NOTES[selectedContact.id] || []).map(n => (
-                  <div key={n.id} className="px-3 py-2 bg-stone-50 rounded-lg border border-stone-100 text-xs text-slate-500">
-                    {n.text} <span className="text-slate-400 ml-1">· {n.date}</span>
-                  </div>
-                ))}
+                {(CONTACT_NOTES[selectedContact.id] || []).map(n => {
+                  const ntc = noteTypeConfig(n.type);
+                  return (
+                    <div key={n.id} className="px-3 py-2 bg-stone-50 rounded-lg border border-stone-100 text-xs text-slate-500">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
+                        {n.reminder && <span className="flex items-center gap-1 text-amber-500"><Bell size={10} />{formatReminderDate(n.reminder)}</span>}
+                      </div>
+                      {n.text} <span className="text-slate-400 ml-1">\u00b7 {n.date}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -637,6 +746,10 @@ function ContactsView({ onNewContact, onNewDeal, onAddNote, onLogCall, isMobile,
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
   const [noteInputs, setNoteInputs] = useState({});
+  const [noteTypeInputs, setNoteTypeInputs] = useState({});
+  const [reminderToggles, setReminderToggles] = useState({});
+  const [reminderPresets, setReminderPresets] = useState({});
+  const [reminderCustoms, setReminderCustoms] = useState({});
 
   const filtered = CONTACTS.filter(c => {
     const matchesSearch = !searchTerm ||
@@ -647,13 +760,32 @@ function ContactsView({ onNewContact, onNewDeal, onAddNote, onLogCall, isMobile,
     return matchesSearch && matchesOwner && matchesStatus;
   });
 
+  function getInlineReminder(contactId) {
+    if (!reminderToggles[contactId]) return "";
+    if (reminderCustoms[contactId]) return reminderCustoms[contactId];
+    if (reminderPresets[contactId]) return getReminderDate(reminderPresets[contactId]).toISOString().split("T")[0];
+    return "";
+  }
+
   function handleAddNote(contactId) {
     const text = noteInputs[contactId];
     if (!text?.trim()) return;
-    const newNote = { id: Date.now(), text: text.trim(), date: "Just now", author: currentUser?.name || "Unknown" };
+    const reminder = getInlineReminder(contactId);
+    const newNote = {
+      id: Date.now(),
+      text: text.trim(),
+      date: "Just now",
+      author: currentUser?.name || "Unknown",
+      type: noteTypeInputs[contactId] || "general",
+      ...(reminder ? { reminder } : {}),
+    };
     if (!CONTACT_NOTES[contactId]) CONTACT_NOTES[contactId] = [];
     CONTACT_NOTES[contactId].unshift(newNote);
     setNoteInputs(prev => ({ ...prev, [contactId]: "" }));
+    setNoteTypeInputs(prev => ({ ...prev, [contactId]: "general" }));
+    setReminderToggles(prev => ({ ...prev, [contactId]: false }));
+    setReminderPresets(prev => ({ ...prev, [contactId]: "" }));
+    setReminderCustoms(prev => ({ ...prev, [contactId]: "" }));
   }
 
   return (
@@ -802,32 +934,79 @@ function ContactsView({ onNewContact, onNewDeal, onAddNote, onLogCall, isMobile,
                       <span className="text-xs text-slate-400 bg-stone-200 px-1.5 py-0.5 rounded-full">{contactNotes.length}</span>
                     </div>
                     {/* Add Note Input */}
-                    <div className="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={noteInputs[c.id] || ""}
-                        onChange={e => setNoteInputs(prev => ({ ...prev, [c.id]: e.target.value }))}
-                        onKeyDown={e => { if (e.key === "Enter") handleAddNote(c.id); }}
-                        onClick={e => e.stopPropagation()}
-                        placeholder="Add a note..."
-                        className="flex-1 px-3 py-2.5 bg-white border border-stone-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
-                      />
-                      <button
-                        onClick={e => { e.stopPropagation(); handleAddNote(c.id); }}
-                        disabled={!noteInputs[c.id]?.trim()}
-                        className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Add Note
-                      </button>
+                    <div className="space-y-2 mb-2">
+                      <div className="flex flex-wrap gap-1" onClick={e => e.stopPropagation()}>
+                        {NOTE_TYPES.map(t => (
+                          <button key={t.key} onClick={() => setNoteTypeInputs(prev => ({ ...prev, [c.id]: t.key }))}
+                            className={`px-2 py-1 rounded text-[10px] font-medium border transition
+                              ${(noteTypeInputs[c.id] || "general") === t.key ? `${t.bg} ${t.text} border-current` : "bg-white text-slate-400 border-stone-200 hover:border-stone-300"}`}>
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={noteInputs[c.id] || ""}
+                          onChange={e => setNoteInputs(prev => ({ ...prev, [c.id]: e.target.value }))}
+                          onKeyDown={e => { if (e.key === "Enter") handleAddNote(c.id); }}
+                          onClick={e => e.stopPropagation()}
+                          placeholder="Add a note..."
+                          className="flex-1 px-3 py-2.5 bg-white border border-stone-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                        />
+                        <button
+                          onClick={e => { e.stopPropagation(); handleAddNote(c.id); }}
+                          disabled={!noteInputs[c.id]?.trim()}
+                          className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          Add Note
+                        </button>
+                      </div>
+                      {/* Inline Reminder Toggle */}
+                      <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => { setReminderToggles(prev => ({ ...prev, [c.id]: !prev[c.id] })); if (reminderToggles[c.id]) { setReminderPresets(prev => ({ ...prev, [c.id]: "" })); setReminderCustoms(prev => ({ ...prev, [c.id]: "" })); } }}
+                          className={`w-8 h-5 rounded-full transition-colors flex items-center ${reminderToggles[c.id] ? "bg-amber-500 justify-end" : "bg-stone-300 justify-start"}`}>
+                          <div className="w-4 h-4 bg-white rounded-full shadow mx-0.5" />
+                        </button>
+                        <Bell size={13} className={reminderToggles[c.id] ? "text-amber-500" : "text-slate-400"} />
+                        <span className="text-xs text-slate-500">Remind me</span>
+                      </div>
+                      {reminderToggles[c.id] && (
+                        <div className="flex flex-wrap items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                          {REMINDER_PRESETS.map(p => (
+                            <button key={p.key} onClick={() => { setReminderPresets(prev => ({ ...prev, [c.id]: p.key })); setReminderCustoms(prev => ({ ...prev, [c.id]: "" })); }}
+                              className={`px-2 py-1 rounded text-[10px] font-medium border transition
+                                ${reminderPresets[c.id] === p.key && !reminderCustoms[c.id] ? "bg-amber-100 text-amber-700 border-amber-300" : "bg-white text-slate-500 border-stone-200 hover:border-stone-300"}`}>
+                              {p.label}
+                            </button>
+                          ))}
+                          <input type="date" value={reminderCustoms[c.id] || ""} onChange={e => { setReminderCustoms(prev => ({ ...prev, [c.id]: e.target.value })); setReminderPresets(prev => ({ ...prev, [c.id]: "" })); }}
+                            className="px-2 py-1 bg-stone-50 border border-stone-200 rounded text-slate-800 text-[10px] focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+                          {getInlineReminder(c.id) && (
+                            <span className="text-[10px] text-amber-600 flex items-center gap-1"><Bell size={10} />{formatReminderDate(getInlineReminder(c.id))}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {contactNotes.length > 0 ? (
                       <div className="space-y-1.5">
-                        {contactNotes.map(note => (
-                          <div key={note.id} className="bg-white rounded-lg border border-stone-200 px-3 py-2.5">
-                            <p className="text-sm text-slate-700">{note.text}</p>
-                            <p className="text-xs text-slate-400 mt-1">{note.date} · {note.author}</p>
-                          </div>
-                        ))}
+                        {contactNotes.map(note => {
+                          const ntc = noteTypeConfig(note.type);
+                          return (
+                            <div key={note.id} className="bg-white rounded-lg border border-stone-200 px-3 py-2.5">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
+                                {note.reminder && (
+                                  <span className="flex items-center gap-1 text-[10px] text-amber-500 font-medium">
+                                    <Bell size={10} />{formatReminderDate(note.reminder)}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-slate-700">{note.text}</p>
+                              <p className="text-xs text-slate-400 mt-1">{note.date} · {note.author}</p>
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="text-xs text-slate-400 py-1">No notes yet – add one above</p>
@@ -1004,21 +1183,36 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
             <span className="ml-auto text-xs font-medium text-slate-400 bg-stone-100 px-2 py-0.5 rounded-full">{FOLLOW_UPS.length}</span>
           </div>
           <div className="space-y-2">
-            {FOLLOW_UPS.map(f => (
-              <div key={f.id} className={`bg-white rounded-xl border border-stone-200 border-l-4 ${priorityStyle(f.priority)} p-4 hover:shadow-md transition cursor-pointer group`}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-slate-800">{f.contact}</p>
-                    <p className="text-sm text-slate-500">{f.company}</p>
-                    <p className="text-sm text-slate-600 mt-1.5">{f.note}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 whitespace-nowrap">{f.time}</span>
-                    <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-500 transition" />
+            {FOLLOW_UPS.map(f => {
+              const isFromNote = f.fromNote;
+              const ntc = isFromNote ? noteTypeConfig(f.noteType) : null;
+              return (
+                <div key={f.id} className={`bg-white rounded-xl border border-stone-200 border-l-4 ${priorityStyle(f.priority)} p-4 hover:shadow-md transition cursor-pointer group`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-slate-800">{f.contact}</p>
+                        {isFromNote && ntc && (
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-500">{f.company}</p>
+                      <p className="text-sm text-slate-600 mt-1.5">{f.note}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isFromNote && f.reminder ? (
+                        <span className="flex items-center gap-1 text-xs text-amber-500 font-medium whitespace-nowrap">
+                          <Bell size={13} />{f.reminder}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400 whitespace-nowrap">{f.time}</span>
+                      )}
+                      <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-500 transition" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Recent Activity */}
