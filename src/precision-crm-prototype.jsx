@@ -644,7 +644,7 @@ function QuickNoteModal({ onClose, currentUser }) {
           {selectedContact && (
             <div className="flex items-center gap-2 px-3 py-2 bg-stone-50 rounded-lg border border-stone-200">
               <Building2 size={14} className="text-slate-400" />
-              <span className="text-xs text-slate-600">{selectedContact.company} \u00b7 {selectedContact.location}</span>
+              <span className="text-xs text-slate-600">{selectedContact.company} · {selectedContact.location}</span>
             </div>
           )}
           {/* Note Type Selector */}
@@ -714,7 +714,7 @@ function QuickNoteModal({ onClose, currentUser }) {
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
                         {n.reminder && <span className="flex items-center gap-1 text-amber-500"><Bell size={10} />{formatReminderDate(n.reminder)}</span>}
                       </div>
-                      {n.text} <span className="text-slate-400 ml-1">\u00b7 {n.date}</span>
+                      {n.text} <span className="text-slate-400 ml-1">· {n.date}</span>
                     </div>
                   );
                 })}
@@ -1203,7 +1203,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
                           <Bell size={13} />{f.reminder}
                         </span>
                       ) : (
-                        <span className="text-xs text-slate-400 whitespace-nowrap">Today \u00b7 {f.time}</span>
+                        <span className="text-xs text-slate-400 whitespace-nowrap">Today · {f.time}</span>
                       )}
                       <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-500 transition" />
                     </div>
