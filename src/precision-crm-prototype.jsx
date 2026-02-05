@@ -153,12 +153,7 @@ const CONTACT_NOTES = {
   10: [],
 };
 
-const FOLLOW_UPS = [
-  { id: 2, contact: "Lisa Tran", company: "Pacific Coast Logistics", time: "10:30 AM", note: "Follow up on quote sent Monday", priority: "medium" },
-  { id: 4, contact: "Priya Sharma", company: "Metro Health Services", time: "2:30 PM", note: "Check contract renewal timeline", priority: "low" },
-  { id: 6, contact: "David Harrison", company: "Apex Building Solutions", time: "--", note: "Revised quote margin check with finance", priority: "high", fromNote: true, noteType: "pricing", reminder: "06/02/26" },
-  { id: 7, contact: "Tom Kessler", company: "Greenfield Agricultural", time: "--", note: "Re-engage - may be reviewing other suppliers", priority: "medium", fromNote: true, noteType: "follow_up", reminder: "05/02/26" },
-];
+
 
 const LOST_REASONS = [
   { key: "price", label: "Price" },
@@ -1079,6 +1074,24 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
   const meetingsSet = RECENT_CALLS.filter(c => c.outcome === "meeting").length;
   const quoteRequests = PIPELINE_DEALS.filter(d => d.stage === "quote_request" && d.owner === currentUser?.name).length;
 
+  const [checkedTodos, setCheckedTodos] = useState({});
+
+  // Build to-do list from follow_up and meeting notes across all contacts
+  const myTodos = [];
+  for (const [contactId, notes] of Object.entries(CONTACT_NOTES)) {
+    const contact = CONTACTS.find(c => String(c.id) === String(contactId));
+    if (!contact) continue;
+    for (const note of notes) {
+      if (note.type === "follow_up" || note.type === "meeting") {
+        myTodos.push({ ...note, contactName: contact.name, company: contact.company, contactId });
+      }
+    }
+  }
+
+  function toggleTodo(noteId) {
+    setCheckedTodos(prev => ({ ...prev, [noteId]: !prev[noteId] }));
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -1171,48 +1184,55 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
         </div>
       </div>
 
-      {/* Follow-Ups & Activity - 50/50 split on desktop, stacked on mobile */}
+      {/* My To-Do's & Activity - 50/50 split on desktop, stacked on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Follow-ups */}
+        {/* My To-Do's */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Calendar size={18} className="text-slate-400" />
-            <h2 className="text-base font-semibold text-slate-700">Follow-Ups</h2>
-            <span className="ml-auto text-xs font-medium text-slate-400 bg-stone-100 px-2 py-0.5 rounded-full">{FOLLOW_UPS.length}</span>
+            <CheckCircle size={18} className="text-slate-400" />
+            <h2 className="text-base font-semibold text-slate-700">My To-Do's</h2>
+            <span className="ml-auto text-xs font-medium text-slate-400 bg-stone-100 px-2 py-0.5 rounded-full">{myTodos.length}</span>
           </div>
-          <div className="space-y-2">
-            {FOLLOW_UPS.map(f => {
-              const isFromNote = f.fromNote;
-              const ntc = isFromNote ? noteTypeConfig(f.noteType) : null;
-              return (
-                <div key={f.id} className={`bg-white rounded-xl border border-stone-200 border-l-4 ${priorityStyle(f.priority)} p-4 hover:shadow-md transition cursor-pointer group`}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-slate-800">{f.contact}</p>
-                        {isFromNote && ntc && (
+          {myTodos.length > 0 ? (
+            <div className="space-y-2">
+              {myTodos.map(todo => {
+                const ntc = noteTypeConfig(todo.type);
+                const done = checkedTodos[todo.id];
+                return (
+                  <div key={todo.id} onClick={() => toggleTodo(todo.id)}
+                    className={`bg-white rounded-xl border border-stone-200 p-4 hover:shadow-md transition cursor-pointer group ${done ? "opacity-60" : ""}`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${done ? "bg-emerald-500 border-emerald-500" : "border-stone-300 group-hover:border-amber-400"}`}>
+                        {done && <CheckCircle size={14} className="text-white" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className={`font-semibold text-slate-800 ${done ? "line-through text-slate-400" : ""}`}>{todo.contactName}</p>
                           <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
+                        </div>
+                        <p className={`text-sm text-slate-500 ${done ? "line-through" : ""}`}>{todo.company}</p>
+                        <p className={`text-sm mt-1.5 ${done ? "line-through text-slate-400" : "text-slate-600"}`}>{todo.text}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {todo.reminder && (
+                          <span className="flex items-center gap-1 text-xs text-amber-500 font-medium whitespace-nowrap">
+                            <Bell size={13} />{formatReminderDate(todo.reminder)}
+                          </span>
                         )}
                       </div>
-                      <p className="text-sm text-slate-500">{f.company}</p>
-                      <p className="text-sm text-slate-600 mt-1.5">{f.note}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isFromNote && f.reminder ? (
-                        <span className="flex items-center gap-1 text-xs text-amber-500 font-medium whitespace-nowrap">
-                          <Bell size={13} />{f.reminder}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-400 whitespace-nowrap">Today · {f.time}</span>
-                      )}
-                      <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-500 transition" />
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-stone-200 p-6 text-center">
+              <p className="text-sm text-slate-400">No to-do's right now. Add a Follow-up or Meeting note to see it here.</p>
+            </div>
+          )}
         </div>
+
+
 
         {/* Today's Activity */}
         <div className="space-y-4">
