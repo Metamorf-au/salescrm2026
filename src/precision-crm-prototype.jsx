@@ -251,7 +251,7 @@ function stageConfig(stage) {
     awaiting_approval: { label: "Under Review", bg: "bg-orange-100", text: "text-orange-700" },
     won: { label: "Won", bg: "bg-emerald-100", text: "text-emerald-700" },
     lost: { label: "Lost", bg: "bg-rose-100", text: "text-rose-700" },
-    closed: { label: "Closed", bg: "bg-slate-100", text: "text-slate-600" },
+    closed: { label: "Voided", bg: "bg-slate-100", text: "text-slate-600" },
   };
   return map[stage] || map.discovery;
 }
@@ -1501,7 +1501,7 @@ function PipelineView({ isMobile, currentUser }) {
           </div>
           {closedDeals.length > 0 && (
             <button onClick={() => setShowGraveyard(!showGraveyard)} className={`border rounded-xl px-4 py-2 text-center transition ${showGraveyard ? "bg-slate-200 border-slate-400" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}>
-              <p className="text-xs text-slate-500">Closed</p>
+              <p className="text-xs text-slate-500">Voided</p>
               <p className="text-lg font-bold text-slate-600">{closedDeals.length}</p>
             </button>
           )}
@@ -1561,7 +1561,7 @@ function PipelineView({ isMobile, currentUser }) {
                       )}
                       {["discovery", "quote_request", "quote_sent"].includes(d.stage) && (
                         <button onClick={() => setCloseModal(d)} className="mt-2 w-full py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition">
-                          Close Deal
+                          Void Deal
                         </button>
                       )}
                       {d.stage === "awaiting_approval" && (
@@ -1618,7 +1618,7 @@ function PipelineView({ isMobile, currentUser }) {
                       {["discovery", "quote_request", "quote_sent"].includes(d.stage) && (
                         <div className="mt-2 pt-2 border-t border-stone-100">
                           <button onClick={() => setCloseModal(d)} className="w-full py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition">
-                            Close Deal
+                            Void Deal
                           </button>
                         </div>
                       )}
@@ -1646,7 +1646,7 @@ function PipelineView({ isMobile, currentUser }) {
         <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
             <div>
-              <h2 className="text-base font-semibold text-slate-700">Closed Deals</h2>
+              <h2 className="text-base font-semibold text-slate-700">Voided Deals</h2>
               <p className="text-xs text-slate-400 mt-0.5">{closedDeals.length} deal{closedDeals.length !== 1 ? "s" : ""} – {formatCurrency(closedDeals.reduce((s, d) => s + d.value, 0))} total value</p>
             </div>
             <button onClick={() => setShowGraveyard(false)} className="p-2 rounded-lg hover:bg-stone-100 text-slate-400 hover:text-slate-600 transition">
@@ -1757,9 +1757,9 @@ function CloseDealModal({ deal, onClose }) {
   }
 
   return (
-    <Modal title="Close Deal" onClose={onClose}>
+    <Modal title="Void Deal" onClose={onClose}>
       {saved ? (
-        <SuccessScreen message="Deal Closed" sub={`"${deal.title}" has been moved to closed deals.`} />
+        <SuccessScreen message="Deal Voided" sub={`"${deal.title}" has been moved to voided deals.`} />
       ) : (
         <div className="px-6 py-5 space-y-5 overflow-y-auto" style={{ maxHeight: "calc(90vh - 140px)" }}>
           <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
@@ -1773,15 +1773,15 @@ function CloseDealModal({ deal, onClose }) {
             </div>
           </div>
           <div>
-            <p className="text-sm text-slate-600 mb-3">This deal will be moved to closed deals where it can be filtered and re-evaluated at a later date.</p>
-            <label className="block text-sm font-medium text-slate-600 mb-1.5">Reason for closing (optional)</label>
+            <p className="text-sm text-slate-600 mb-3">This deal will be moved to voided deals where it can be filtered and re-evaluated at a later date.</p>
+            <label className="block text-sm font-medium text-slate-600 mb-1.5">Reason for voiding (optional)</label>
             <textarea value={reason} onChange={e => setReason(e.target.value)} rows={2}
               placeholder="e.g. Budget freeze, contact left company, revisit Q3..."
               className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none" />
           </div>
           <button onClick={handleSave}
             className="w-full py-3 rounded-xl font-semibold text-white transition bg-slate-600 hover:bg-slate-700">
-            Close Deal
+            Void Deal
           </button>
         </div>
       )}
