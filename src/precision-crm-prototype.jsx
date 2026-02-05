@@ -1176,7 +1176,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center gap-2">
             <Calendar size={18} className="text-slate-400" />
-            <h2 className="text-base font-semibold text-slate-700">Today's Follow-Ups</h2>
+            <h2 className="text-base font-semibold text-slate-700">Follow-Ups</h2>
             <span className="ml-auto text-xs font-medium text-slate-400 bg-stone-100 px-2 py-0.5 rounded-full">{FOLLOW_UPS.length}</span>
           </div>
           <div className="space-y-2">
@@ -1202,7 +1202,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
                           <Bell size={13} />{f.reminder}
                         </span>
                       ) : (
-                        <span className="text-xs text-slate-400 whitespace-nowrap">{f.time}</span>
+                        <span className="text-xs text-slate-400 whitespace-nowrap">Today · {f.time}</span>
                       )}
                       <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-500 transition" />
                     </div>
