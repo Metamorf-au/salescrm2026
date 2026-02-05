@@ -786,7 +786,7 @@ function ContactsView({ onNewContact, onNewDeal, onAddNote, onLogCall, isMobile,
   }
 
   return (
-    <div className={`max-w-4xl mx-auto ${isMobile ? "space-y-4" : "space-y-6"}`}>
+    <div className={`max-w-6xl mx-auto ${isMobile ? "space-y-4" : "space-y-6"}`}>
       {/* Header */}
       <div className={isMobile ? "space-y-3" : "flex items-center justify-between"}>
         <div>
@@ -1080,7 +1080,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
   const quoteRequests = PIPELINE_DEALS.filter(d => d.stage === "quote_request" && d.owner === currentUser?.name).length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className={isMobile ? "space-y-3" : "flex items-center justify-between"}>
         <div>
