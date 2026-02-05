@@ -119,6 +119,13 @@ function formatReminderDate(dateStr) {
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const yy = String(d.getFullYear()).slice(-2);
+  if (dateStr.includes("T")) {
+    const hh = d.getHours();
+    const min = String(d.getMinutes()).padStart(2, "0");
+    const ampm = hh >= 12 ? "pm" : "am";
+    const hh12 = hh % 12 || 12;
+    return `${dd}/${mm}/${yy} ${hh12}:${min}${ampm}`;
+  }
   return `${dd}/${mm}/${yy}`;
 }
 
@@ -134,7 +141,7 @@ const CONTACT_NOTES = {
   ],
   2: [
     { id: 1, text: "Lisa reports to ops director Michael Chen. Get Michael on next call.", date: "30 Jan", author: "Sarah Mitchell", type: "internal" },
-    { id: 2, text: "Chase Lisa on fleet maintenance quote - needs response by Friday.", date: "3 Feb", author: "Sarah Mitchell", type: "follow_up", reminder: "2026-02-07" },
+    { id: 2, text: "Chase Lisa on fleet maintenance quote - needs response by Friday.", date: "3 Feb", author: "Sarah Mitchell", type: "follow_up", reminder: "2026-02-05T11:30:00" },
   ],
   3: [
     { id: 1, text: "Mark prefers phone over email. Best reached before 10am.", date: "1 Feb", author: "Sarah Mitchell", type: "general" },
@@ -1083,13 +1090,13 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
     if (!contact) continue;
     for (const note of notes) {
       if (note.type === "follow_up" || note.type === "meeting") {
-        myTodos.push({ ...note, contactName: contact.name, company: contact.company, contactId });
+        myTodos.push({ ...note, uid: `${contactId}-${note.id}`, contactName: contact.name, company: contact.company, contactId });
       }
     }
   }
 
-  function toggleTodo(noteId) {
-    setCheckedTodos(prev => ({ ...prev, [noteId]: !prev[noteId] }));
+  function toggleTodo(uid) {
+    setCheckedTodos(prev => ({ ...prev, [uid]: !prev[uid] }));
   }
 
   return (
@@ -1197,9 +1204,9 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
             <div className="space-y-2">
               {myTodos.map(todo => {
                 const ntc = noteTypeConfig(todo.type);
-                const done = checkedTodos[todo.id];
+                const done = checkedTodos[todo.uid];
                 return (
-                  <div key={todo.id} onClick={() => toggleTodo(todo.id)}
+                  <div key={todo.uid} onClick={() => toggleTodo(todo.uid)}
                     className={`bg-white rounded-xl border border-stone-200 p-4 hover:shadow-md transition cursor-pointer group ${done ? "opacity-60" : ""}`}>
                     <div className="flex items-start gap-3">
                       <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${done ? "bg-emerald-500 border-emerald-500" : "border-stone-300 group-hover:border-amber-400"}`}>
