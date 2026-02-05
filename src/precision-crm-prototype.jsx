@@ -248,7 +248,7 @@ function stageConfig(stage) {
     discovery: { label: "Discovery", bg: "bg-sky-100", text: "text-sky-700" },
     quote_request: { label: "Quote Request", bg: "bg-violet-100", text: "text-violet-700" },
     quote_sent: { label: "Quote Sent", bg: "bg-amber-100", text: "text-amber-700" },
-    awaiting_approval: { label: "Awaiting Approval", bg: "bg-orange-100", text: "text-orange-700" },
+    awaiting_approval: { label: "Under Review", bg: "bg-orange-100", text: "text-orange-700" },
     won: { label: "Won", bg: "bg-emerald-100", text: "text-emerald-700" },
     lost: { label: "Lost", bg: "bg-rose-100", text: "text-rose-700" },
     closed: { label: "Closed", bg: "bg-slate-100", text: "text-slate-600" },
@@ -518,7 +518,7 @@ function NewDealModal({ onClose, onSave, defaultContact }) {
     { key: "discovery", label: "Discovery" },
     { key: "quote_request", label: "Quote Request" },
     { key: "quote_sent", label: "Quote Sent" },
-    { key: "awaiting_approval", label: "Awaiting Approval" },
+    { key: "awaiting_approval", label: "Under Review" },
     { key: "won", label: "Won" },
     { key: "lost", label: "Lost" },
   ];
@@ -1455,7 +1455,7 @@ function PipelineView({ isMobile, currentUser }) {
     { key: "discovery", label: "Discovery", color: "border-sky-400", bg: "bg-sky-50", text: "text-sky-700" },
     { key: "quote_request", label: "Quote Request", color: "border-violet-400", bg: "bg-violet-50", text: "text-violet-700" },
     { key: "quote_sent", label: "Quote Sent", color: "border-amber-400", bg: "bg-amber-50", text: "text-amber-700" },
-    { key: "awaiting_approval", label: "Awaiting Approval", color: "border-orange-400", bg: "bg-orange-50", text: "text-orange-700" },
+    { key: "awaiting_approval", label: "Under Review", color: "border-orange-400", bg: "bg-orange-50", text: "text-orange-700" },
     { key: "won", label: "Won", color: "border-emerald-400", bg: "bg-emerald-50", text: "text-emerald-700" },
     { key: "lost", label: "Lost", color: "border-rose-400", bg: "bg-rose-50", text: "text-rose-700" },
   ];
