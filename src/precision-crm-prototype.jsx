@@ -1171,9 +1171,10 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      {/* Follow-Ups & Activity - 50/50 split on desktop, stacked on mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Follow-ups */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Calendar size={18} className="text-slate-400" />
             <h2 className="text-base font-semibold text-slate-700">Follow-Ups</h2>
@@ -1202,7 +1203,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
                           <Bell size={13} />{f.reminder}
                         </span>
                       ) : (
-                        <span className="text-xs text-slate-400 whitespace-nowrap">Today · {f.time}</span>
+                        <span className="text-xs text-slate-400 whitespace-nowrap">Today \u00b7 {f.time}</span>
                       )}
                       <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-500 transition" />
                     </div>
@@ -1211,9 +1212,11 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
               );
             })}
           </div>
+        </div>
 
-          {/* Recent Activity */}
-          <div className="flex items-center gap-2 mt-6">
+        {/* Today's Activity */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
             <Activity size={18} className="text-slate-400" />
             <h2 className="text-base font-semibold text-slate-700">Today's Activity</h2>
           </div>
@@ -1227,7 +1230,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
                     <Icon size={15} className={oc.color} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{c.contact} – {c.company}</p>
+                    <p className="text-sm font-medium text-slate-800 truncate">{c.contact} - {c.company}</p>
                     <p className="text-xs text-slate-500 truncate">{c.summary}</p>
                   </div>
                   <span className="text-xs text-slate-400 whitespace-nowrap">{c.time}</span>
@@ -1236,20 +1239,20 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
             })}
           </div>
         </div>
+      </div>
 
-        {/* Right column */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-stone-200 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-slate-700">Weekly Summary</h3>
-              <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">Due Friday</span>
-            </div>
-            <textarea placeholder="Highlights, challenges, and plan for next week..." rows={3}
-              className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none mb-3" />
-            <button className="w-full py-2.5 rounded-xl font-medium text-white bg-amber-500 hover:bg-amber-600 transition text-sm shadow-md">
-              Submit Weekly Summary
-            </button>
+      {/* Weekly Summary - full width */}
+      <div className="bg-white rounded-xl border border-stone-200 p-5">
+        <div className="max-w-2xl">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-semibold text-slate-700">Weekly Summary</h3>
+            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">Due Friday</span>
           </div>
+          <textarea placeholder="Highlights, challenges, and plan for next week..." rows={3}
+            className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none mb-3" />
+          <button className="py-2.5 px-8 rounded-xl font-medium text-white bg-amber-500 hover:bg-amber-600 transition text-sm shadow-md">
+            Submit Weekly Summary
+          </button>
         </div>
       </div>
     </div>
