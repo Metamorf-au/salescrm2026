@@ -154,11 +154,8 @@ const CONTACT_NOTES = {
 };
 
 const FOLLOW_UPS = [
-  { id: 1, contact: "David Harrison", company: "Apex Building Solutions", time: "9:00 AM", note: "Interested in bulk order - send pricing", priority: "high" },
   { id: 2, contact: "Lisa Tran", company: "Pacific Coast Logistics", time: "10:30 AM", note: "Follow up on quote sent Monday", priority: "medium" },
-  { id: 3, contact: "Mark O'Brien", company: "Southern Cross Engineering", time: "1:00 PM", note: "Demo scheduled - confirm attendees", priority: "high" },
   { id: 4, contact: "Priya Sharma", company: "Metro Health Services", time: "2:30 PM", note: "Check contract renewal timeline", priority: "low" },
-  { id: 5, contact: "Tom Kessler", company: "Greenfield Agricultural", time: "3:30 PM", note: "Reconnect - went quiet last month", priority: "medium" },
   { id: 6, contact: "David Harrison", company: "Apex Building Solutions", time: "--", note: "Revised quote margin check with finance", priority: "high", fromNote: true, noteType: "pricing", reminder: "06/02/26" },
   { id: 7, contact: "Tom Kessler", company: "Greenfield Agricultural", time: "--", note: "Re-engage - may be reviewing other suppliers", priority: "medium", fromNote: true, noteType: "follow_up", reminder: "05/02/26" },
 ];
