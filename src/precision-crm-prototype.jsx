@@ -1486,7 +1486,7 @@ function PipelineView({ isMobile, currentUser }) {
           <h1 className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-slate-800`}>Deal Pipeline</h1>
           <p className="text-slate-500 mt-0.5 text-sm">Visual overview of all deals by stage</p>
         </div>
-        <div className={`flex ${isMobile ? "flex-wrap" : "items-center"} gap-3`}>
+        <div className={`flex ${isMobile ? "flex-wrap" : "items-center"} gap-4`}>
           <div className="bg-white border border-stone-200 rounded-xl px-4 py-2 text-center">
             <p className="text-xs text-slate-400">Active Pipeline</p>
             <p className="text-lg font-bold text-slate-800">{formatCurrency(totalActive)}</p>
@@ -1509,7 +1509,7 @@ function PipelineView({ isMobile, currentUser }) {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {!isRepOnly && (
           <div className="flex items-center gap-2">
             <User size={16} className="text-slate-400" />
@@ -1578,7 +1578,7 @@ function PipelineView({ isMobile, currentUser }) {
           })}
         </div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-4">
+        <div className="flex gap-4 overflow-x-auto pb-4">
           {stages.map(s => {
             const deals = filteredDeals.filter(d => d.stage === s.key);
             const stageTotal = deals.reduce((sum, d) => sum + d.value, 0);
@@ -1591,7 +1591,7 @@ function PipelineView({ isMobile, currentUser }) {
                   </div>
                   <span className="text-xs font-semibold text-slate-600">{formatCurrency(stageTotal)}</span>
                 </div>
-                <div className="bg-stone-100 rounded-b-xl p-2 space-y-2 min-h-[200px]">
+                <div className="bg-stone-100 rounded-b-xl p-3 space-y-2 min-h-[200px]">
                   {deals.length === 0 && (
                     <div className="text-xs text-slate-400 text-center py-8">No deals</div>
                   )}
