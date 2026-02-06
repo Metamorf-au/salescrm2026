@@ -257,6 +257,8 @@ function activityTypeConfig(type) {
     new_contact: { icon: UserPlus, label: "New Contact", color: "text-emerald-600", bg: "bg-emerald-50" },
     new_deal: { icon: Briefcase, label: "New Deal", color: "text-sky-600", bg: "bg-sky-50" },
     quote_sent: { icon: Send, label: "Quote Sent", color: "text-violet-600", bg: "bg-violet-50" },
+    deal_won: { icon: CheckCircle, label: "Deal Won", color: "text-emerald-600", bg: "bg-emerald-50" },
+    deal_lost: { icon: XCircle, label: "Deal Lost", color: "text-rose-600", bg: "bg-rose-50" },
   };
   return map[type];
 }
@@ -1099,8 +1101,9 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
   const repEntry = REPS.find(r => r.name === currentUser?.name);
   const repMetrics = repEntry ? METRICS[repEntry.id] : null;
   const dailyPct = Math.min((callsLogged / DAILY_TARGET) * 100, 100);
-  const weeklyPct = repMetrics ? Math.min((repMetrics.callsWeek / WEEKLY_TARGET) * 100, 100) : 0;
+  const weeklyPct = Math.min((callsLogged / WEEKLY_TARGET) * 100, 100);
   const meetingsSet = activityLog.filter(c => c.activityType === "call" && c.outcome === "meeting").length;
+  const newContactsCount = activityLog.filter(a => a.activityType === "new_contact").length;
   const quoteRequests = PIPELINE_DEALS.filter(d => d.stage === "quote_request" && d.owner === currentUser?.name).length;
 
   const [checkedTodos, setCheckedTodos] = useState({});
@@ -1116,6 +1119,9 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
       }
     }
   }
+
+  const completedTodos = myTodos.filter(t => checkedTodos[t.uid]).length;
+  const crmCompliance = myTodos.length > 0 ? Math.round((completedTodos / myTodos.length) * 100) : (activityLog.length > 0 ? 100 : 0);
 
   function toggleTodo(uid) {
     setCheckedTodos(prev => ({ ...prev, [uid]: !prev[uid] }));
@@ -1169,7 +1175,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
             <Target size={14} className="text-amber-500" />
             <span className="text-xs font-medium text-slate-500">Weekly Calls</span>
           </div>
-          <p className="text-xl font-bold text-slate-800">{repMetrics?.callsWeek || 0}<span className="text-sm font-normal text-slate-400"> / {WEEKLY_TARGET}</span></p>
+          <p className="text-xl font-bold text-slate-800">{callsLogged}<span className="text-sm font-normal text-slate-400"> / {WEEKLY_TARGET}</span></p>
           <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mt-2">
             <div className="h-full rounded-full transition-all duration-500"
               style={{ width: `${weeklyPct}%`, background: weeklyPct >= 100 ? "#16a34a" : weeklyPct >= 75 ? "#d97706" : "#0ea5e9" }} />
@@ -1181,8 +1187,8 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
             <CheckCircle size={14} className="text-emerald-500" />
             <span className="text-xs font-medium text-slate-500">CRM Compliance</span>
           </div>
-          <p className="text-xl font-bold text-slate-800">{repMetrics?.crmCompliance || 0}<span className="text-sm font-normal text-slate-400">%</span></p>
-          <p className="text-xs text-slate-400 mt-1">{repMetrics?.crmCompliance >= 90 ? "On track" : "Needs attention"}</p>
+          <p className="text-xl font-bold text-slate-800">{crmCompliance}<span className="text-sm font-normal text-slate-400">%</span></p>
+          <p className="text-xs text-slate-400 mt-1">{crmCompliance >= 90 ? "On track" : "Needs attention"}</p>
         </div>
         {/* Meetings Set */}
         <div className="bg-white rounded-xl border border-stone-200 p-4">
@@ -1199,7 +1205,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
             <UserPlus size={14} className="text-sky-500" />
             <span className="text-xs font-medium text-slate-500">New Contacts</span>
           </div>
-          <p className="text-xl font-bold text-slate-800">{CONTACTS.filter(c => c.status === "new" && c.owner === currentUser?.name).length}</p>
+          <p className="text-xl font-bold text-slate-800">{newContactsCount}</p>
           <p className="text-xs text-slate-400 mt-1">This week</p>
         </div>
         {/* Quote Requests */}
@@ -1272,29 +1278,35 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
             <h2 className="text-base font-semibold text-slate-700">Today's Activity</h2>
             <span className="ml-auto text-xs font-medium text-slate-400 bg-stone-100 px-2 py-0.5 rounded-full">{activityLog.length}</span>
           </div>
-          <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
-            {activityLog.map(c => {
-              const atc = c.activityType !== "call" ? activityTypeConfig(c.activityType) : null;
-              const oc = c.activityType === "call" ? outcomeConfig(c.outcome) : null;
-              const cfg = atc || oc;
-              const Icon = cfg.icon;
-              return (
-                <div key={c.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                    <Icon size={15} className={cfg.color} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
-                      {atc && <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>}
+          {activityLog.length > 0 ? (
+            <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
+              {activityLog.map(c => {
+                const atc = c.activityType !== "call" ? activityTypeConfig(c.activityType) : null;
+                const oc = c.activityType === "call" ? outcomeConfig(c.outcome) : null;
+                const cfg = atc || oc;
+                const Icon = cfg.icon;
+                return (
+                  <div key={c.id} className="flex items-center gap-3 px-4 py-3">
+                    <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+                      <Icon size={15} className={cfg.color} />
                     </div>
-                    <p className="text-xs text-slate-500 truncate">{c.summary}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
+                        {atc && <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>}
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">{c.summary}</p>
+                    </div>
+                    <span className="text-xs text-slate-400 whitespace-nowrap">{c.time}</span>
                   </div>
-                  <span className="text-xs text-slate-400 whitespace-nowrap">{c.time}</span>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-stone-200 p-6 text-center">
+              <p className="text-sm text-slate-400">No activity yet today. Log a call, add a contact, or create a deal to get started.</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1491,7 +1503,7 @@ function ManagerDashboard({ isMobile, currentUser }) {
 // PIPELINE VIEW
 // ============================================================
 
-function PipelineView({ isMobile, currentUser }) {
+function PipelineView({ isMobile, currentUser, onDealWon, onDealLost }) {
   const isRepOnly = currentUser.role === "rep";
   const [selectedRep, setSelectedRep] = useState(isRepOnly ? currentUser.name : "all");
   const [timePeriod, setTimePeriod] = useState("all");
@@ -1624,7 +1636,7 @@ function PipelineView({ isMobile, currentUser }) {
                       {d.stage === "awaiting_approval" && (
                         <div className="flex gap-1.5 mt-2">
                           <button onClick={() => setLostModal(d)} className="flex-1 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition">Lost</button>
-                          <button className="flex-1 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition">Won</button>
+                          <button onClick={() => onDealWon && onDealWon(d)} className="flex-1 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition">Won</button>
                         </div>
                       )}
                     </div>
@@ -1733,7 +1745,7 @@ function PipelineView({ isMobile, currentUser }) {
 
       {/* Lost Reason Modal */}
       {lostModal && (
-        <LostReasonModal deal={lostModal} onClose={() => setLostModal(null)} />
+        <LostReasonModal deal={lostModal} onClose={() => setLostModal(null)} onSave={(d) => onDealLost && onDealLost(d)} />
       )}
 
       {/* Close Deal Modal */}
@@ -1749,13 +1761,14 @@ function PipelineView({ isMobile, currentUser }) {
 // LOST REASON MODAL
 // ============================================================
 
-function LostReasonModal({ deal, onClose }) {
+function LostReasonModal({ deal, onClose, onSave }) {
   const [reason, setReason] = useState("");
   const [otherText, setOtherText] = useState("");
   const [saved, setSaved] = useState(false);
 
   function handleSave() {
     setSaved(true);
+    if (onSave) onSave(deal);
     setTimeout(() => onClose(), 1200);
   }
 
@@ -2154,13 +2167,13 @@ export default function PrecisionCRM() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState({ name: "Bill Thompson", email: "bill.t@precisiongroup.com.au", role: "admin", initials: "BT" });
   const [activeView, setActiveView] = useState("rep");
-  const [callsLogged, setCallsLogged] = useState(14);
+  const [callsLogged, setCallsLogged] = useState(0);
   const [showCallModal, setShowCallModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showDealModal, setShowDealModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [dealContactId, setDealContactId] = useState(null);
-  const [activityLog, setActivityLog] = useState(RECENT_CALLS.map(c => ({ ...c, activityType: "call" })));
+  const [activityLog, setActivityLog] = useState([]);
   const [contactNotes, setContactNotes] = useState(CONTACT_NOTES);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
@@ -2223,7 +2236,7 @@ export default function PrecisionCRM() {
             <div className="bg-white rounded-2xl p-6 shadow-2xl">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Sign in as</label>
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Sign in</label>
                   <select value={currentUser.email} onChange={e => { const u = LOGIN_USERS.find(u => u.email === e.target.value); if (u) setCurrentUser(u); }}
                     className="w-full px-3 pr-8 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer">
                     {LOGIN_USERS.map(u => { const parts = u.name.split(" "); return <option key={u.email} value={u.email}>{parts[0]} {parts[1][0]}. – {u.title}</option>; })}
@@ -2347,7 +2360,15 @@ export default function PrecisionCRM() {
           {activeView === "contacts" && (
             <ContactsView onNewContact={() => setShowContactModal(true)} onNewDeal={(contactId) => openDealModal(contactId)} onAddNote={() => setShowNoteModal(true)} onLogCall={() => setShowCallModal(true)} isMobile={isMobile} currentUser={currentUser} />
           )}
-          {activeView === "pipeline" && <PipelineView isMobile={isMobile} currentUser={currentUser} />}
+          {activeView === "pipeline" && <PipelineView isMobile={isMobile} currentUser={currentUser} onDealWon={(d) => {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
+            setActivityLog(prev => [{ id: Date.now(), activityType: "deal_won", contact: d.contact, company: d.company, summary: `Deal won: "${d.title}" – ${formatCurrency(d.value)}`, time: timeStr }, ...prev]);
+          }} onDealLost={(d) => {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
+            setActivityLog(prev => [{ id: Date.now(), activityType: "deal_lost", contact: d.contact, company: d.company, summary: `Deal lost: "${d.title}" – ${formatCurrency(d.value)}`, time: timeStr }, ...prev]);
+          }} />}
           {activeView === "manager" && <ManagerDashboard isMobile={isMobile} currentUser={currentUser} />}
           {activeView === "admin" && <AdminView isMobile={isMobile} />}
         </main>
