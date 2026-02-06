@@ -118,10 +118,12 @@ function formatReminderDate(dateStr) {
   const d = new Date(dateStr);
   const now = new Date();
   const isToday = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  const tom = new Date(now); tom.setDate(tom.getDate() + 1);
+  const isTomorrow = d.getFullYear() === tom.getFullYear() && d.getMonth() === tom.getMonth() && d.getDate() === tom.getDate();
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const yy = String(d.getFullYear()).slice(-2);
-  const datePart = isToday ? "Today" : `${dd}/${mm}/${yy}`;
+  const datePart = isToday ? "Today" : isTomorrow ? "Tomorrow" : `${dd}/${mm}/${yy}`;
   if (dateStr.includes("T")) {
     const hh = d.getHours();
     const min = String(d.getMinutes()).padStart(2, "0");
@@ -130,6 +132,14 @@ function formatReminderDate(dateStr) {
     return `${datePart} ${hh12}:${min}${ampm}`;
   }
   return datePart;
+}
+
+function isOverdue(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return d < todayStart;
 }
 
 function noteTypeConfig(typeKey) {
@@ -144,7 +154,7 @@ const CONTACT_NOTES = {
   ],
   2: [
     { id: 1, text: "Lisa reports to ops director Michael Chen. Get Michael on next call.", date: "30 Jan", author: "Sarah Mitchell", type: "internal" },
-    { id: 2, text: "Chase Lisa on fleet maintenance quote - needs response by Friday.", date: "3 Feb", author: "Sarah Mitchell", type: "follow_up", reminder: "2026-02-05T11:30:00" },
+    { id: 2, text: "Chase Lisa on fleet maintenance quote - needs response by Friday.", date: "3 Feb", author: "Sarah Mitchell", type: "follow_up", reminder: "2026-02-07T11:30:00" },
   ],
   3: [
     { id: 1, text: "Mark prefers phone over email. Best reached before 10am.", date: "1 Feb", author: "Sarah Mitchell", type: "general" },
@@ -1208,25 +1218,27 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
               {myTodos.map(todo => {
                 const ntc = noteTypeConfig(todo.type);
                 const done = checkedTodos[todo.uid];
+                const overdue = !done && isOverdue(todo.reminder);
                 return (
                   <div key={todo.uid} onClick={() => toggleTodo(todo.uid)}
-                    className={`bg-white rounded-xl border border-stone-200 p-4 hover:shadow-md transition cursor-pointer group ${done ? "opacity-60" : ""}`}>
+                    className={`bg-white rounded-xl border p-4 hover:shadow-md transition cursor-pointer group ${overdue ? "border-red-300 bg-red-50/40" : "border-stone-200"} ${done ? "opacity-60" : ""}`}>
                     <div className="flex items-start gap-3">
-                      <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${done ? "bg-emerald-500 border-emerald-500" : "border-stone-300 group-hover:border-amber-400"}`}>
+                      <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${done ? "bg-emerald-500 border-emerald-500" : overdue ? "border-red-400 group-hover:border-red-500" : "border-stone-300 group-hover:border-amber-400"}`}>
                         {done && <CheckCircle size={14} className="text-white" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className={`font-semibold text-slate-800 ${done ? "line-through text-slate-400" : ""}`}>{todo.contactName}</p>
                           <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
+                          {overdue && <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-600">Overdue</span>}
                         </div>
                         <p className={`text-sm text-slate-500 ${done ? "line-through" : ""}`}>{todo.company}</p>
                         <p className={`text-sm mt-1.5 ${done ? "line-through text-slate-400" : "text-slate-600"}`}>{todo.text}</p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {todo.reminder && (
-                          <span className="flex items-center gap-1 text-xs text-amber-500 font-medium whitespace-nowrap">
-                            <Bell size={13} />{formatReminderDate(todo.reminder)}
+                          <span className={`flex items-center gap-1 text-xs font-medium whitespace-nowrap ${overdue ? "text-red-500" : "text-amber-500"}`}>
+                            {overdue ? <AlertTriangle size={13} /> : <Bell size={13} />}{formatReminderDate(todo.reminder)}
                           </span>
                         )}
                       </div>
