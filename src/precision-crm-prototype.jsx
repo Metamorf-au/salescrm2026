@@ -252,6 +252,15 @@ function outcomeConfig(outcome) {
   return map[outcome] || map.no_answer;
 }
 
+function activityTypeConfig(type) {
+  const map = {
+    new_contact: { icon: UserPlus, label: "New Contact", color: "text-emerald-600", bg: "bg-emerald-50" },
+    new_deal: { icon: Briefcase, label: "New Deal", color: "text-sky-600", bg: "bg-sky-50" },
+    quote_sent: { icon: Send, label: "Quote Sent", color: "text-violet-600", bg: "bg-violet-50" },
+  };
+  return map[type];
+}
+
 function priorityStyle(p) {
   if (p === "high") return "border-l-rose-400";
   if (p === "medium") return "border-l-amber-400";
@@ -365,7 +374,7 @@ function CallLogModal({ onClose, onSave }) {
 
   function handleSave() {
     setSaved(true);
-    setTimeout(() => { onSave(); onClose(); }, 1200);
+    setTimeout(() => { onSave({ contact, outcome, summary, nextStep, nextDate }); onClose(); }, 1200);
   }
 
   return (
@@ -1086,19 +1095,19 @@ function ContactsView({ onNewContact, onNewDeal, onAddNote, onLogCall, isMobile,
 // REP VIEW
 // ============================================================
 
-function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, isMobile, userName, currentUser }) {
+function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, isMobile, userName, currentUser, activityLog, contactNotes }) {
   const repEntry = REPS.find(r => r.name === currentUser?.name);
   const repMetrics = repEntry ? METRICS[repEntry.id] : null;
   const dailyPct = Math.min((callsLogged / DAILY_TARGET) * 100, 100);
   const weeklyPct = repMetrics ? Math.min((repMetrics.callsWeek / WEEKLY_TARGET) * 100, 100) : 0;
-  const meetingsSet = RECENT_CALLS.filter(c => c.outcome === "meeting").length;
+  const meetingsSet = activityLog.filter(c => c.activityType === "call" && c.outcome === "meeting").length;
   const quoteRequests = PIPELINE_DEALS.filter(d => d.stage === "quote_request" && d.owner === currentUser?.name).length;
 
   const [checkedTodos, setCheckedTodos] = useState({});
 
   // Build to-do list from follow_up and meeting notes across all contacts
   const myTodos = [];
-  for (const [contactId, notes] of Object.entries(CONTACT_NOTES)) {
+  for (const [contactId, notes] of Object.entries(contactNotes)) {
     const contact = CONTACTS.find(c => String(c.id) === String(contactId));
     if (!contact) continue;
     for (const note of notes) {
@@ -1261,18 +1270,24 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
           <div className="flex items-center gap-2">
             <Activity size={18} className="text-slate-400" />
             <h2 className="text-base font-semibold text-slate-700">Today's Activity</h2>
+            <span className="ml-auto text-xs font-medium text-slate-400 bg-stone-100 px-2 py-0.5 rounded-full">{activityLog.length}</span>
           </div>
           <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
-            {RECENT_CALLS.map(c => {
-              const oc = outcomeConfig(c.outcome);
-              const Icon = oc.icon;
+            {activityLog.map(c => {
+              const atc = c.activityType !== "call" ? activityTypeConfig(c.activityType) : null;
+              const oc = c.activityType === "call" ? outcomeConfig(c.outcome) : null;
+              const cfg = atc || oc;
+              const Icon = cfg.icon;
               return (
                 <div key={c.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className={`w-8 h-8 rounded-lg ${oc.bg} flex items-center justify-center flex-shrink-0`}>
-                    <Icon size={15} className={oc.color} />
+                  <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+                    <Icon size={15} className={cfg.color} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{c.contact} - {c.company}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
+                      {atc && <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>}
+                    </div>
                     <p className="text-xs text-slate-500 truncate">{c.summary}</p>
                   </div>
                   <span className="text-xs text-slate-400 whitespace-nowrap">{c.time}</span>
@@ -2145,6 +2160,8 @@ export default function PrecisionCRM() {
   const [showDealModal, setShowDealModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [dealContactId, setDealContactId] = useState(null);
+  const [activityLog, setActivityLog] = useState(RECENT_CALLS.map(c => ({ ...c, activityType: "call" })));
+  const [contactNotes, setContactNotes] = useState(CONTACT_NOTES);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
   useEffect(() => {
@@ -2325,7 +2342,7 @@ export default function PrecisionCRM() {
         {/* Main Content */}
         <main className={`flex-1 overflow-y-auto ${isMobile ? "p-4" : "p-6 lg:p-8"}`}>
           {activeView === "rep" && (
-            <RepView callsLogged={callsLogged} onLogCall={() => setShowCallModal(true)} onNewDeal={() => openDealModal()} onAddNote={() => setShowNoteModal(true)} onNewContact={() => setShowContactModal(true)} isMobile={isMobile} userName={currentUser.name.split(" ")[0]} currentUser={currentUser} />
+            <RepView callsLogged={callsLogged} onLogCall={() => setShowCallModal(true)} onNewDeal={() => openDealModal()} onAddNote={() => setShowNoteModal(true)} onNewContact={() => setShowContactModal(true)} isMobile={isMobile} userName={currentUser.name.split(" ")[0]} currentUser={currentUser} activityLog={activityLog} contactNotes={contactNotes} />
           )}
           {activeView === "contacts" && (
             <ContactsView onNewContact={() => setShowContactModal(true)} onNewDeal={(contactId) => openDealModal(contactId)} onAddNote={() => setShowNoteModal(true)} onLogCall={() => setShowCallModal(true)} isMobile={isMobile} currentUser={currentUser} />
@@ -2337,13 +2354,40 @@ export default function PrecisionCRM() {
 
         {/* Modals */}
         {showCallModal && (
-          <CallLogModal onClose={() => setShowCallModal(false)} onSave={() => setCallsLogged(prev => prev + 1)} />
+          <CallLogModal onClose={() => setShowCallModal(false)} onSave={(data) => {
+            setCallsLogged(prev => prev + 1);
+            const contactObj = CONTACTS.find(c => c.id === Number(data.contact));
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
+            setActivityLog(prev => [{ id: Date.now(), activityType: "call", contact: contactObj?.name || "Unknown", company: contactObj?.company || "", outcome: data.outcome, summary: data.summary || "Call logged", time: timeStr }, ...prev]);
+            if (data.nextStep && data.nextDate && contactObj) {
+              setContactNotes(prev => ({
+                ...prev,
+                [contactObj.id]: [...(prev[contactObj.id] || []), { id: Date.now(), text: data.nextStep, date: now.toLocaleDateString("en-AU", { day: "numeric", month: "short" }), author: currentUser.name, type: "follow_up", reminder: data.nextDate }]
+              }));
+            }
+          }} />
         )}
         {showContactModal && (
-          <NewContactModal onClose={() => setShowContactModal(false)} onSave={(data) => { console.log("New contact:", data); }} />
+          <NewContactModal onClose={() => setShowContactModal(false)} onSave={(data) => {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
+            setActivityLog(prev => [{ id: Date.now(), activityType: "new_contact", contact: data.name, company: data.company, summary: "New contact added", time: timeStr }, ...prev]);
+          }} />
         )}
         {showDealModal && (
-          <NewDealModal onClose={() => { setShowDealModal(false); setDealContactId(null); }} onSave={(data) => { console.log("New deal:", data); }} defaultContact={dealContactId} />
+          <NewDealModal onClose={() => { setShowDealModal(false); setDealContactId(null); }} onSave={(data) => {
+            const contactObj = CONTACTS.find(c => c.id === Number(data.contact));
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
+            setActivityLog(prev => {
+              const entries = [{ id: Date.now(), activityType: "new_deal", contact: contactObj?.name || "Unknown", company: contactObj?.company || "", summary: `New deal: ${data.title}`, time: timeStr }];
+              if (data.stage === "quote_sent" || data.stage === "awaiting_approval") {
+                entries.push({ id: Date.now() + 1, activityType: "quote_sent", contact: contactObj?.name || "Unknown", company: contactObj?.company || "", summary: `Quote sent for "${data.title}"`, time: timeStr });
+              }
+              return [...entries, ...prev];
+            });
+          }} defaultContact={dealContactId} />
         )}
         {showNoteModal && (
           <QuickNoteModal onClose={() => setShowNoteModal(false)} currentUser={currentUser} />
