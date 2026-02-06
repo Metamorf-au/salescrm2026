@@ -28,11 +28,11 @@ const REPS = [
 ];
 
 const METRICS = {
-  1: { callsToday: 18, callsWeek: 82, crmCompliance: 100, quoteOnTime: 100, oppWithNext: 95, pipelineClean: true, summaryDone: true },
-  2: { callsToday: 22, callsWeek: 98, crmCompliance: 95, quoteOnTime: 85, oppWithNext: 90, pipelineClean: true, summaryDone: true },
-  3: { callsToday: 12, callsWeek: 55, crmCompliance: 78, quoteOnTime: 60, oppWithNext: 70, pipelineClean: false, summaryDone: false },
-  4: { callsToday: 20, callsWeek: 100, crmCompliance: 100, quoteOnTime: 95, oppWithNext: 92, pipelineClean: true, summaryDone: true },
-  5: { callsToday: 8, callsWeek: 38, crmCompliance: 65, quoteOnTime: 50, oppWithNext: 60, pipelineClean: false, summaryDone: false },
+  1: { callsToday: 18, callsWeek: 82, crmCompliance: 100, meetingsSet: 3, newContacts: 2, oppWithNext: 95, pipelineClean: true, summaryDone: true },
+  2: { callsToday: 22, callsWeek: 98, crmCompliance: 95, meetingsSet: 2, newContacts: 1, oppWithNext: 90, pipelineClean: true, summaryDone: true },
+  3: { callsToday: 12, callsWeek: 55, crmCompliance: 78, meetingsSet: 1, newContacts: 0, oppWithNext: 70, pipelineClean: false, summaryDone: false },
+  4: { callsToday: 20, callsWeek: 100, crmCompliance: 100, meetingsSet: 4, newContacts: 3, oppWithNext: 92, pipelineClean: true, summaryDone: true },
+  5: { callsToday: 8, callsWeek: 38, crmCompliance: 65, meetingsSet: 0, newContacts: 0, oppWithNext: 60, pipelineClean: false, summaryDone: false },
 };
 
 const CONTACTS = [
@@ -49,7 +49,7 @@ const CONTACTS = [
 
 const DEALS = [
   { id: 1, title: "Bulk supply agreement", contact: "David Harrison", company: "Apex Building Solutions", stage: "quote_request", value: 48000, nextAction: "Send revised quote", nextDate: "2026-02-05", owner: "Sarah Mitchell", quoteRequestedAt: "2026-02-04T09:15:00" },
-  { id: 2, title: "Fleet maintenance contract", contact: "Lisa Tran", company: "Pacific Coast Logistics", stage: "quote_sent", value: 32000, nextAction: "Confirm pricing terms", nextDate: "2026-02-06", owner: "Sarah Mitchell", quoteSentAt: "2026-02-03T14:00:00" },
+  { id: 2, title: "Fleet maintenance contract", contact: "Lisa Tran", company: "Pacific Coast Logistics", stage: "quote_sent", value: 32000, nextAction: "Confirm pricing terms", nextDate: "2026-02-06", owner: "Sarah Mitchell", quoteRequestedAt: "2026-02-03T09:00:00", quoteSentAt: "2026-02-03T14:00:00" },
   { id: 3, title: "Site equipment package", contact: "Mark O'Brien", company: "Southern Cross Engineering", stage: "discovery", value: 15500, nextAction: "Demo Thursday 2pm", nextDate: "2026-02-06", owner: "Sarah Mitchell" },
   { id: 4, title: "Annual supply renewal", contact: "Tom Kessler", company: "Greenfield Agricultural", stage: "discovery", value: 22000, nextAction: "Re-engage – send update", nextDate: "2026-02-04", owner: "Sarah Mitchell" },
   { id: 6, title: "Window hardware upgrade", contact: "Steve Malone", company: "Eastside Commercial", stage: "quote_request", value: 8750, nextAction: "Site assessment", nextDate: "2026-02-07", owner: "Marcus Webb", quoteRequestedAt: "2026-02-03T13:15:00" },
@@ -224,7 +224,6 @@ function getStatus(m) {
   const issues = [];
   if (m.callsToday < DAILY_TARGET * 0.8) issues.push("calls");
   if (m.crmCompliance < 90) issues.push("crm");
-  if (m.quoteOnTime < 80) issues.push("quotes");
   if (m.oppWithNext < 85) issues.push("pipeline");
   if (!m.summaryDone) issues.push("summary");
   if (!m.pipelineClean) issues.push("hygiene");
@@ -1127,7 +1126,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
   const weeklyPct = Math.min((callsLogged / WEEKLY_TARGET) * 100, 100);
   const meetingsSet = activityLog.filter(c => c.activityType === "call" && c.outcome === "meeting").length;
   const newContactsCount = activityLog.filter(a => a.activityType === "new_contact").length;
-  const quoteRequests = pipelineDeals.filter(d => d.stage === "quote_request" && d.owner === currentUser?.name).length;
+  const quotesSent = pipelineDeals.filter(d => d.quoteSentAt && d.owner === currentUser?.name).length;
 
   const [checkedTodos, setCheckedTodos] = useState({});
 
@@ -1231,14 +1230,14 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
           <p className="text-xl font-bold text-slate-800">{newContactsCount}</p>
           <p className="text-xs text-slate-400 mt-1">This week</p>
         </div>
-        {/* Quote Requests */}
+        {/* Quotes Sent */}
         <div className="bg-white rounded-xl border border-stone-200 p-4">
           <div className="flex items-center gap-2 mb-2">
-            <FileText size={14} className="text-rose-500" />
-            <span className="text-xs font-medium text-slate-500">Quote Requests</span>
+            <Send size={14} className="text-amber-500" />
+            <span className="text-xs font-medium text-slate-500">Quotes Sent</span>
           </div>
-          <p className="text-xl font-bold text-slate-800">{quoteRequests}</p>
-          <p className="text-xs text-slate-400 mt-1">Pending</p>
+          <p className="text-xl font-bold text-slate-800">{quotesSent}</p>
+          <p className="text-xs text-slate-400 mt-1">Total</p>
         </div>
       </div>
 
@@ -1356,7 +1355,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
 // MANAGER DASHBOARD
 // ============================================================
 
-function ManagerDashboard({ isMobile, currentUser }) {
+function ManagerDashboard({ isMobile, currentUser, pipelineDeals }) {
   const isRepOnly = currentUser.role === "rep";
   const repUser = isRepOnly ? REPS.find(r => r.name === currentUser.name) : null;
   const [selectedRep, setSelectedRep] = useState(isRepOnly && repUser ? String(repUser.id) : "all");
@@ -1371,16 +1370,43 @@ function ManagerDashboard({ isMobile, currentUser }) {
   }));
 
   const repCount = filteredReps.length;
-  const totalCalls = filteredMetrics.reduce((s, m) => s + m.callsToday, 0);
+  const isFiltered = selectedRep !== "all";
+
+  // Aggregated metrics from METRICS
+  const totalCallsToday = filteredMetrics.reduce((s, m) => s + m.callsToday, 0);
+  const totalCallsWeek = filteredMetrics.reduce((s, m) => s + m.callsWeek, 0);
   const avgCompliance = Math.round(filteredMetrics.reduce((s, m) => s + m.crmCompliance, 0) / repCount);
-  const avgQuote = Math.round(filteredMetrics.reduce((s, m) => s + m.quoteOnTime, 0) / repCount);
+  const totalMeetings = filteredMetrics.reduce((s, m) => s + (m.meetingsSet || 0), 0);
+  const totalNewContacts = filteredMetrics.reduce((s, m) => s + (m.newContacts || 0), 0);
   const greenCount = filteredReps.filter(r => getStatus(METRICS[r.id]) === "green").length;
 
-  const isFiltered = selectedRep !== "all";
+  // Pipeline-derived metrics (filterable by rep via deal.owner)
+  const repNames = filteredReps.map(r => r.name);
+  const repDeals = isFiltered ? pipelineDeals.filter(d => repNames.includes(d.owner)) : pipelineDeals;
+  const quotesRequested = repDeals.filter(d => d.quoteRequestedAt).length;
+  const quotesSent = repDeals.filter(d => d.quoteSentAt).length;
+
+  // Quote turnaround: avg hours from requested to sent
+  const turnaroundDeals = repDeals.filter(d => d.quoteRequestedAt && d.quoteSentAt);
+  const avgTurnaround = turnaroundDeals.length > 0
+    ? Math.round(turnaroundDeals.reduce((s, d) => s + (new Date(d.quoteSentAt) - new Date(d.quoteRequestedAt)) / 3600000, 0) / turnaroundDeals.length * 10) / 10
+    : null;
+
+  // Weighted pipeline value
+  const stageWeights = { discovery: 0.10, quote_request: 0.25, quote_sent: 0.75 };
+  const activeDeals = repDeals.filter(d => !["won", "lost", "closed"].includes(d.stage));
+  const pipelineValue = activeDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
+
   const summaryCards = [
-    { label: isFiltered ? "Calls Today" : "Total Calls Today", value: totalCalls, sub: isFiltered ? `Target: ${DAILY_TARGET}` : `Target: ${DAILY_TARGET * REPS.length}`, icon: Phone, accent: "bg-sky-50 text-sky-600" },
+    { label: isFiltered ? "Calls Today" : "Total Calls Today", value: totalCallsToday, sub: `Target: ${isFiltered ? DAILY_TARGET : DAILY_TARGET * REPS.length}`, icon: Phone, accent: "bg-sky-50 text-sky-600" },
+    { label: isFiltered ? "Calls This Week" : "Total Calls Week", value: totalCallsWeek, sub: `Target: ${isFiltered ? WEEKLY_TARGET : WEEKLY_TARGET * REPS.length}`, icon: Target, accent: "bg-sky-50 text-sky-600" },
     { label: "CRM Compliance", value: `${avgCompliance}%`, sub: isFiltered ? "Individual" : "Team average", icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600" },
-    { label: "Quotes On Time", value: `${avgQuote}%`, sub: "Under 24h", icon: FileText, accent: "bg-amber-50 text-amber-600" },
+    { label: "Meetings Set", value: totalMeetings, sub: "This week", icon: Calendar, accent: "bg-violet-50 text-violet-600" },
+    { label: "New Contacts", value: totalNewContacts, sub: "This week", icon: UserPlus, accent: "bg-sky-50 text-sky-600" },
+    { label: "Quotes Requested", value: quotesRequested, sub: "Active", icon: FileText, accent: "bg-violet-50 text-violet-600" },
+    { label: "Quotes Sent", value: quotesSent, sub: "Total", icon: Send, accent: "bg-amber-50 text-amber-600" },
+    { label: "Quote Turnaround", value: avgTurnaround !== null ? `${avgTurnaround}h` : "\u2013", sub: "Avg hours", icon: Clock, accent: "bg-amber-50 text-amber-600" },
+    { label: "Pipeline Value", value: formatCurrency(pipelineValue), sub: "Weighted", icon: DollarSign, accent: "bg-emerald-50 text-emerald-600" },
     { label: "Reps On Track", value: `${greenCount} / ${filteredReps.length}`, sub: "All KPIs met", icon: Users, accent: "bg-violet-50 text-violet-600" },
   ];
 
@@ -1408,7 +1434,7 @@ function ManagerDashboard({ isMobile, currentUser }) {
         </div>
       </div>
 
-      <div className={`grid grid-cols-2 ${isMobile ? "gap-3" : "lg:grid-cols-4 gap-4"}`}>
+      <div className={`grid grid-cols-2 ${isMobile ? "gap-3" : "lg:grid-cols-5 gap-4"}`}>
         {summaryCards.map((c, i) => {
           const Icon = c.icon;
           return (
@@ -1481,7 +1507,7 @@ function ManagerDashboard({ isMobile, currentUser }) {
                 <th className="px-4 py-3 font-medium text-center">Calls Today</th>
                 <th className="px-4 py-3 font-medium text-center">Calls This Week</th>
                 <th className="px-4 py-3 font-medium text-center">CRM Discipline</th>
-                <th className="px-4 py-3 font-medium text-center">Quotes On Time</th>
+                <th className="px-4 py-3 font-medium text-center">Quote Turnaround</th>
                 <th className="px-4 py-3 font-medium text-center">Opp. Progression</th>
                 <th className="px-4 py-3 font-medium text-center">Pipeline</th>
                 <th className="px-4 py-3 font-medium text-center">Weekly Summary</th>
@@ -1495,13 +1521,18 @@ function ManagerDashboard({ isMobile, currentUser }) {
                 function cellColor(val, target) {
                   return val >= target ? "text-emerald-700 font-semibold" : val >= target * 0.8 ? "text-amber-600 font-semibold" : "text-rose-600 font-semibold";
                 }
+                // Per-rep quote turnaround from deal data
+                const repTurnaroundDeals = pipelineDeals.filter(d => d.owner === r.name && d.quoteRequestedAt && d.quoteSentAt);
+                const repTurnaround = repTurnaroundDeals.length > 0
+                  ? Math.round(repTurnaroundDeals.reduce((s, d) => s + (new Date(d.quoteSentAt) - new Date(d.quoteRequestedAt)) / 3600000, 0) / repTurnaroundDeals.length * 10) / 10
+                  : null;
                 return (
                   <tr key={r.id} className="hover:bg-stone-50 transition">
                     <td className="px-5 py-3 font-medium text-slate-800">{r.name}</td>
                     <td className={`px-4 py-3 text-center ${cellColor(m.callsToday, DAILY_TARGET)}`}>{m.callsToday}</td>
                     <td className={`px-4 py-3 text-center ${cellColor(m.callsWeek, WEEKLY_TARGET)}`}>{m.callsWeek}</td>
                     <td className={`px-4 py-3 text-center ${cellColor(m.crmCompliance, 100)}`}>{m.crmCompliance}%</td>
-                    <td className={`px-4 py-3 text-center ${cellColor(m.quoteOnTime, 80)}`}>{m.quoteOnTime}%</td>
+                    <td className={`px-4 py-3 text-center ${repTurnaround !== null ? (repTurnaround <= 24 ? "text-emerald-700 font-semibold" : "text-rose-600 font-semibold") : "text-slate-400"}`}>{repTurnaround !== null ? `${repTurnaround}h` : "\u2013"}</td>
                     <td className={`px-4 py-3 text-center ${cellColor(m.oppWithNext, 90)}`}>{m.oppWithNext}%</td>
                     <td className="px-4 py-3 text-center">
                       {m.pipelineClean ? <CheckCircle size={16} className="inline text-emerald-600" /> : <XCircle size={16} className="inline text-rose-500" />}
@@ -2532,7 +2563,7 @@ export default function PrecisionCRM() {
             const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
             setActivityLog(prev => [{ id: Date.now(), activityType: "deal_lost", contact: d.contact, company: d.company, summary: `Deal lost: "${d.title}" – ${formatCurrency(d.value)}`, time: timeStr }, ...prev]);
           }} />}
-          {activeView === "manager" && <ManagerDashboard isMobile={isMobile} currentUser={currentUser} />}
+          {activeView === "manager" && <ManagerDashboard isMobile={isMobile} currentUser={currentUser} pipelineDeals={pipelineDeals} />}
           {activeView === "admin" && <AdminView isMobile={isMobile} />}
         </main>
 
