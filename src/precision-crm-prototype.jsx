@@ -1547,12 +1547,12 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
   ];
 
   const stages = [
-    { key: "discovery", label: "Discovery", color: "border-sky-400", bg: "bg-sky-50", text: "text-sky-700" },
-    { key: "quote_request", label: "Quote Request", color: "border-violet-400", bg: "bg-violet-50", text: "text-violet-700" },
-    { key: "quote_sent", label: "Quote Sent", color: "border-amber-400", bg: "bg-amber-50", text: "text-amber-700" },
-    { key: "awaiting_approval", label: "Under Review", color: "border-orange-400", bg: "bg-orange-50", text: "text-orange-700" },
-    { key: "won", label: "Won", color: "border-emerald-400", bg: "bg-emerald-50", text: "text-emerald-700" },
-    { key: "lost", label: "Lost", color: "border-rose-400", bg: "bg-rose-50", text: "text-rose-700" },
+    { key: "discovery", label: "Discovery", color: "border-sky-400", bg: "bg-sky-50", text: "text-sky-700", weight: 0.10 },
+    { key: "quote_request", label: "Quote Request", color: "border-violet-400", bg: "bg-violet-50", text: "text-violet-700", weight: 0.25 },
+    { key: "quote_sent", label: "Quote Sent", color: "border-amber-400", bg: "bg-amber-50", text: "text-amber-700", weight: 0.50 },
+    { key: "awaiting_approval", label: "Under Review", color: "border-orange-400", bg: "bg-orange-50", text: "text-orange-700", weight: 0.75 },
+    { key: "won", label: "Won", color: "border-emerald-400", bg: "bg-emerald-50", text: "text-emerald-700", weight: 1.0 },
+    { key: "lost", label: "Lost", color: "border-rose-400", bg: "bg-rose-50", text: "text-rose-700", weight: 0 },
   ];
 
   const now = new Date("2026-02-04T14:00:00");
@@ -1565,6 +1565,10 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
   });
   const activeDeals = filteredDeals.filter(d => !["won", "lost", "closed"].includes(d.stage));
   const totalActive = activeDeals.reduce((s, d) => s + d.value, 0);
+  const weightedTotal = activeDeals.reduce((s, d) => {
+    const stageObj = stages.find(st => st.key === d.stage);
+    return s + d.value * (stageObj?.weight || 0);
+  }, 0);
   const wonDeals = filteredDeals.filter(d => d.stage === "won");
   const totalWon = wonDeals.reduce((s, d) => s + d.value, 0);
   const lostDeals = filteredDeals.filter(d => d.stage === "lost");
@@ -1572,6 +1576,19 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
   const closedDeals = filteredDeals.filter(d => d.stage === "closed");
 
   const repNames = [...new Set(pipelineDeals.map(d => d.owner))].sort();
+
+  function getDealAge(deal) {
+    if (["won", "lost", "closed"].includes(deal.stage)) return null;
+    if (!deal.nextDate) return null;
+    const nextDate = new Date(deal.nextDate);
+    const diffDays = Math.floor((now - nextDate) / 86400000);
+    if (diffDays >= 14) return { level: "critical", label: `${diffDays}d overdue`, color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-300" };
+    if (diffDays >= 7) return { level: "warning", label: `${diffDays}d overdue`, color: "text-orange-600", bg: "bg-orange-50", border: "border-orange-300" };
+    if (diffDays >= 1) return { level: "stale", label: `${diffDays}d overdue`, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-300" };
+    return null;
+  }
+
+  const staleCount = activeDeals.filter(d => getDealAge(d)).length;
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? "space-y-4" : "space-y-6"}`}>
@@ -1586,6 +1603,10 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
             <p className="text-xs text-slate-400">Active Pipeline</p>
             <p className="text-lg font-bold text-slate-800">{formatCurrency(totalActive)}</p>
           </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 text-center">
+            <p className="text-xs text-amber-600">Weighted Pipeline</p>
+            <p className="text-lg font-bold text-amber-700">{formatCurrency(weightedTotal)}</p>
+          </div>
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 text-center">
             <p className="text-xs text-emerald-600">Won This Month</p>
             <p className="text-lg font-bold text-emerald-700">{formatCurrency(totalWon)}</p>
@@ -1594,6 +1615,12 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
             <p className="text-xs text-rose-600">Lost This Month</p>
             <p className="text-lg font-bold text-rose-700">{formatCurrency(totalLost)}</p>
           </div>
+          {staleCount > 0 && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-2 text-center">
+              <p className="text-xs text-orange-600 flex items-center justify-center gap-1"><AlertTriangle size={10} /> Overdue</p>
+              <p className="text-lg font-bold text-orange-700">{staleCount}</p>
+            </div>
+          )}
           {closedDeals.length > 0 && (
             <button onClick={() => setShowGraveyard(!showGraveyard)} className={`border rounded-xl px-4 py-2 text-center transition ${showGraveyard ? "bg-slate-200 border-slate-400" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}>
               <p className="text-xs text-slate-500">Voided</p>
@@ -1632,16 +1659,29 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
             const stageTotal = deals.reduce((sum, d) => sum + d.value, 0);
             return (
               <div key={s.key} className={`bg-white rounded-xl border border-stone-200 overflow-hidden`}>
-                <div className={`px-4 py-2.5 border-l-4 ${s.color} flex items-center justify-between`}>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-semibold ${s.text}`}>{s.label}</span>
-                    <span className="text-xs bg-stone-100 text-slate-500 px-1.5 py-0.5 rounded-full">{deals.length}</span>
+                <div className={`px-4 py-2.5 border-l-4 ${s.color}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-semibold ${s.text}`}>{s.label}</span>
+                      <span className="text-xs bg-stone-100 text-slate-500 px-1.5 py-0.5 rounded-full">{deals.length}</span>
+                      {!["won", "lost"].includes(s.key) && (
+                        <span className="text-[10px] text-slate-400">{Math.round(s.weight * 100)}%</span>
+                      )}
+                    </div>
+                    <span className="text-sm font-semibold text-slate-700">{formatCurrency(stageTotal)}</span>
                   </div>
-                  <span className="text-sm font-semibold text-slate-700">{formatCurrency(stageTotal)}</span>
                 </div>
                 <div className="divide-y divide-stone-100">
-                  {deals.map(d => (
-                    <div key={d.id} className="px-4 py-3">
+                  {deals.map(d => {
+                    const age = getDealAge(d);
+                    return (
+                    <div key={d.id} className={`px-4 py-3 ${age ? age.bg : ""}`}>
+                      {age && (
+                        <div className="flex items-center gap-1 mb-1">
+                          <AlertTriangle size={10} className={age.color} />
+                          <span className={`text-[10px] font-semibold ${age.color}`}>{age.label}</span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-semibold text-slate-800">{d.title}</p>
                         <span className="text-sm font-bold text-slate-700">{formatCurrency(d.value)}</span>
@@ -1666,7 +1706,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
                         </div>
                       )}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             );
@@ -1679,19 +1719,32 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
             const stageTotal = deals.reduce((sum, d) => sum + d.value, 0);
             return (
               <div key={s.key} className="flex-1 min-w-[180px]">
-                <div className={`rounded-t-xl px-3 py-2 border-t-4 ${s.color} ${s.bg} flex items-center justify-between`}>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-xs font-bold ${s.text}`}>{s.label}</span>
-                    <span className="text-xs bg-white/70 text-slate-500 px-1.5 py-0.5 rounded-full">{deals.length}</span>
+                <div className={`rounded-t-xl px-3 py-2 border-t-4 ${s.color} ${s.bg}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-xs font-bold ${s.text}`}>{s.label}</span>
+                      <span className="text-xs bg-white/70 text-slate-500 px-1.5 py-0.5 rounded-full">{deals.length}</span>
+                    </div>
+                    <span className="text-xs font-semibold text-slate-600">{formatCurrency(stageTotal)}</span>
                   </div>
-                  <span className="text-xs font-semibold text-slate-600">{formatCurrency(stageTotal)}</span>
+                  {!["won", "lost"].includes(s.key) && (
+                    <p className="text-[10px] text-slate-400 mt-0.5">{Math.round(s.weight * 100)}% weighted</p>
+                  )}
                 </div>
                 <div className="bg-stone-100 rounded-b-xl p-3 space-y-2 min-h-[200px]">
                   {deals.length === 0 && (
                     <div className="text-xs text-slate-400 text-center py-8">No deals</div>
                   )}
-                  {deals.map(d => (
-                    <div key={d.id} className="bg-white rounded-lg p-3 shadow-sm border border-stone-200 hover:shadow-md transition cursor-pointer">
+                  {deals.map(d => {
+                    const age = getDealAge(d);
+                    return (
+                    <div key={d.id} className={`bg-white rounded-lg p-3 shadow-sm border hover:shadow-md transition cursor-pointer ${age ? age.border : "border-stone-200"}`}>
+                      {age && (
+                        <div className={`flex items-center gap-1 mb-1.5 px-1.5 py-0.5 rounded ${age.bg} w-fit`}>
+                          <AlertTriangle size={10} className={age.color} />
+                          <span className={`text-[10px] font-semibold ${age.color}`}>{age.label}</span>
+                        </div>
+                      )}
                       <p className="text-sm font-semibold text-slate-800 leading-tight">{d.title}</p>
                       <p className="text-xs text-slate-500 mt-1">{d.contact}</p>
                       <p className="text-xs text-slate-400">{d.company}</p>
@@ -1728,7 +1781,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
                         </div>
                       )}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             );
@@ -2502,6 +2555,19 @@ export default function PrecisionCRM() {
             const contactObj = CONTACTS.find(c => c.id === Number(data.contact));
             const now = new Date();
             const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
+            const newDeal = {
+              id: Date.now(),
+              title: data.title,
+              contact: contactObj?.name || "Unknown",
+              company: contactObj?.company || "",
+              stage: data.stage || "discovery",
+              value: Number(data.value) || 0,
+              nextAction: data.nextAction,
+              nextDate: data.nextDate || null,
+              owner: currentUser.name,
+              createdAt: now.toISOString(),
+            };
+            setPipelineDeals(prev => [...prev, newDeal]);
             setActivityLog(prev => {
               const entries = [{ id: Date.now(), activityType: "new_deal", contact: contactObj?.name || "Unknown", company: contactObj?.company || "", summary: `New deal: ${data.title}`, time: timeStr }];
               if (data.stage === "quote_sent" || data.stage === "awaiting_approval") {
