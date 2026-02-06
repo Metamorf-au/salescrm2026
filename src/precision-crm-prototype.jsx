@@ -1157,7 +1157,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
       {/* Header */}
       <div className={isMobile ? "space-y-3" : "flex items-center justify-between"}>
         <div>
-          <h1 className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-slate-800`}>Good morning, {userName}</h1>
+          <h1 className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-slate-800`}>{(() => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; })()}, {userName}</h1>
           <p className="text-slate-500 mt-0.5 text-sm">{new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
         </div>
         <div className={`${isMobile ? "grid grid-cols-2" : "flex items-center"} gap-2`}>
