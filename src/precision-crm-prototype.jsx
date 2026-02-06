@@ -364,6 +364,9 @@ function CallLogModal({ onClose, onSave }) {
   const [clientNeed, setClientNeed] = useState("");
   const [nextStep, setNextStep] = useState("");
   const [nextDate, setNextDate] = useState("");
+  const [meetingDate, setMeetingDate] = useState("");
+  const [meetingTime, setMeetingTime] = useState("");
+  const [meetingNote, setMeetingNote] = useState("");
   const [quoteRequested, setQuoteRequested] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -376,7 +379,7 @@ function CallLogModal({ onClose, onSave }) {
 
   function handleSave() {
     setSaved(true);
-    setTimeout(() => { onSave({ contact, outcome, summary, nextStep, nextDate }); onClose(); }, 1200);
+    setTimeout(() => { onSave({ contact, outcome, summary, nextStep, nextDate, meetingDate, meetingTime, meetingNote }); onClose(); }, 1200);
   }
 
   return (
@@ -409,6 +412,28 @@ function CallLogModal({ onClose, onSave }) {
               })}
             </div>
           </div>
+          {outcome === "meeting" && (
+            <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-4 space-y-3">
+              <p className="text-sm font-semibold text-emerald-700 flex items-center gap-1.5"><Calendar size={14} />Meeting Details</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Meeting Date *</label>
+                  <input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Meeting Time *</label>
+                  <input type="time" value={meetingTime} onChange={e => setMeetingTime(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Meeting Note</label>
+                <input type="text" value={meetingNote} onChange={e => setMeetingNote(e.target.value)} placeholder="e.g. Site demo at their office"
+                  className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent" />
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-slate-600 mb-1.5">Discussion Summary</label>
             <textarea value={summary} onChange={e => setSummary(e.target.value)} rows={2} placeholder="Brief summary of the conversation..."
@@ -441,7 +466,7 @@ function CallLogModal({ onClose, onSave }) {
               <p className="text-xs text-slate-400">Tick if the client asked for a quote on this call</p>
             </div>
           </div>
-          <button onClick={handleSave} disabled={!contact || !outcome}
+          <button onClick={handleSave} disabled={!contact || !outcome || (outcome === "meeting" && (!meetingDate || !meetingTime))}
             className="w-full py-3 rounded-xl font-semibold text-white transition bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed">
             Save Call Log
           </button>
@@ -2381,10 +2406,18 @@ export default function PrecisionCRM() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
             setActivityLog(prev => [{ id: Date.now(), activityType: "call", contact: contactObj?.name || "Unknown", company: contactObj?.company || "", outcome: data.outcome, summary: data.summary || "Call logged", time: timeStr }, ...prev]);
+            if (data.meetingDate && data.meetingTime && contactObj) {
+              const meetingText = data.meetingNote || `Meeting with ${contactObj.name}`;
+              const reminder = `${data.meetingDate}T${data.meetingTime}:00`;
+              setContactNotes(prev => ({
+                ...prev,
+                [contactObj.id]: [...(prev[contactObj.id] || []), { id: Date.now(), text: meetingText, date: now.toLocaleDateString("en-AU", { day: "numeric", month: "short" }), author: currentUser.name, type: "meeting", reminder }]
+              }));
+            }
             if (data.nextStep && data.nextDate && contactObj) {
               setContactNotes(prev => ({
                 ...prev,
-                [contactObj.id]: [...(prev[contactObj.id] || []), { id: Date.now(), text: data.nextStep, date: now.toLocaleDateString("en-AU", { day: "numeric", month: "short" }), author: currentUser.name, type: "follow_up", reminder: data.nextDate }]
+                [contactObj.id]: [...(prev[contactObj.id] || []), { id: Date.now() + 1, text: data.nextStep, date: now.toLocaleDateString("en-AU", { day: "numeric", month: "short" }), author: currentUser.name, type: "follow_up", reminder: data.nextDate }]
               }));
             }
           }} />
