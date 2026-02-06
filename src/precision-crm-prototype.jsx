@@ -9,7 +9,7 @@ import {
   ChevronRight, Eye, Settings, ArrowRight, Search, Building2,
   Mail, MapPin, DollarSign, Briefcase, BookOpen, StickyNote,
   Lock, Shield, Upload, Download, Columns, UserPlus, ToggleLeft,
-  ToggleRight, LogOut, Bell
+  ToggleRight, LogOut, Bell, Trophy
 } from "lucide-react";
 
 // ============================================================
@@ -1122,14 +1122,14 @@ function ContactsView({ onNewContact, onNewDeal, onAddNote, onLogCall, isMobile,
 // REP VIEW
 // ============================================================
 
-function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, isMobile, userName, currentUser, activityLog, contactNotes }) {
+function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, isMobile, userName, currentUser, activityLog, contactNotes, pipelineDeals }) {
   const repEntry = REPS.find(r => r.name === currentUser?.name);
   const repMetrics = repEntry ? METRICS[repEntry.id] : null;
   const dailyPct = Math.min((callsLogged / DAILY_TARGET) * 100, 100);
   const weeklyPct = Math.min((callsLogged / WEEKLY_TARGET) * 100, 100);
   const meetingsSet = activityLog.filter(c => c.activityType === "call" && c.outcome === "meeting").length;
   const newContactsCount = activityLog.filter(a => a.activityType === "new_contact").length;
-  const quoteRequests = PIPELINE_DEALS.filter(d => d.stage === "quote_request" && d.owner === currentUser?.name).length;
+  const quoteRequests = pipelineDeals.filter(d => d.stage === "quote_request" && d.owner === currentUser?.name).length;
 
   const [checkedTodos, setCheckedTodos] = useState({});
 
@@ -1528,12 +1528,13 @@ function ManagerDashboard({ isMobile, currentUser }) {
 // PIPELINE VIEW
 // ============================================================
 
-function PipelineView({ isMobile, currentUser, onDealWon, onDealLost }) {
+function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDeals }) {
   const isRepOnly = currentUser.role === "rep";
   const [selectedRep, setSelectedRep] = useState(isRepOnly ? currentUser.name : "all");
   const [timePeriod, setTimePeriod] = useState("all");
   const [lostModal, setLostModal] = useState(null);
   const [closeModal, setCloseModal] = useState(null);
+  const [wonModal, setWonModal] = useState(null);
   const [showGraveyard, setShowGraveyard] = useState(false);
 
   const timePeriods = [
@@ -1557,7 +1558,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost }) {
   const now = new Date("2026-02-04T14:00:00");
   const selectedPeriod = timePeriods.find(p => p.key === timePeriod);
   const cutoffDate = selectedPeriod?.days ? new Date(now.getTime() - selectedPeriod.days * 86400000) : null;
-  const filteredDeals = PIPELINE_DEALS.filter(d => {
+  const filteredDeals = pipelineDeals.filter(d => {
     if (selectedRep !== "all" && d.owner !== selectedRep) return false;
     if (cutoffDate && d.nextDate && new Date(d.nextDate) < cutoffDate) return false;
     return true;
@@ -1570,7 +1571,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost }) {
   const totalLost = lostDeals.reduce((s, d) => s + d.value, 0);
   const closedDeals = filteredDeals.filter(d => d.stage === "closed");
 
-  const repNames = [...new Set(PIPELINE_DEALS.map(d => d.owner))].sort();
+  const repNames = [...new Set(pipelineDeals.map(d => d.owner))].sort();
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? "space-y-4" : "space-y-6"}`}>
@@ -1661,7 +1662,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost }) {
                       {d.stage === "awaiting_approval" && (
                         <div className="flex gap-1.5 mt-2">
                           <button onClick={() => setLostModal(d)} className="flex-1 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition">Lost</button>
-                          <button onClick={() => onDealWon && onDealWon(d)} className="flex-1 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition">Won</button>
+                          <button onClick={() => { setWonModal(d); if (onDealWon) onDealWon(d); }} className="flex-1 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition">Won</button>
                         </div>
                       )}
                     </div>
@@ -1777,6 +1778,11 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost }) {
       {closeModal && (
         <CloseDealModal deal={closeModal} onClose={() => setCloseModal(null)} />
       )}
+
+      {/* Won Celebration */}
+      {wonModal && (
+        <WonCelebrationModal deal={wonModal} onClose={() => setWonModal(null)} />
+      )}
     </div>
   );
 }
@@ -1881,6 +1887,65 @@ function CloseDealModal({ deal, onClose }) {
         </div>
       )}
     </Modal>
+  );
+}
+
+
+// ============================================================
+// WON DEAL CELEBRATION MODAL
+// ============================================================
+
+function WonCelebrationModal({ deal, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(() => onClose(), 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const confettiColors = ["#16a34a", "#facc15", "#f97316", "#06b6d4", "#a855f7", "#ec4899", "#22c55e"];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {confettiColors.flatMap((color, ci) =>
+          Array.from({ length: 6 }, (_, i) => (
+            <div key={`${ci}-${i}`} className="absolute w-2.5 h-2.5 rounded-full opacity-0"
+              style={{
+                backgroundColor: color,
+                left: `${8 + ci * 13 + i * 3}%`,
+                animation: `confettiFall ${1.8 + i * 0.3}s ease-out ${i * 0.1}s forwards`,
+              }} />
+          ))
+        )}
+      </div>
+      <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center transform animate-bounce-in">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-200">
+          <Trophy size={36} className="text-white" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-1">Deal Won!</h2>
+        <p className="text-slate-500 mb-5">Great work closing this one</p>
+        <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200 p-5 mb-5">
+          <p className="text-sm font-semibold text-slate-700">{deal.title}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{deal.contact} – {deal.company}</p>
+          <p className="text-3xl font-bold text-emerald-600 mt-3">{formatCurrency(deal.value)}</p>
+        </div>
+        <p className="text-xs text-slate-400">This window will close automatically</p>
+      </div>
+      <style>{`
+        @keyframes confettiFall {
+          0% { top: -5%; opacity: 1; transform: rotate(0deg) scale(1); }
+          50% { opacity: 1; transform: rotate(180deg) scale(1.2); }
+          100% { top: 105%; opacity: 0; transform: rotate(360deg) scale(0.5); }
+        }
+        @keyframes bounceIn {
+          0% { opacity: 0; transform: scale(0.3); }
+          50% { opacity: 1; transform: scale(1.05); }
+          70% { transform: scale(0.95); }
+          100% { transform: scale(1); }
+        }
+        .animate-bounce-in { animation: bounceIn 0.5s ease-out forwards; }
+      `}</style>
+    </div>
   );
 }
 
@@ -2200,6 +2265,7 @@ export default function PrecisionCRM() {
   const [dealContactId, setDealContactId] = useState(null);
   const [activityLog, setActivityLog] = useState([]);
   const [contactNotes, setContactNotes] = useState(CONTACT_NOTES);
+  const [pipelineDeals, setPipelineDeals] = useState(PIPELINE_DEALS);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
   useEffect(() => {
@@ -2380,16 +2446,18 @@ export default function PrecisionCRM() {
         {/* Main Content */}
         <main className={`flex-1 overflow-y-auto ${isMobile ? "p-4" : "p-6 lg:p-8"}`}>
           {activeView === "rep" && (
-            <RepView callsLogged={callsLogged} onLogCall={() => setShowCallModal(true)} onNewDeal={() => openDealModal()} onAddNote={() => setShowNoteModal(true)} onNewContact={() => setShowContactModal(true)} isMobile={isMobile} userName={currentUser.name.split(" ")[0]} currentUser={currentUser} activityLog={activityLog} contactNotes={contactNotes} />
+            <RepView callsLogged={callsLogged} onLogCall={() => setShowCallModal(true)} onNewDeal={() => openDealModal()} onAddNote={() => setShowNoteModal(true)} onNewContact={() => setShowContactModal(true)} isMobile={isMobile} userName={currentUser.name.split(" ")[0]} currentUser={currentUser} activityLog={activityLog} contactNotes={contactNotes} pipelineDeals={pipelineDeals} />
           )}
           {activeView === "contacts" && (
             <ContactsView onNewContact={() => setShowContactModal(true)} onNewDeal={(contactId) => openDealModal(contactId)} onAddNote={() => setShowNoteModal(true)} onLogCall={() => setShowCallModal(true)} isMobile={isMobile} currentUser={currentUser} />
           )}
-          {activeView === "pipeline" && <PipelineView isMobile={isMobile} currentUser={currentUser} onDealWon={(d) => {
+          {activeView === "pipeline" && <PipelineView isMobile={isMobile} currentUser={currentUser} pipelineDeals={pipelineDeals} onDealWon={(d) => {
+            setPipelineDeals(prev => prev.map(deal => deal.id === d.id ? { ...deal, stage: "won" } : deal));
             const now = new Date();
             const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
             setActivityLog(prev => [{ id: Date.now(), activityType: "deal_won", contact: d.contact, company: d.company, summary: `Deal won: "${d.title}" – ${formatCurrency(d.value)}`, time: timeStr }, ...prev]);
           }} onDealLost={(d) => {
+            setPipelineDeals(prev => prev.map(deal => deal.id === d.id ? { ...deal, stage: "lost" } : deal));
             const now = new Date();
             const timeStr = now.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
             setActivityLog(prev => [{ id: Date.now(), activityType: "deal_lost", contact: d.contact, company: d.company, summary: `Deal lost: "${d.title}" – ${formatCurrency(d.value)}`, time: timeStr }, ...prev]);
