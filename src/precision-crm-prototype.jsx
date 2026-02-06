@@ -1792,7 +1792,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
                           <button onClick={() => setLostModal(d)} className="flex-1 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition">
                             Lost
                           </button>
-                          <button className="flex-1 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition">
+                          <button onClick={() => { setWonModal(d); if (onDealWon) onDealWon(d); }} className="flex-1 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition">
                             Won
                           </button>
                         </div>
