@@ -1684,6 +1684,16 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
                         <span className="text-sm font-bold text-slate-700">{formatCurrency(d.value)}</span>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">{d.contact} – {d.company}</p>
+                      {d.quoteSentAt && (
+                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                          <Send size={10} />Sent {formatReminderDate(d.quoteSentAt)}
+                        </p>
+                      )}
+                      {d.quoteRequestedAt && !d.quoteSentAt && (
+                        <p className="text-xs text-violet-500 mt-1 flex items-center gap-1">
+                          <Clock size={10} />Requested {formatReminderDate(d.quoteRequestedAt)}
+                        </p>
+                      )}
                       {d.nextAction && <p className="text-xs text-slate-400 mt-1">{d.nextAction}</p>}
                       {d.stage === "lost" && d.lostReason && (
                         <p className="text-xs text-rose-500 mt-1">Reason: {LOST_REASONS.find(r => r.key === d.lostReason)?.label || d.lostReason}</p>
@@ -1749,6 +1759,16 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
                         <span className="text-sm font-bold text-slate-700">{formatCurrency(d.value)}</span>
                         <span className="text-xs text-slate-400">{d.owner?.split(" ")[0]}</span>
                       </div>
+                      {d.quoteSentAt && (
+                        <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+                          <Send size={10} />Sent {formatReminderDate(d.quoteSentAt)}
+                        </p>
+                      )}
+                      {d.quoteRequestedAt && !d.quoteSentAt && (
+                        <p className="text-xs text-violet-500 mt-1.5 flex items-center gap-1">
+                          <Clock size={10} />Requested {formatReminderDate(d.quoteRequestedAt)}
+                        </p>
+                      )}
                       {d.nextAction && !["won", "lost", "closed"].includes(d.stage) && (
                         <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
                           <ArrowRight size={10} />{d.nextAction}
