@@ -116,17 +116,20 @@ function getReminderDate(presetKey, fromDate) {
 function formatReminderDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
+  const now = new Date();
+  const isToday = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const yy = String(d.getFullYear()).slice(-2);
+  const datePart = isToday ? "Today" : `${dd}/${mm}/${yy}`;
   if (dateStr.includes("T")) {
     const hh = d.getHours();
     const min = String(d.getMinutes()).padStart(2, "0");
     const ampm = hh >= 12 ? "pm" : "am";
     const hh12 = hh % 12 || 12;
-    return `${dd}/${mm}/${yy} ${hh12}:${min}${ampm}`;
+    return `${datePart} ${hh12}:${min}${ampm}`;
   }
-  return `${dd}/${mm}/${yy}`;
+  return datePart;
 }
 
 function noteTypeConfig(typeKey) {
