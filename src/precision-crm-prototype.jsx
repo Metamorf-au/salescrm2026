@@ -1158,7 +1158,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
       <div className={isMobile ? "space-y-3" : "flex items-center justify-between"}>
         <div>
           <h1 className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-slate-800`}>Good morning, {userName}</h1>
-          <p className="text-slate-500 mt-0.5 text-sm">Wednesday, 4 February 2026</p>
+          <p className="text-slate-500 mt-0.5 text-sm">{new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
         </div>
         <div className={`${isMobile ? "grid grid-cols-2" : "flex items-center"} gap-2`}>
           <button onClick={onAddNote}
@@ -1391,7 +1391,7 @@ function ManagerDashboard({ isMobile, currentUser }) {
       <div className={isMobile ? "space-y-3" : "flex items-center justify-between"}>
         <div>
           <h1 className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-slate-800`}>KPI Dashboard</h1>
-          <p className="text-slate-500 mt-0.5 text-sm">Wednesday, 4 February 2026 – Real-time overview</p>
+          <p className="text-slate-500 mt-0.5 text-sm">{new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} – Real-time overview</p>
         </div>
         <div className="flex items-center gap-2">
           {!isRepOnly && (
