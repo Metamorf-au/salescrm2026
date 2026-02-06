@@ -49,7 +49,7 @@ const CONTACTS = [
 
 const DEALS = [
   { id: 1, title: "Bulk supply agreement", contact: "David Harrison", company: "Apex Building Solutions", stage: "quote_request", value: 48000, nextAction: "Send revised quote", nextDate: "2026-02-05", owner: "Sarah Mitchell", quoteRequestedAt: "2026-02-04T09:15:00" },
-  { id: 2, title: "Fleet maintenance contract", contact: "Lisa Tran", company: "Pacific Coast Logistics", stage: "awaiting_approval", value: 32000, nextAction: "Confirm pricing terms", nextDate: "2026-02-06", owner: "Sarah Mitchell", quoteSentAt: "2026-02-03T14:00:00" },
+  { id: 2, title: "Fleet maintenance contract", contact: "Lisa Tran", company: "Pacific Coast Logistics", stage: "quote_sent", value: 32000, nextAction: "Confirm pricing terms", nextDate: "2026-02-06", owner: "Sarah Mitchell", quoteSentAt: "2026-02-03T14:00:00" },
   { id: 3, title: "Site equipment package", contact: "Mark O'Brien", company: "Southern Cross Engineering", stage: "discovery", value: 15500, nextAction: "Demo Thursday 2pm", nextDate: "2026-02-06", owner: "Sarah Mitchell" },
   { id: 4, title: "Annual supply renewal", contact: "Tom Kessler", company: "Greenfield Agricultural", stage: "discovery", value: 22000, nextAction: "Re-engage – send update", nextDate: "2026-02-04", owner: "Sarah Mitchell" },
   { id: 6, title: "Window hardware upgrade", contact: "Steve Malone", company: "Eastside Commercial", stage: "quote_request", value: 8750, nextAction: "Site assessment", nextDate: "2026-02-07", owner: "Marcus Webb", quoteRequestedAt: "2026-02-03T13:15:00" },
@@ -204,7 +204,7 @@ const ADMIN_USERS = [
   { id: 10, name: "Bill Thompson", email: "bill.t@precisiongroup.com.au", role: "admin", status: "active", lastLogin: "Today, 6:30 AM", created: "10 Jan 2026" },
 ];
 
-const PIPELINE_STAGES = ["discovery", "quote_request", "quote_sent", "awaiting_approval", "won", "lost", "closed"];
+const PIPELINE_STAGES = ["discovery", "quote_request", "quote_sent", "won", "lost", "closed"];
 
 const PIPELINE_DEALS = [
   ...DEALS,
@@ -274,7 +274,6 @@ function stageConfig(stage) {
     discovery: { label: "Discovery", bg: "bg-sky-100", text: "text-sky-700" },
     quote_request: { label: "Quote Request", bg: "bg-violet-100", text: "text-violet-700" },
     quote_sent: { label: "Quote Sent", bg: "bg-amber-100", text: "text-amber-700" },
-    awaiting_approval: { label: "Under Review", bg: "bg-orange-100", text: "text-orange-700" },
     won: { label: "Won", bg: "bg-emerald-100", text: "text-emerald-700" },
     lost: { label: "Lost", bg: "bg-rose-100", text: "text-rose-700" },
     closed: { label: "Voided", bg: "bg-slate-100", text: "text-slate-600" },
@@ -569,7 +568,6 @@ function NewDealModal({ onClose, onSave, defaultContact }) {
     { key: "discovery", label: "Discovery" },
     { key: "quote_request", label: "Quote Request" },
     { key: "quote_sent", label: "Quote Sent" },
-    { key: "awaiting_approval", label: "Under Review" },
     { key: "won", label: "Won" },
     { key: "lost", label: "Lost" },
   ];
@@ -1549,8 +1547,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
   const stages = [
     { key: "discovery", label: "Discovery", color: "border-sky-400", bg: "bg-sky-50", text: "text-sky-700", weight: 0.10 },
     { key: "quote_request", label: "Quote Request", color: "border-violet-400", bg: "bg-violet-50", text: "text-violet-700", weight: 0.25 },
-    { key: "quote_sent", label: "Quote Sent", color: "border-amber-400", bg: "bg-amber-50", text: "text-amber-700", weight: 0.50 },
-    { key: "awaiting_approval", label: "Under Review", color: "border-orange-400", bg: "bg-orange-50", text: "text-orange-700", weight: 0.75 },
+    { key: "quote_sent", label: "Quote Sent", color: "border-amber-400", bg: "bg-amber-50", text: "text-amber-700", weight: 0.75 },
     { key: "won", label: "Won", color: "border-emerald-400", bg: "bg-emerald-50", text: "text-emerald-700", weight: 1.0 },
     { key: "lost", label: "Lost", color: "border-rose-400", bg: "bg-rose-50", text: "text-rose-700", weight: 0 },
   ];
@@ -1699,7 +1696,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
                           Void Deal
                         </button>
                       )}
-                      {d.stage === "awaiting_approval" && (
+                      {d.stage === "quote_sent" && (
                         <div className="flex gap-1.5 mt-2">
                           <button onClick={() => setLostModal(d)} className="flex-1 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition">Lost</button>
                           <button onClick={() => { setWonModal(d); if (onDealWon) onDealWon(d); }} className="flex-1 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition">Won</button>
@@ -1770,7 +1767,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
                           </button>
                         </div>
                       )}
-                      {d.stage === "awaiting_approval" && (
+                      {d.stage === "quote_sent" && (
                         <div className="flex gap-1.5 mt-2 pt-2 border-t border-stone-100">
                           <button onClick={() => setLostModal(d)} className="flex-1 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition">
                             Lost
@@ -2570,7 +2567,7 @@ export default function PrecisionCRM() {
             setPipelineDeals(prev => [...prev, newDeal]);
             setActivityLog(prev => {
               const entries = [{ id: Date.now(), activityType: "new_deal", contact: contactObj?.name || "Unknown", company: contactObj?.company || "", summary: `New deal: ${data.title}`, time: timeStr }];
-              if (data.stage === "quote_sent" || data.stage === "awaiting_approval") {
+              if (data.stage === "quote_sent") {
                 entries.push({ id: Date.now() + 1, activityType: "quote_sent", contact: contactObj?.name || "Unknown", company: contactObj?.company || "", summary: `Quote sent for "${data.title}"`, time: timeStr });
               }
               return [...entries, ...prev];
