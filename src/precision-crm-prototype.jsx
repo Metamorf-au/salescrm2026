@@ -1343,7 +1343,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
         </div>
         <textarea placeholder="Highlights, challenges, and plan for next week..." rows={3}
           className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none mb-3" />
-        <div className="flex justify-end">
+        <div className="flex justify-start">
           <button className="py-2.5 px-8 rounded-xl font-medium text-white bg-amber-500 hover:bg-amber-600 transition text-sm shadow-md">
             Submit Weekly Summary
           </button>
