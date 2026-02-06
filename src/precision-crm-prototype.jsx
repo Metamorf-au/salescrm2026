@@ -1694,7 +1694,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
                       {d.stage === "closed" && d.closedReason && (
                         <p className="text-xs text-slate-500 mt-1">Note: {d.closedReason}</p>
                       )}
-                      {["discovery", "quote_request", "quote_sent"].includes(d.stage) && (
+                      {["discovery", "quote_request"].includes(d.stage) && (
                         <button onClick={() => setCloseModal(d)} className="mt-2 w-full py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition">
                           Void Deal
                         </button>
@@ -1763,7 +1763,7 @@ function PipelineView({ isMobile, currentUser, onDealWon, onDealLost, pipelineDe
                       {d.stage === "closed" && d.closedReason && (
                         <p className="text-xs text-slate-500 mt-1.5">Note: {d.closedReason}</p>
                       )}
-                      {["discovery", "quote_request", "quote_sent"].includes(d.stage) && (
+                      {["discovery", "quote_request"].includes(d.stage) && (
                         <div className="mt-2 pt-2 border-t border-stone-100">
                           <button onClick={() => setCloseModal(d)} className="w-full py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition">
                             Void Deal
