@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Phone, Mail, MapPin, User, Building2, ChevronRight, Briefcase, StickyNote, ArrowRight, Bell, Pencil, Trash2 } from "lucide-react";
 import { contactStatusStyle, outcomeConfig, stageConfig, noteTypeConfig, NOTE_TYPES, REMINDER_PRESETS } from "../shared/constants";
 import { formatCurrency, formatReminderDate, getReminderDate, isOverdue } from "../shared/formatters";
+import Modal from "../shared/Modal";
 
 export default function ContactCard({ contact, deals, calls, notes, isExpanded, onToggle, onNewDeal, onAddNote, onEdit, onDelete, isSelected, onSelect, isMobile }) {
   const [noteText, setNoteText] = useState("");
@@ -68,14 +69,16 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
               {deals.length > 0 && <p className="mt-1 font-medium text-amber-600">{deals.length} deal{deals.length > 1 ? "s" : ""}</p>}
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-500 bg-white border border-stone-200 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
-                <Pencil size={11} /> Edit
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-rose-500 bg-white border border-stone-200 rounded-lg hover:border-rose-400 hover:bg-rose-50 transition">
-                <Trash2 size={11} /> Delete
-              </button>
+              <div className="flex flex-col gap-1">
+                <button onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
+                  className="flex items-center justify-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-500 bg-white border border-stone-200 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
+                  <Pencil size={11} /> Edit
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
+                  className="flex items-center justify-center gap-1 px-2.5 py-1 text-xs font-medium text-rose-500 bg-white border border-stone-200 rounded-lg hover:border-rose-400 hover:bg-rose-50 transition">
+                  <Trash2 size={11} /> Delete
+                </button>
+              </div>
               <ChevronRight size={16} className={`text-slate-300 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
             </div>
           </div>
@@ -87,16 +90,19 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
           <span className="flex items-center gap-1"><User size={12} /> {contact.owner}</span>
         </div>
 
-        {/* Delete Confirmation */}
-        {showDeleteConfirm && (
-          <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl" onClick={e => e.stopPropagation()}>
-            <p className="text-sm text-rose-700 mb-2.5">
-              Delete <strong>{contact.name}</strong>? This removes all their calls and notes and cannot be undone.
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <Modal title="Delete Contact" onClose={() => setShowDeleteConfirm(false)}>
+          <div className="px-6 py-5">
+            <p className="text-sm text-slate-700 mb-4">
+              Are you sure you want to delete <strong>{contact.name}</strong>? This will also remove all their calls and notes. This cannot be undone.
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)}
                 disabled={deleting}
-                className="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-stone-200 hover:bg-stone-50 transition disabled:opacity-50">
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-stone-200 hover:bg-stone-50 transition disabled:opacity-50">
                 Cancel
               </button>
               <button onClick={async () => {
@@ -104,15 +110,16 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
                   try { await onDelete(contact.id, contact.name, contact.company); }
                   catch (err) { console.error(err); }
                   setDeleting(false);
+                  setShowDeleteConfirm(false);
                 }}
                 disabled={deleting}
-                className="flex-1 py-2 rounded-lg text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 transition disabled:opacity-50">
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 transition disabled:opacity-50">
                 {deleting ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </Modal>
+      )}
 
       {/* Expanded Section */}
       {isExpanded && (
