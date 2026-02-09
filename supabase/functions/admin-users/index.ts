@@ -172,6 +172,72 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── UPDATE USER ────────────────────────────────────────
+    if (action === "update-user") {
+      const { userId, name, email, role, phone } = body;
+
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "userId is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (role && !["rep", "manager", "admin"].includes(role)) {
+        return new Response(JSON.stringify({ error: "Invalid role" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Update auth email if changed (triggers change email confirmation)
+      if (email) {
+        const { error: emailErr } = await adminClient.auth.admin.updateUserById(userId, {
+          email,
+        });
+        if (emailErr) {
+          return new Response(JSON.stringify({ error: emailErr.message }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      // Update user metadata in auth (name, phone)
+      const metadata: Record<string, string> = {};
+      if (name) metadata.name = name;
+      if (phone !== undefined) metadata.phone = phone;
+      if (Object.keys(metadata).length > 0) {
+        await adminClient.auth.admin.updateUserById(userId, {
+          user_metadata: metadata,
+        });
+      }
+
+      // Update profile record
+      const profileUpdate: Record<string, string> = {};
+      if (name) profileUpdate.name = name;
+      if (email) profileUpdate.email = email;
+      if (role) profileUpdate.role = role;
+
+      if (Object.keys(profileUpdate).length > 0) {
+        const { error: profileErr } = await adminClient
+          .from("profiles")
+          .update(profileUpdate)
+          .eq("id", userId);
+
+        if (profileErr) {
+          return new Response(JSON.stringify({ error: profileErr.message }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, message: "User updated" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ── DELETE USER ──────────────────────────────────────────
     if (action === "delete") {
       const { userId } = body;
