@@ -2528,6 +2528,171 @@ function AddUserModal({ onClose }) {
 
 
 // ============================================================
+// MY PROFILE MODAL
+// ============================================================
+
+function MyProfileModal({ currentUser, onClose, onProfileUpdate }) {
+  const [name, setName] = useState(currentUser.name || "");
+  const [email, setEmail] = useState(currentUser.email || "");
+  const [phone, setPhone] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("details"); // "details" | "password"
+
+  const emailChanged = email !== currentUser.email;
+
+  async function handleSaveDetails() {
+    setError("");
+    setSaving(true);
+
+    try {
+      // Update name in profiles table
+      if (name !== currentUser.name) {
+        const { error: profileErr } = await supabase
+          .from("profiles")
+          .update({ name })
+          .eq("id", currentUser.id);
+        if (profileErr) throw new Error(profileErr.message);
+      }
+
+      // Update email via Supabase Auth (triggers confirmation email)
+      if (emailChanged) {
+        const { error: emailErr } = await supabase.auth.updateUser({ email });
+        if (emailErr) throw new Error(emailErr.message);
+      }
+
+      setSaved(true);
+      if (onProfileUpdate) onProfileUpdate();
+      setTimeout(() => onClose(), 1500);
+    } catch (err) {
+      setError(err.message);
+    }
+    setSaving(false);
+  }
+
+  async function handleChangePassword() {
+    setError("");
+
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Verify current password by re-authenticating
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: currentUser.email,
+        password: currentPassword,
+      });
+      if (signInErr) throw new Error("Current password is incorrect");
+
+      // Update to new password
+      const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateErr) throw new Error(updateErr.message);
+
+      setSaved(true);
+      setTimeout(() => onClose(), 1500);
+    } catch (err) {
+      setError(err.message);
+    }
+    setSaving(false);
+  }
+
+  return (
+    <Modal title="My Profile" onClose={onClose}>
+      {saved ? (
+        <SuccessScreen message={activeTab === "details" ? "Profile Updated" : "Password Changed"}
+          sub={activeTab === "details" && emailChanged ? `A confirmation email has been sent to ${email}.` : "Your changes have been saved."} />
+      ) : (
+        <div className="overflow-y-auto" style={{ maxHeight: "calc(90vh - 140px)" }}>
+          {/* Tabs */}
+          <div className="flex border-b border-stone-200">
+            <button onClick={() => { setActiveTab("details"); setError(""); }}
+              className={`flex-1 py-3 text-sm font-medium transition ${activeTab === "details" ? "text-amber-600 border-b-2 border-amber-500" : "text-slate-400 hover:text-slate-600"}`}>
+              Details
+            </button>
+            <button onClick={() => { setActiveTab("password"); setError(""); }}
+              className={`flex-1 py-3 text-sm font-medium transition ${activeTab === "password" ? "text-amber-600 border-b-2 border-amber-500" : "text-slate-400 hover:text-slate-600"}`}>
+              Change Password
+            </button>
+          </div>
+
+          <div className="px-6 py-5 space-y-4">
+            {error && (
+              <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>
+            )}
+
+            {activeTab === "details" ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Full Name</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Email</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+                  {emailChanged && (
+                    <p className="text-xs text-amber-600 mt-1.5">A confirmation email will be sent to verify the new address.</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Role</label>
+                  <div className="px-3 py-2.5 bg-stone-100 border border-stone-200 rounded-xl text-slate-500 text-sm">
+                    {currentUser.role === "admin" ? "Administrator" : currentUser.role === "manager" ? "Sales Manager" : "Sales Representative"}
+                    <span className="text-xs text-slate-400 ml-2">(contact admin to change)</span>
+                  </div>
+                </div>
+                <button onClick={handleSaveDetails} disabled={!name || !email || saving}
+                  className="w-full py-3 rounded-xl font-semibold text-white transition bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed">
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Current Password</label>
+                  <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
+                    placeholder="Enter your current password"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">New Password</label>
+                  <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Minimum 8 characters"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Confirm New Password</label>
+                  <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+                </div>
+                <button onClick={handleChangePassword} disabled={!currentPassword || !newPassword || !confirmPassword || saving}
+                  className="w-full py-3 rounded-xl font-semibold text-white transition bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed">
+                  {saving ? "Changing..." : "Change Password"}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+
+// ============================================================
 // EDIT USER MODAL
 // ============================================================
 
@@ -2726,6 +2891,8 @@ export default function PrecisionCRM() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showDealModal, setShowDealModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showMyProfile, setShowMyProfile] = useState(false);
+  const [showMobileProfileMenu, setShowMobileProfileMenu] = useState(false);
   const [dealContactId, setDealContactId] = useState(null);
   const [activityLog, setActivityLog] = useState([]);
   const [contactNotes, setContactNotes] = useState(CONTACT_NOTES);
@@ -2920,7 +3087,7 @@ export default function PrecisionCRM() {
             <div className="px-3 pb-4">
               <div className="px-3 py-3 rounded-xl bg-slate-800 text-slate-400 text-xs">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div onClick={() => setShowMyProfile(true)} className="cursor-pointer hover:opacity-80 transition flex-1">
                     <p className="text-white font-medium text-sm">{currentUser.name}</p>
                     <p className="mt-0.5">{currentUser.role === "admin" ? "Administrator" : currentUser.role === "manager" ? "Sales Manager" : "Sales Representative"}</p>
                   </div>
@@ -2937,13 +3104,13 @@ export default function PrecisionCRM() {
         {isMobile && (
           <nav className="bg-slate-900 border-b border-slate-800 flex-shrink-0">
             <div className="flex items-center justify-between px-3 py-2">
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <div className="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center">
-                  <Target size={14} className="text-white" />
-                </div>
-                <span className="text-white font-bold text-sm">Precision</span>
-              </div>
               <div className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-0.5 px-2 py-1.5">
+                  <div className="w-5 h-5 rounded-md bg-amber-500 flex items-center justify-center">
+                    <Target size={12} className="text-white" />
+                  </div>
+                  <span className="text-[10px] font-bold text-amber-400">Precision</span>
+                </div>
                 {navItems.map(item => {
                   const Icon = item.icon;
                   const active = activeView === item.key;
@@ -2957,11 +3124,24 @@ export default function PrecisionCRM() {
                     </button>
                   );
                 })}
-                <button onClick={handleLogout}
-                  className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition text-slate-500 hover:text-rose-400">
-                  <LogOut size={18} />
-                  <span className="text-[10px] font-medium">Sign Out</span>
+              </div>
+              <div className="relative">
+                <button onClick={() => setShowMobileProfileMenu(!showMobileProfileMenu)}
+                  className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-amber-400 hover:bg-slate-600 transition">
+                  {currentUser.initials}
                 </button>
+                {showMobileProfileMenu && (
+                  <div className="absolute right-0 top-10 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-44">
+                    <button onClick={() => { setShowMobileProfileMenu(false); setShowMyProfile(true); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left">
+                      <User size={14} className="text-slate-400" />My Profile
+                    </button>
+                    <button onClick={() => { setShowMobileProfileMenu(false); handleLogout(); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition text-left">
+                      <LogOut size={14} />Sign Out
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </nav>
@@ -2991,6 +3171,9 @@ export default function PrecisionCRM() {
         </main>
 
         {/* Modals */}
+        {showMyProfile && (
+          <MyProfileModal currentUser={currentUser} onClose={() => setShowMyProfile(false)} onProfileUpdate={() => loadProfile(currentUser.id)} />
+        )}
         {showCallModal && (
           <CallLogModal onClose={() => setShowCallModal(false)} onSave={(data) => {
             setCallsLogged(prev => prev + 1);
