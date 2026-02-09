@@ -64,10 +64,20 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right text-xs text-slate-400">
-              <p>{contact.lastContact}</p>
+              <p>Last contact: {contact.lastContact}</p>
               {deals.length > 0 && <p className="mt-1 font-medium text-amber-600">{deals.length} deal{deals.length > 1 ? "s" : ""}</p>}
             </div>
-            <ChevronRight size={16} className={`text-slate-300 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+            <div className="flex items-center gap-2">
+              <button onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-500 bg-white border border-stone-200 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
+                <Pencil size={11} /> Edit
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-rose-500 bg-white border border-stone-200 rounded-lg hover:border-rose-400 hover:bg-rose-50 transition">
+                <Trash2 size={11} /> Delete
+              </button>
+              <ChevronRight size={16} className={`text-slate-300 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+            </div>
           </div>
         </div>
         <div className={`grid ${isMobile ? "grid-cols-1 gap-1.5" : "grid-cols-2 gap-x-4 gap-y-1.5"} mt-3 text-xs text-slate-500`}>
@@ -76,50 +86,37 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
           <span className="flex items-center gap-1"><MapPin size={12} /> {contact.location}</span>
           <span className="flex items-center gap-1"><User size={12} /> {contact.owner}</span>
         </div>
+
+        {/* Delete Confirmation */}
+        {showDeleteConfirm && (
+          <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl" onClick={e => e.stopPropagation()}>
+            <p className="text-sm text-rose-700 mb-2.5">
+              Delete <strong>{contact.name}</strong>? This removes all their calls and notes and cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-stone-200 hover:bg-stone-50 transition disabled:opacity-50">
+                Cancel
+              </button>
+              <button onClick={async () => {
+                  setDeleting(true);
+                  try { await onDelete(contact.id, contact.name, contact.company); }
+                  catch (err) { console.error(err); }
+                  setDeleting(false);
+                }}
+                disabled={deleting}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 transition disabled:opacity-50">
+                {deleting ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Expanded Section */}
       {isExpanded && (
         <div className="border-t border-amber-200 bg-stone-50/60">
-          {/* Edit / Delete actions */}
-          <div className="px-4 pt-3 flex items-center justify-end gap-2">
-            <button onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-stone-200 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
-              <Pencil size={12} /> Edit
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-rose-600 bg-white border border-stone-200 rounded-lg hover:border-rose-400 hover:bg-rose-50 transition">
-              <Trash2 size={12} /> Delete
-            </button>
-          </div>
-
-          {/* Delete Confirmation */}
-          {showDeleteConfirm && (
-            <div className="mx-4 mt-2 p-4 bg-rose-50 border border-rose-200 rounded-xl">
-              <p className="text-sm text-rose-700 mb-3">
-                Are you sure you want to delete <strong>{contact.name}</strong>? This will also remove all their calls and notes. This cannot be undone.
-              </p>
-              <div className="flex gap-2">
-                <button onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}
-                  disabled={deleting}
-                  className="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-stone-200 hover:bg-stone-50 transition disabled:opacity-50">
-                  Cancel
-                </button>
-                <button onClick={async (e) => {
-                    e.stopPropagation();
-                    setDeleting(true);
-                    try { await onDelete(contact.id, contact.name, contact.company); }
-                    catch (err) { console.error(err); }
-                    setDeleting(false);
-                  }}
-                  disabled={deleting}
-                  className="flex-1 py-2 rounded-lg text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 transition disabled:opacity-50">
-                  {deleting ? "Deleting..." : "Yes, Delete"}
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Recent Calls */}
           <div className="px-4 pt-4 pb-3">
             <div className="flex items-center gap-2 mb-2">

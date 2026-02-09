@@ -142,16 +142,73 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
         </div>
       </div>
 
-      {/* Select All */}
+      {/* Select All + Bulk Actions */}
       {filtered.length > 0 && (
-        <div className="flex items-center gap-3">
-          <button onClick={toggleSelectAll}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${allVisibleSelected ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-white border-stone-200 text-slate-500 hover:border-stone-300"}`}>
-            <CheckSquare size={14} />
-            {allVisibleSelected ? "Deselect All" : "Select All"}
-          </button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={toggleSelectAll}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${allVisibleSelected ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-white border-stone-200 text-slate-500 hover:border-stone-300"}`}>
+              <CheckSquare size={14} />
+              {allVisibleSelected ? "Deselect All" : "Select All"}
+            </button>
+            {selectedIds.size > 0 && (
+              <span className="text-xs text-slate-500">{selectedIds.size} selected</span>
+            )}
+          </div>
+
           {selectedIds.size > 0 && (
-            <span className="text-xs text-slate-500">{selectedIds.size} selected</span>
+            <div className="flex items-center gap-2">
+              {!bulkAction && (
+                <>
+                  {!isRepOnly && (
+                    <button onClick={() => setBulkAction("reassign")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:border-sky-400 hover:text-sky-600 transition">
+                      <UserCog size={13} /> Change Owner
+                    </button>
+                  )}
+                  <button onClick={() => setBulkAction("delete")}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-rose-600 hover:border-rose-400 hover:bg-rose-50 transition">
+                    <Trash2 size={13} /> Delete
+                  </button>
+                  <button onClick={clearSelection}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-stone-100 rounded-lg transition" title="Clear selection">
+                    <X size={14} />
+                  </button>
+                </>
+              )}
+
+              {bulkAction === "delete" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-rose-600 font-medium">Delete {selectedIds.size} contact{selectedIds.size > 1 ? "s" : ""}?</span>
+                  <button onClick={handleBulkDelete} disabled={bulkLoading}
+                    className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-xs font-semibold transition disabled:opacity-50">
+                    {bulkLoading ? "Deleting..." : "Confirm"}
+                  </button>
+                  <button onClick={() => setBulkAction(null)} disabled={bulkLoading}
+                    className="px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-stone-50 transition disabled:opacity-50">
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {bulkAction === "reassign" && (
+                <div className="flex items-center gap-2">
+                  <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
+                    className="px-2.5 py-1.5 bg-white border border-stone-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent">
+                    <option value="">Assign to...</option>
+                    {reps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                  <button onClick={handleBulkReassign} disabled={bulkLoading || !reassignTo}
+                    className="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-xs font-semibold transition disabled:opacity-50">
+                    {bulkLoading ? "Saving..." : "Confirm"}
+                  </button>
+                  <button onClick={() => { setBulkAction(null); setReassignTo(""); }} disabled={bulkLoading}
+                    className="px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-stone-50 transition disabled:opacity-50">
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -189,66 +246,6 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
         )}
       </div>
 
-      {/* Bulk Action Bar */}
-      {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
-          <div className="bg-slate-800 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4">
-            <span className="text-sm font-medium whitespace-nowrap">{selectedIds.size} selected</span>
-            <div className="w-px h-6 bg-slate-600" />
-
-            {!bulkAction && (
-              <>
-                {!isRepOnly && (
-                  <button onClick={() => setBulkAction("reassign")}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-600 rounded-lg text-xs font-medium transition">
-                    <UserCog size={14} /> Change Owner
-                  </button>
-                )}
-                <button onClick={() => setBulkAction("delete")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500 hover:bg-rose-600 rounded-lg text-xs font-medium transition">
-                  <Trash2 size={14} /> Delete
-                </button>
-              </>
-            )}
-
-            {bulkAction === "delete" && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-rose-300">Delete {selectedIds.size} contact{selectedIds.size > 1 ? "s" : ""}?</span>
-                <button onClick={handleBulkDelete} disabled={bulkLoading}
-                  className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 rounded-lg text-xs font-semibold transition disabled:opacity-50">
-                  {bulkLoading ? "Deleting..." : "Confirm"}
-                </button>
-                <button onClick={() => setBulkAction(null)} disabled={bulkLoading}
-                  className="px-2 py-1.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs transition disabled:opacity-50">
-                  Cancel
-                </button>
-              </div>
-            )}
-
-            {bulkAction === "reassign" && (
-              <div className="flex items-center gap-2">
-                <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
-                  className="px-2 py-1.5 bg-slate-700 border border-slate-600 rounded-lg text-xs text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
-                  <option value="">Assign to...</option>
-                  {reps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
-                <button onClick={handleBulkReassign} disabled={bulkLoading || !reassignTo}
-                  className="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 rounded-lg text-xs font-semibold transition disabled:opacity-50">
-                  {bulkLoading ? "Saving..." : "Confirm"}
-                </button>
-                <button onClick={() => { setBulkAction(null); setReassignTo(""); }} disabled={bulkLoading}
-                  className="px-2 py-1.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs transition disabled:opacity-50">
-                  Cancel
-                </button>
-              </div>
-            )}
-
-            <button onClick={clearSelection} className="ml-1 p-1 hover:bg-slate-700 rounded-lg transition" title="Clear selection">
-              <X size={16} />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
