@@ -2611,7 +2611,7 @@ function MyProfileModal({ currentUser, onClose, onProfileUpdate }) {
     <Modal title="My Profile" onClose={onClose}>
       {saved ? (
         <SuccessScreen message={activeTab === "details" ? "Profile Updated" : "Password Changed"}
-          sub={activeTab === "details" && emailChanged ? `A confirmation email has been sent to ${email}.` : "Your changes have been saved."} />
+          sub={activeTab === "details" && emailChanged ? `Check ${email} for a confirmation link to complete the email change.` : "Your changes have been saved."} />
       ) : (
         <div className="overflow-y-auto" style={{ maxHeight: "calc(90vh - 140px)" }}>
           {/* Tabs */}
@@ -2913,12 +2913,19 @@ export default function PrecisionCRM() {
       else setAuthLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       if (event === "PASSWORD_RECOVERY") {
         setRecoveryMode(true);
         setAuthLoading(false);
         return;
+      }
+      // Sync email to profiles table after user confirms email change
+      if (event === "USER_UPDATED" && session) {
+        await supabase
+          .from("profiles")
+          .update({ email: session.user.email })
+          .eq("id", session.user.id);
       }
       if (session) loadProfile(session.user.id);
       else {
@@ -3103,14 +3110,14 @@ export default function PrecisionCRM() {
         {/* Top Tab Bar - mobile only */}
         {isMobile && (
           <nav className="bg-slate-900 border-b border-slate-800 flex-shrink-0">
-            <div className="flex items-center justify-between px-3 py-2">
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col items-center gap-0.5 px-2 py-1.5">
-                  <div className="w-5 h-5 rounded-md bg-amber-500 flex items-center justify-center">
-                    <Target size={12} className="text-white" />
-                  </div>
-                  <span className="text-[10px] font-bold text-amber-400">Precision</span>
+            <div className="flex items-center px-3 py-2">
+              <div className="flex flex-col items-center gap-0.5 px-2 py-1.5 mr-auto">
+                <div className="w-5 h-5 rounded-md bg-amber-500 flex items-center justify-center">
+                  <Target size={12} className="text-white" />
                 </div>
+                <span className="text-[10px] font-bold text-white">Precision</span>
+              </div>
+              <div className="flex items-center gap-3">
                 {navItems.map(item => {
                   const Icon = item.icon;
                   const active = activeView === item.key;
@@ -3124,24 +3131,24 @@ export default function PrecisionCRM() {
                     </button>
                   );
                 })}
-              </div>
-              <div className="relative">
-                <button onClick={() => setShowMobileProfileMenu(!showMobileProfileMenu)}
-                  className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-amber-400 hover:bg-slate-600 transition">
-                  {currentUser.initials}
-                </button>
-                {showMobileProfileMenu && (
-                  <div className="absolute right-0 top-10 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-44">
-                    <button onClick={() => { setShowMobileProfileMenu(false); setShowMyProfile(true); }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left">
-                      <User size={14} className="text-slate-400" />My Profile
-                    </button>
-                    <button onClick={() => { setShowMobileProfileMenu(false); handleLogout(); }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition text-left">
-                      <LogOut size={14} />Sign Out
-                    </button>
-                  </div>
-                )}
+                <div className="relative">
+                  <button onClick={() => setShowMobileProfileMenu(!showMobileProfileMenu)}
+                    className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-amber-400 hover:bg-slate-600 transition">
+                    {currentUser.initials}
+                  </button>
+                  {showMobileProfileMenu && (
+                    <div className="absolute right-0 top-10 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-44">
+                      <button onClick={() => { setShowMobileProfileMenu(false); setShowMyProfile(true); }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left">
+                        <User size={14} className="text-slate-400" />My Profile
+                      </button>
+                      <button onClick={() => { setShowMobileProfileMenu(false); handleLogout(); }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition text-left">
+                        <LogOut size={14} />Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </nav>
