@@ -2892,6 +2892,7 @@ export default function PrecisionCRM() {
   const [showDealModal, setShowDealModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showMyProfile, setShowMyProfile] = useState(false);
+  const [showMobileProfileMenu, setShowMobileProfileMenu] = useState(false);
   const [dealContactId, setDealContactId] = useState(null);
   const [activityLog, setActivityLog] = useState([]);
   const [contactNotes, setContactNotes] = useState(CONTACT_NOTES);
@@ -3103,14 +3104,11 @@ export default function PrecisionCRM() {
         {isMobile && (
           <nav className="bg-slate-900 border-b border-slate-800 flex-shrink-0">
             <div className="flex items-center justify-between px-3 py-2">
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
                 <div className="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center">
                   <Target size={14} className="text-white" />
                 </div>
                 <span className="text-white font-bold text-sm">Precision</span>
-                <button onClick={() => setShowMyProfile(true)} className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-amber-400 hover:bg-slate-600 transition ml-1" title="My Profile">
-                  {currentUser.initials}
-                </button>
               </div>
               <div className="flex items-center gap-2">
                 {navItems.map(item => {
@@ -3126,11 +3124,24 @@ export default function PrecisionCRM() {
                     </button>
                   );
                 })}
-                <button onClick={handleLogout}
-                  className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition text-slate-500 hover:text-rose-400">
-                  <LogOut size={18} />
-                  <span className="text-[10px] font-medium">Sign Out</span>
-                </button>
+                <div className="relative">
+                  <button onClick={() => setShowMobileProfileMenu(!showMobileProfileMenu)}
+                    className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-amber-400 hover:bg-slate-600 transition">
+                    {currentUser.initials}
+                  </button>
+                  {showMobileProfileMenu && (
+                    <div className="absolute right-0 top-10 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-44">
+                      <button onClick={() => { setShowMobileProfileMenu(false); setShowMyProfile(true); }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left">
+                        <User size={14} className="text-slate-400" />My Profile
+                      </button>
+                      <button onClick={() => { setShowMobileProfileMenu(false); handleLogout(); }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition text-left">
+                        <LogOut size={14} />Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </nav>
