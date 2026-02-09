@@ -104,10 +104,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Use the admin client to generate a password reset link
-      const { data, error } = await adminClient.auth.admin.generateLink({
-        type: "recovery",
-        email,
+      // Use the standard auth flow which triggers the email template
+      const { error } = await adminClient.auth.resetPasswordForEmail(email, {
+        redirectTo: `${Deno.env.get("SITE_URL") || supabaseUrl}`,
       });
 
       if (error) {
@@ -116,9 +115,6 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-
-      // Also send the reset email via the standard flow
-      await adminClient.auth.resetPasswordForEmail(email);
 
       return new Response(JSON.stringify({ success: true, message: "Password reset email sent" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

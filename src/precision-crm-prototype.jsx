@@ -2110,7 +2110,7 @@ function AdminView({ isMobile, currentUser }) {
       showFeedback("error", err.message);
     }
     setActionLoading(false);
-    setUserMenu(null);
+    setConfirmAction(null);
   }
 
   async function handleDisableEnable(user) {
@@ -2231,8 +2231,8 @@ function AdminView({ isMobile, currentUser }) {
                           </button>
                           {userMenu === u.id && (
                             <div className="absolute right-0 bottom-full mb-1 z-30 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-48">
-                              <button onClick={() => handleResetPassword(u)} disabled={actionLoading}
-                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left disabled:opacity-50">
+                              <button onClick={() => { setConfirmAction({ type: "reset-password", user: u }); setUserMenu(null); }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left">
                                 <Lock size={14} className="text-slate-400" />Reset Password
                               </button>
                               {!isCurrentUser(u) && (
@@ -2277,8 +2277,8 @@ function AdminView({ isMobile, currentUser }) {
                       </button>
                       {userMenu === u.id && (
                         <div className="absolute right-0 bottom-full mb-1 z-30 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-48">
-                          <button onClick={() => handleResetPassword(u)} disabled={actionLoading}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left disabled:opacity-50">
+                          <button onClick={() => { setConfirmAction({ type: "reset-password", user: u }); setUserMenu(null); }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left">
                             <Lock size={14} className="text-slate-400" />Reset Password
                           </button>
                           {!isCurrentUser(u) && (
@@ -2383,12 +2383,16 @@ function AdminView({ isMobile, currentUser }) {
 
       {/* Confirmation Modal */}
       {confirmAction && (
-        <Modal title={`${confirmAction.type === "delete" ? "Delete" : confirmAction.type === "disable" ? "Disable" : "Enable"} User`} onClose={() => setConfirmAction(null)}>
+        <Modal title={`${confirmAction.type === "delete" ? "Delete" : confirmAction.type === "disable" ? "Disable" : confirmAction.type === "reset-password" ? "Reset Password" : "Enable"} User`} onClose={() => setConfirmAction(null)}>
           <div className="px-6 py-5 space-y-4">
-            <div className={`p-4 rounded-xl ${confirmAction.type === "delete" ? "bg-rose-50 border border-rose-200" : confirmAction.type === "disable" ? "bg-amber-50 border border-amber-200" : "bg-emerald-50 border border-emerald-200"}`}>
+            <div className={`p-4 rounded-xl ${confirmAction.type === "delete" ? "bg-rose-50 border border-rose-200" : confirmAction.type === "reset-password" ? "bg-sky-50 border border-sky-200" : confirmAction.type === "disable" ? "bg-amber-50 border border-amber-200" : "bg-emerald-50 border border-emerald-200"}`}>
               {confirmAction.type === "delete" ? (
                 <p className="text-sm text-rose-700">
                   This will permanently delete <strong>{confirmAction.user.name}</strong> ({confirmAction.user.email}) and all their data. This action cannot be undone.
+                </p>
+              ) : confirmAction.type === "reset-password" ? (
+                <p className="text-sm text-sky-700">
+                  This will send a password reset email to <strong>{confirmAction.user.name}</strong> at {confirmAction.user.email}.
                 </p>
               ) : confirmAction.type === "disable" ? (
                 <p className="text-sm text-amber-700">
@@ -2405,10 +2409,10 @@ function AdminView({ isMobile, currentUser }) {
                 className="flex-1 py-3 rounded-xl font-semibold text-slate-700 bg-stone-100 hover:bg-stone-200 transition disabled:opacity-50">
                 Cancel
               </button>
-              <button onClick={() => confirmAction.type === "delete" ? handleDelete(confirmAction.user) : handleDisableEnable(confirmAction.user)}
+              <button onClick={() => confirmAction.type === "delete" ? handleDelete(confirmAction.user) : confirmAction.type === "reset-password" ? handleResetPassword(confirmAction.user) : handleDisableEnable(confirmAction.user)}
                 disabled={actionLoading}
-                className={`flex-1 py-3 rounded-xl font-semibold text-white transition disabled:opacity-50 ${confirmAction.type === "delete" ? "bg-rose-500 hover:bg-rose-600" : confirmAction.type === "disable" ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}`}>
-                {actionLoading ? "Processing..." : confirmAction.type === "delete" ? "Delete User" : confirmAction.type === "disable" ? "Disable User" : "Enable User"}
+                className={`flex-1 py-3 rounded-xl font-semibold text-white transition disabled:opacity-50 ${confirmAction.type === "delete" ? "bg-rose-500 hover:bg-rose-600" : confirmAction.type === "reset-password" ? "bg-sky-500 hover:bg-sky-600" : confirmAction.type === "disable" ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}`}>
+                {actionLoading ? "Processing..." : confirmAction.type === "delete" ? "Delete User" : confirmAction.type === "reset-password" ? "Send Reset Email" : confirmAction.type === "disable" ? "Disable User" : "Enable User"}
               </button>
             </div>
           </div>
