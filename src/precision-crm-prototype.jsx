@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "./supabaseClient";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell, CartesianGrid
 } from "recharts";
@@ -2355,8 +2356,10 @@ function AddUserModal({ onClose }) {
 // ============================================================
 
 export default function PrecisionCRM() {
+  const [authLoading, setAuthLoading] = useState(true);
+  const [session, setSession] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState({ name: "Bill Thompson", email: "bill.t@precisiongroup.com.au", role: "admin", initials: "BT" });
+  const [currentUser, setCurrentUser] = useState(null);
   const [activeView, setActiveView] = useState("rep");
   const [callsLogged, setCallsLogged] = useState(0);
   const [showCallModal, setShowCallModal] = useState(false);
@@ -2375,33 +2378,76 @@ export default function PrecisionCRM() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Supabase auth session listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) loadProfile(session.user.id);
+      else setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) loadProfile(session.user.id);
+      else {
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+        setAuthLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function loadProfile(userId) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("name, email, role, status")
+      .eq("id", userId)
+      .single();
+    if (data) {
+      const names = data.name.split(" ");
+      const initials = names.map(n => n[0]).join("").toUpperCase();
+      const user = { id: userId, name: data.name, email: data.email, role: data.role, initials };
+      setCurrentUser(user);
+      setActiveView(user.role === "admin" ? "manager" : user.role === "manager" ? "manager" : "rep");
+      setIsLoggedIn(true);
+    }
+    setAuthLoading(false);
+  }
+
   function openDealModal(contactId) {
     setDealContactId(contactId || null);
     setShowDealModal(true);
   }
 
-  function handleLogin(user) {
-    setCurrentUser(user);
-    setActiveView(user.role === "admin" ? "manager" : "rep");
-    setIsLoggedIn(true);
-    setCallsLogged(14);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    setLoginError("");
+    setLoginLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+    });
+    if (error) setLoginError(error.message);
+    setLoginLoading(false);
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    await supabase.auth.signOut();
     setActiveView("rep");
     setIsLoggedIn(false);
+    setCurrentUser(null);
   }
 
-  const isAdmin = currentUser.role === "admin";
-  const isManager = currentUser.role === "manager" || isAdmin;
-
-  const LOGIN_USERS = [
-    { name: "Bill Thompson", email: "bill.t@precisiongroup.com.au", role: "admin", title: "Admin", initials: "BT" },
-    { name: "Chris Palmer", email: "chris.p@precisiongroup.com.au", role: "manager", title: "Manager", initials: "CP" },
-    { name: "Sarah Mitchell", email: "sarah.m@precisiongroup.com.au", role: "rep", title: "Rep", initials: "SM" },
-  ];
-
-  const isRep = currentUser.role === "rep";
+  const isAdmin = currentUser?.role === "admin";
+  const isManager = currentUser?.role === "manager" || isAdmin;
+  const isRep = currentUser?.role === "rep";
   const allNavItems = [
     { key: "rep", label: "My Day", icon: User, desc: "Daily workflow", hideForAdmin: true },
     { key: "contacts", label: isRep ? "My Contacts" : "Contacts", icon: BookOpen, desc: "Client database" },
@@ -2415,7 +2461,16 @@ export default function PrecisionCRM() {
   return (
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');`}</style>
-      {!isLoggedIn ? (
+      {authLoading ? (
+        <div style={{ fontFamily: "'Outfit', sans-serif" }} className="min-h-screen bg-slate-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/20 animate-pulse">
+              <Target size={32} className="text-white" />
+            </div>
+            <p className="text-slate-400 text-sm">Loading...</p>
+          </div>
+        </div>
+      ) : !isLoggedIn ? (
         <div style={{ fontFamily: "'Outfit', sans-serif" }} className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
           <div className="w-full max-w-sm">
             <div className="text-center mb-8">
@@ -2425,36 +2480,37 @@ export default function PrecisionCRM() {
               <h1 className="text-2xl font-bold text-white">Precision</h1>
               <p className="text-slate-400 text-sm mt-1">Sales CRM</p>
             </div>
-            <div className="bg-white rounded-2xl p-6 shadow-2xl">
+            <form onSubmit={handleLogin} className="bg-white rounded-2xl p-6 shadow-2xl">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Sign in</label>
-                  <select value={currentUser.email} onChange={e => { const u = LOGIN_USERS.find(u => u.email === e.target.value); if (u) setCurrentUser(u); }}
-                    className="w-full px-3 pr-8 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer">
-                    {LOGIN_USERS.map(u => { const parts = u.name.split(" "); return <option key={u.email} value={u.email}>{parts[0]} {parts[1][0]}. – {u.title}</option>; })}
-                  </select>
-                </div>
-                <div>
                   <label className="block text-sm font-medium text-slate-600 mb-1.5">Email</label>
-                  <input type="email" value={currentUser.email} readOnly className="w-full px-3 py-2.5 bg-stone-100 border border-stone-200 rounded-xl text-slate-600 text-sm" />
+                  <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required
+                    placeholder="you@thepg.com.au"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-600 mb-1.5">Password</label>
-                  <input type="password" defaultValue="••••••••••" className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+                  <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required
+                    placeholder="Enter your password"
+                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
                 </div>
-                <button onClick={() => handleLogin(currentUser)}
-                  className="w-full py-3 rounded-xl font-semibold text-white bg-amber-500 hover:bg-amber-600 transition shadow-md">
-                  Sign In
+                {loginError && (
+                  <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                    {loginError}
+                  </div>
+                )}
+                <button type="submit" disabled={loginLoading}
+                  className="w-full py-3 rounded-xl font-semibold text-white bg-amber-500 hover:bg-amber-600 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                  {loginLoading ? "Signing in..." : "Sign In"}
                 </button>
               </div>
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-stone-100">
-                <a href="#" className="text-xs text-amber-600 hover:text-amber-700 font-medium">Forgot password?</a>
+              <div className="flex items-center justify-center mt-4 pt-4 border-t border-stone-100">
                 <div className="flex items-center gap-1.5 text-xs text-slate-400">
                   <Shield size={12} className="text-emerald-500" />
-                  Secured with 2FA
+                  Secured by Supabase
                 </div>
               </div>
-            </div>
+            </form>
             <p className="text-center text-xs text-slate-500 mt-6">&copy; 2026 Precision Group. All rights reserved.</p>
           </div>
         </div>
