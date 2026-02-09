@@ -2,9 +2,10 @@
   { "name": "Steve Morgan", "email": "steven@thepg.com.au", "role": "rep" },
   { "name": "David Craig", "email": "david@thepg.com.au", "role": "rep" },
   { "name": "Anthony Hargreaves", "email": "anthony.hargreaves@thepg.com.au", "role": "rep" }
-    { "name": "Tess Baster", "email": "tess.baster@thepg.com.au", "role": "rep" },
+  { "name": "Tess Baster", "email": "tess.baster@thepg.com.au", "role": "rep" },
   { "name": "Anthony Davis", "email": "anthony.davis@thepg.com.au", "role": "rep" },
-    { "name": "Nick Carayanis", "email": "nick@thepg.com.au", "role": "manager" },
-    { "name": "Cory Hall", "email": "cory@thepg.com.au", "role": "admin" },
-    { "name": "Bill Atta", "email": "billy@thepg.com.au", "role": "admin" },
+  { "name": "Nick Carayanis", "email": "nick@thepg.com.au", "role": "manager" },
+  { "name": "Cory Hall", "email": "cory@thepg.com.au", "role": "admin" },
+  { "name": "Bill Atta", "email": "billy@thepg.com.au", "role": "admin" },
+  { "name": "Jess Hall", "email": "jess@thepg.com.au", "role": "admin" },
 ]
