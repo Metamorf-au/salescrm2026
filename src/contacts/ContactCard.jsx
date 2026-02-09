@@ -64,7 +64,8 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
             </div>
           </div>
           <div className="text-right text-xs text-slate-400">
-            <p>Last contact: {contact.lastContact}</p>
+            <p>Last contact:</p>
+            <p>{contact.lastContact}</p>
             {deals.length > 0 && <p className="mt-1 font-medium text-amber-600">{deals.length} deal{deals.length > 1 ? "s" : ""}</p>}
           </div>
         </div>
