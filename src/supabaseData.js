@@ -37,8 +37,9 @@ export async function fetchContacts() {
   const { data, error } = await supabase
     .from("contacts")
     .select(`
-      id, first_name, last_name, email, phone, mobile, status, last_contact_at,
-      suburb, state, company_id, owner_id, created_at,
+      id, first_name, last_name, email, phone, mobile, job_title, industry,
+      address_line1, suburb, state, postcode, status, last_contact_at,
+      company_id, owner_id, created_at,
       companies(id, name),
       profiles!contacts_owner_id_fkey(id, name)
     `)
@@ -51,9 +52,16 @@ export async function fetchContacts() {
     lastName: c.last_name,
     company: c.companies?.name || "",
     companyId: c.company_id,
-    phone: c.phone || c.mobile || "",
+    phone: c.phone || "",
+    mobile: c.mobile || "",
     email: c.email || "",
-    location: [c.suburb, c.state].filter(Boolean).join(", ") || "",
+    jobTitle: c.job_title || "",
+    industry: c.industry || "",
+    addressLine1: c.address_line1 || "",
+    suburb: c.suburb || "",
+    state: c.state || "",
+    postcode: c.postcode || "",
+    location: [c.suburb, c.state, c.postcode].filter(Boolean).join(", ") || "",
     owner: c.profiles?.name || "",
     ownerId: c.owner_id,
     lastContact: formatRelativeDate(c.last_contact_at),
@@ -271,6 +279,64 @@ export async function insertContact({ firstName, lastName, email, phone, mobile,
     .single();
   if (error) throw new Error(error.message);
   return { contactId: data.id, companyId };
+}
+
+export async function updateContact(contactId, { firstName, lastName, email, phone, mobile, jobTitle, industry, companyName, addressLine1, suburb, state, postcode, ownerId }) {
+  // Find or create company
+  let companyId = null;
+  if (companyName?.trim()) {
+    const { data: existing } = await supabase
+      .from("companies")
+      .select("id")
+      .ilike("name", companyName.trim())
+      .limit(1)
+      .single();
+    if (existing) {
+      companyId = existing.id;
+    } else {
+      const { data: newCo, error: coErr } = await supabase
+        .from("companies")
+        .insert({
+          name: companyName.trim(),
+          owner_id: ownerId,
+          city: suburb?.trim() || null,
+          state: state?.trim() || null,
+          industry: industry?.trim() || null,
+        })
+        .select("id")
+        .single();
+      if (coErr) console.error("Error creating company:", coErr);
+      else companyId = newCo.id;
+    }
+  }
+  const { error } = await supabase
+    .from("contacts")
+    .update({
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      email: email?.trim() || null,
+      phone: phone?.trim() || null,
+      mobile: mobile?.trim() || null,
+      job_title: jobTitle?.trim() || null,
+      industry: industry?.trim() || null,
+      company_id: companyId,
+      address_line1: addressLine1?.trim() || null,
+      suburb: suburb?.trim() || null,
+      state: state?.trim() || null,
+      postcode: postcode?.trim() || null,
+    })
+    .eq("id", contactId);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteContact(contactId) {
+  // Delete associated notes and calls first (cascade should handle this, but be explicit)
+  await supabase.from("notes").delete().eq("contact_id", contactId);
+  await supabase.from("calls").delete().eq("contact_id", contactId);
+  // Nullify deals referencing this contact (don't delete deals)
+  await supabase.from("deals").update({ contact_id: null }).eq("contact_id", contactId);
+  const { error } = await supabase.from("contacts").delete().eq("id", contactId);
+  if (error) throw new Error(error.message);
 }
 
 export async function insertCall({ contactId, callerId, outcome, summary, calledAt }) {

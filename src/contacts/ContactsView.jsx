@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Search, Users } from "lucide-react";
 import ContactCard from "./ContactCard";
 
-export default function ContactsView({ contacts, deals, callsByContact, notesByContact, reps, currentUser, onNewContact, onNewDeal, onAddNote, onLogCall, onAddInlineNote, isMobile }) {
+export default function ContactsView({ contacts, deals, callsByContact, notesByContact, reps, currentUser, onNewContact, onNewDeal, onAddNote, onLogCall, onAddInlineNote, onEditContact, onDeleteContact, isMobile }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -91,6 +91,8 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
               onToggle={() => setExpandedId(expandedId === c.id ? null : c.id)}
               onNewDeal={onNewDeal}
               onAddNote={onAddInlineNote}
+              onEdit={onEditContact}
+              onDelete={onDeleteContact}
               isMobile={isMobile}
             />
           );

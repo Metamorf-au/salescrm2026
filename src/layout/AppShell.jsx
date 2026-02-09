@@ -4,7 +4,7 @@ import { User, BookOpen, Columns, LayoutDashboard, Settings, Target } from "luci
 import {
   fetchContacts, fetchDeals, fetchAllNotes, fetchAllCalls, fetchReps,
   fetchActivityLog, groupCallsByContact,
-  insertContact, insertCall, insertNote, insertDeal, updateDeal, insertActivity,
+  insertContact, updateContact, deleteContact, insertCall, insertNote, insertDeal, updateDeal, insertActivity,
 } from "../supabaseData";
 
 // Views
@@ -17,6 +17,7 @@ import AdminView from "../admin/AdminView";
 // Modals
 import CallLogModal from "../contacts/CallLogModal";
 import NewContactModal from "../contacts/NewContactModal";
+import EditContactModal from "../contacts/EditContactModal";
 import NewDealModal from "../deals/NewDealModal";
 import QuickNoteModal from "../contacts/QuickNoteModal";
 import MyProfileModal from "../profile/MyProfileModal";
@@ -58,6 +59,7 @@ export default function AppShell() {
   const [showDealModal, setShowDealModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showMyProfile, setShowMyProfile] = useState(false);
+  const [editContact, setEditContact] = useState(null);
   const [dealContactId, setDealContactId] = useState(null);
 
   // Responsive
@@ -231,6 +233,44 @@ export default function AppShell() {
     });
     await loadAllData();
     return result;
+  }
+
+  async function handleEditContact(contactId, data) {
+    await updateContact(contactId, {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      mobile: data.mobile,
+      jobTitle: data.jobTitle,
+      industry: data.industry,
+      companyName: data.company,
+      addressLine1: data.addressLine1,
+      suburb: data.suburb,
+      state: data.state,
+      postcode: data.postcode,
+      ownerId: currentUser.id,
+    });
+    await insertActivity({
+      userId: currentUser.id,
+      activityType: "contact_updated",
+      contactName: `${data.firstName} ${data.lastName}`,
+      companyName: data.company,
+      summary: "Contact updated",
+    });
+    await loadAllData();
+  }
+
+  async function handleDeleteContact(contactId, contactName, companyName) {
+    await deleteContact(contactId);
+    await insertActivity({
+      userId: currentUser.id,
+      activityType: "contact_updated",
+      contactName,
+      companyName,
+      summary: `Contact deleted: ${contactName}`,
+    });
+    await loadAllData();
   }
 
   async function handleSaveDeal(data) {
@@ -427,6 +467,8 @@ export default function AppShell() {
                     onAddNote={() => setShowNoteModal(true)}
                     onLogCall={() => setShowCallModal(true)}
                     onAddInlineNote={handleAddInlineNote}
+                    onEditContact={(contact) => setEditContact(contact)}
+                    onDeleteContact={handleDeleteContact}
                     isMobile={isMobile}
                   />
                 )}
@@ -466,6 +508,9 @@ export default function AppShell() {
           )}
           {showNoteModal && (
             <QuickNoteModal contacts={contacts} currentUser={currentUser} onSave={handleSaveNote} onClose={() => setShowNoteModal(false)} />
+          )}
+          {editContact && (
+            <EditContactModal contact={editContact} onSave={handleEditContact} onClose={() => setEditContact(null)} />
           )}
         </div>
       )}

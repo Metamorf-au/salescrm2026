@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { Phone, Mail, MapPin, User, Building2, ChevronRight, Briefcase, StickyNote, ArrowRight, Bell } from "lucide-react";
+import { Phone, Mail, MapPin, User, Building2, ChevronRight, Briefcase, StickyNote, ArrowRight, Bell, Pencil, Trash2 } from "lucide-react";
 import { contactStatusStyle, outcomeConfig, stageConfig, noteTypeConfig, NOTE_TYPES, REMINDER_PRESETS } from "../shared/constants";
 import { formatCurrency, formatReminderDate, getReminderDate, isOverdue } from "../shared/formatters";
 
-export default function ContactCard({ contact, deals, calls, notes, isExpanded, onToggle, onNewDeal, onAddNote, isMobile }) {
+export default function ContactCard({ contact, deals, calls, notes, isExpanded, onToggle, onNewDeal, onAddNote, onEdit, onDelete, isMobile }) {
   const [noteText, setNoteText] = useState("");
   const [noteType, setNoteType] = useState("general");
   const [reminderOn, setReminderOn] = useState(false);
   const [reminderPreset, setReminderPreset] = useState("");
   const [reminderCustom, setReminderCustom] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const cs = contactStatusStyle(contact.status);
 
@@ -76,6 +78,45 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
       {/* Expanded Section */}
       {isExpanded && (
         <div className="border-t border-amber-200 bg-stone-50/60">
+          {/* Edit / Delete actions */}
+          <div className="px-4 pt-3 flex items-center justify-end gap-2">
+            <button onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-stone-200 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
+              <Pencil size={12} /> Edit
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-rose-600 bg-white border border-stone-200 rounded-lg hover:border-rose-400 hover:bg-rose-50 transition">
+              <Trash2 size={12} /> Delete
+            </button>
+          </div>
+
+          {/* Delete Confirmation */}
+          {showDeleteConfirm && (
+            <div className="mx-4 mt-2 p-4 bg-rose-50 border border-rose-200 rounded-xl">
+              <p className="text-sm text-rose-700 mb-3">
+                Are you sure you want to delete <strong>{contact.name}</strong>? This will also remove all their calls and notes. This cannot be undone.
+              </p>
+              <div className="flex gap-2">
+                <button onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}
+                  disabled={deleting}
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-stone-200 hover:bg-stone-50 transition disabled:opacity-50">
+                  Cancel
+                </button>
+                <button onClick={async (e) => {
+                    e.stopPropagation();
+                    setDeleting(true);
+                    try { await onDelete(contact.id, contact.name, contact.company); }
+                    catch (err) { console.error(err); }
+                    setDeleting(false);
+                  }}
+                  disabled={deleting}
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 transition disabled:opacity-50">
+                  {deleting ? "Deleting..." : "Yes, Delete"}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Recent Calls */}
           <div className="px-4 pt-4 pb-3">
             <div className="flex items-center gap-2 mb-2">
