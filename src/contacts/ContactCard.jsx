@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Phone, Mail, MapPin, User, Building2, ChevronRight, Briefcase, StickyNote, ArrowRight, Bell, Pencil, Trash2 } from "lucide-react";
+import { Phone, Mail, MapPin, User, Building2, Briefcase, StickyNote, ArrowRight, Bell, Pencil, Trash2 } from "lucide-react";
 import { contactStatusStyle, outcomeConfig, stageConfig, noteTypeConfig, NOTE_TYPES, REMINDER_PRESETS } from "../shared/constants";
 import { formatCurrency, formatReminderDate, getReminderDate, isOverdue } from "../shared/formatters";
 import Modal from "../shared/Modal";
@@ -63,24 +63,9 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right text-xs text-slate-400">
-              <p>Last contact: {contact.lastContact}</p>
-              {deals.length > 0 && <p className="mt-1 font-medium text-amber-600">{deals.length} deal{deals.length > 1 ? "s" : ""}</p>}
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col gap-1">
-                <button onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
-                  className="flex items-center justify-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-500 bg-white border border-stone-200 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
-                  <Pencil size={11} /> Edit
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
-                  className="flex items-center justify-center gap-1 px-2.5 py-1 text-xs font-medium text-rose-500 bg-white border border-stone-200 rounded-lg hover:border-rose-400 hover:bg-rose-50 transition">
-                  <Trash2 size={11} /> Delete
-                </button>
-              </div>
-              <ChevronRight size={16} className={`text-slate-300 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-            </div>
+          <div className="text-right text-xs text-slate-400">
+            <p>Last contact: {contact.lastContact}</p>
+            {deals.length > 0 && <p className="mt-1 font-medium text-amber-600">{deals.length} deal{deals.length > 1 ? "s" : ""}</p>}
           </div>
         </div>
         <div className={`grid ${isMobile ? "grid-cols-1 gap-1.5" : "grid-cols-2 gap-x-4 gap-y-1.5"} mt-3 text-xs text-slate-500`}>
@@ -88,6 +73,18 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
           <a href={`mailto:${contact.email}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-slate-500 hover:text-amber-600 transition"><Mail size={12} /> {contact.email}</a>
           <span className="flex items-center gap-1"><MapPin size={12} /> {contact.location}</span>
           <span className="flex items-center gap-1"><User size={12} /> {contact.owner}</span>
+        </div>
+        <div className="flex justify-end mt-3">
+          <div className="flex flex-col gap-1">
+            <button onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
+              className="flex items-center justify-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-500 bg-white border border-stone-200 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
+              <Pencil size={11} /> Edit
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
+              className="flex items-center justify-center gap-1 px-2.5 py-1 text-xs font-medium text-rose-500 bg-white border border-stone-200 rounded-lg hover:border-rose-400 hover:bg-rose-50 transition">
+              <Trash2 size={11} /> Delete
+            </button>
+          </div>
         </div>
 
       </div>

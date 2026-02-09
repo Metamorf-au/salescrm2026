@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Users, Trash2, UserCog, X, CheckSquare } from "lucide-react";
+import { Search, Users, Trash2, UserCog, CheckSquare } from "lucide-react";
 import ContactCard from "./ContactCard";
 
 export default function ContactsView({ contacts, deals, callsByContact, notesByContact, reps, currentUser, onNewContact, onNewDeal, onAddNote, onLogCall, onAddInlineNote, onEditContact, onDeleteContact, onBulkDelete, onBulkReassign, isMobile }) {
@@ -169,10 +169,6 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
                   <button onClick={() => setBulkAction("delete")}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-rose-600 hover:border-rose-400 hover:bg-rose-50 transition">
                     <Trash2 size={13} /> Delete
-                  </button>
-                  <button onClick={clearSelection}
-                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-stone-100 rounded-lg transition" title="Clear selection">
-                    <X size={14} />
                   </button>
                 </>
               )}
