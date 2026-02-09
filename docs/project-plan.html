@@ -3,78 +3,87 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sales CRM — Implementation Project Plan</title>
+<title>Sales CRM — Approved Implementation Plan</title>
 <style>
-  @page { margin: 20mm 18mm; size: A4; }
+  @page { margin: 18mm 16mm; size: A4; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6; padding: 40px; max-width: 900px; margin: 0 auto; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6; padding: 40px; max-width: 920px; margin: 0 auto; }
 
-  /* Cover header */
-  .cover { text-align: center; padding: 50px 0 40px; border-bottom: 3px solid #0ea5e9; margin-bottom: 40px; }
-  .cover h1 { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
-  .cover .subtitle { font-size: 18px; color: #64748b; margin-bottom: 24px; }
+  /* Cover */
+  .cover { text-align: center; padding: 50px 0 36px; border-bottom: 3px solid #0ea5e9; margin-bottom: 36px; }
+  .cover h1 { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+  .cover .subtitle { font-size: 18px; color: #64748b; margin-bottom: 20px; }
   .cover .meta { font-size: 13px; color: #94a3b8; }
-  .cover .meta span { margin: 0 12px; }
+  .cover .meta span { margin: 0 10px; }
 
-  /* Section headers */
-  h2 { font-size: 22px; font-weight: 700; color: #0f172a; margin: 36px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
-  h3 { font-size: 16px; font-weight: 700; color: #334155; margin: 24px 0 10px; }
-  h4 { font-size: 14px; font-weight: 600; color: #475569; margin: 16px 0 8px; }
+  /* Headings */
+  h2 { font-size: 21px; font-weight: 700; color: #0f172a; margin: 32px 0 14px; padding-bottom: 7px; border-bottom: 2px solid #e2e8f0; }
+  h3 { font-size: 16px; font-weight: 700; color: #334155; margin: 22px 0 10px; }
+  h4 { font-size: 14px; font-weight: 600; color: #475569; margin: 14px 0 8px; }
 
   p { font-size: 14px; color: #475569; margin-bottom: 12px; }
 
   /* Lists */
-  ul { margin: 0 0 16px 20px; }
-  ul li { font-size: 14px; color: #475569; margin-bottom: 6px; }
-  ul li strong { color: #1e293b; }
+  ul, ol { margin: 0 0 14px 20px; }
+  ul li, ol li { font-size: 14px; color: #475569; margin-bottom: 5px; }
+  ul li strong, ol li strong { color: #1e293b; }
 
   /* Tables */
-  table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13px; }
-  th { background: #f1f5f9; color: #334155; font-weight: 600; text-align: left; padding: 10px 14px; border: 1px solid #e2e8f0; }
-  td { padding: 10px 14px; border: 1px solid #e2e8f0; color: #475569; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 20px; font-size: 13px; }
+  th { background: #f1f5f9; color: #334155; font-weight: 600; text-align: left; padding: 9px 12px; border: 1px solid #e2e8f0; }
+  td { padding: 9px 12px; border: 1px solid #e2e8f0; color: #475569; }
   tr:nth-child(even) td { background: #f8fafc; }
 
-  /* Highlight boxes */
-  .box { border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  /* Boxes */
+  .box { border-radius: 8px; padding: 14px 18px; margin: 14px 0; }
   .box-blue { background: #f0f9ff; border: 1px solid #bae6fd; }
   .box-green { background: #f0fdf4; border: 1px solid #bbf7d0; }
   .box-amber { background: #fffbeb; border: 1px solid #fde68a; }
+  .box-slate { background: #f8fafc; border: 1px solid #e2e8f0; }
   .box p { margin-bottom: 4px; }
-  .box ul { margin-bottom: 4px; }
 
-  /* Badge */
+  /* Badges */
   .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
-  .badge-blue { background: #dbeafe; color: #1d4ed8; }
   .badge-green { background: #dcfce7; color: #15803d; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-slate { background: #f1f5f9; color: #475569; }
 
-  /* Option cards */
-  .option-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 24px; margin: 20px 0; }
-  .option-card.recommended { border-color: #86efac; background: #fafffe; }
-  .option-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-  .option-label.a { color: #15803d; }
-  .option-label.b { color: #1d4ed8; }
-
-  /* Summary row */
-  .summary-row { display: flex; gap: 16px; margin: 16px 0; }
+  /* Summary cards */
+  .summary-row { display: flex; gap: 14px; margin: 16px 0; }
   .summary-item { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; text-align: center; }
   .summary-item .num { font-size: 24px; font-weight: 700; color: #0f172a; }
   .summary-item .label { font-size: 12px; color: #64748b; margin-top: 2px; }
 
-  /* Pros/Cons */
-  .pros-cons { display: flex; gap: 16px; margin: 12px 0; }
-  .pros-cons > div { flex: 1; }
-  .pros-cons h4 { margin-top: 0; }
+  /* Week cards */
+  .week-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 24px; margin: 18px 0; break-inside: avoid; }
+  .week-card.active { border-color: #86efac; background: #fafffe; }
+  .week-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .week-header h3 { margin: 0; }
+
+  /* Checklist */
+  .checklist { list-style: none; margin: 0 0 8px 0; padding: 0; }
+  .checklist li { font-size: 13px; color: #475569; padding: 5px 0 5px 28px; position: relative; border-bottom: 1px solid #f1f5f9; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 16px; height: 16px; border: 2px solid #cbd5e1; border-radius: 4px; background: white; }
+  .checklist li.done { color: #94a3b8; text-decoration: line-through; }
+  .checklist li.done::before { background: #16a34a; border-color: #16a34a; }
+  .checklist li strong { color: #1e293b; font-weight: 600; }
+
+  /* Deliverables tag */
+  .deliverable { font-size: 11px; color: #0369a1; background: #e0f2fe; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
 
   /* Page breaks */
   .page-break { page-break-before: always; }
 
-  /* Print styles */
+  /* Print */
   @media print {
     body { padding: 0; }
-    .cover { padding: 30px 0 30px; }
-    h2 { margin-top: 28px; }
-    .option-card { break-inside: avoid; }
+    .cover { padding: 30px 0 28px; }
+    h2 { margin-top: 24px; }
+    .week-card { break-inside: avoid; }
     table { break-inside: avoid; }
+    .checklist li::before { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
 </head>
@@ -83,20 +92,19 @@
 <!-- COVER -->
 <div class="cover">
   <h1>Sales CRM Platform</h1>
-  <p class="subtitle">Implementation Project Plan</p>
+  <p class="subtitle">Implementation Plan — Approved</p>
   <p class="meta">
     <span>Prepared: February 2026</span>
     <span>|</span>
-    <span>Status: Prototype Complete</span>
+    <span>Approach: Option A — Direct to Supabase</span>
     <span>|</span>
     <span>Confidential</span>
   </p>
 </div>
 
-<!-- EXECUTIVE SUMMARY -->
-<h2>Executive Summary</h2>
-<p>A fully functional Sales CRM prototype has been built and validated, featuring role-based dashboards for sales reps, managers, and administrators. The system includes pipeline management, contact management, call logging, KPI tracking, and real-time activity monitoring.</p>
-<p>This document outlines two options for taking the prototype to a live production system supporting 10 users and 6,000+ contacts.</p>
+<!-- PROJECT OVERVIEW -->
+<h2>Project Overview</h2>
+<p>The Sales CRM prototype has been presented to the CEO and approved for production implementation. This document is the working implementation plan for taking the approved prototype to a live system using Option A (Direct to Supabase).</p>
 
 <div class="summary-row">
   <div class="summary-item">
@@ -108,8 +116,12 @@
     <div class="label">Contacts to Import</div>
   </div>
   <div class="summary-item">
-    <div class="num">3–5</div>
+    <div class="num">4</div>
     <div class="label">Weeks to Go-Live</div>
+  </div>
+  <div class="summary-item">
+    <div class="num">5 hrs</div>
+    <div class="label">Per Day</div>
   </div>
   <div class="summary-item">
     <div class="num">$25–50</div>
@@ -117,228 +129,348 @@
   </div>
 </div>
 
+<table>
+  <tr><th style="width:30%">Detail</th><th>Value</th></tr>
+  <tr><td><strong>Approved Approach</strong></td><td>Option A — Direct to Supabase (no custom API layer)</td></tr>
+  <tr><td><strong>Tech Stack</strong></td><td>React + Supabase (Sydney region) + Vercel + DataTools</td></tr>
+  <tr><td><strong>Timeline</strong></td><td>3 weeks build + 1 week buffer = 4 weeks total</td></tr>
+  <tr><td><strong>Total Hours</strong></td><td>75–100 hours at 5 hrs/day</td></tr>
+  <tr><td><strong>Hosting</strong></td><td>~$25–50/month (Supabase Pro + Vercel)</td></tr>
+  <tr><td><strong>Data Hosting</strong></td><td>AWS Sydney (ap-southeast-2) — data stays in Australia</td></tr>
+</table>
+
 <!-- WHAT'S BUILT -->
-<h2>What's Already Built</h2>
+<h2>What's Already Built (Prototype)</h2>
 <ul>
-  <li><strong>Sales Rep Dashboard</strong> — 6 KPI cards (daily/weekly calls, CRM compliance, meetings, contacts, quotes sent), to-do list, activity feed</li>
+  <li><strong>Sales Rep Dashboard</strong> — 6 KPI cards (daily/weekly calls, CRM compliance, meetings, new contacts, quotes sent), to-do list, activity feed</li>
   <li><strong>Contact Management</strong> — Contact cards, call history, typed notes with reminders, search</li>
   <li><strong>Pipeline Management</strong> — Kanban board with 5 stages, weighted pipeline values, stale deal indicators, quote timestamps, Won/Lost flows with celebration modal</li>
-  <li><strong>Manager KPI Dashboard</strong> — 10 aggregated metrics, calls vs target chart, status board, weekly scorecard, filterable by rep</li>
+  <li><strong>Manager KPI Dashboard</strong> — 10 aggregated metrics (daily/weekly calls, CRM compliance, meetings, new contacts, quotes requested, quotes sent, quote turnaround, pipeline value, reps on track), calls vs target chart, status board, weekly scorecard, filterable by rep</li>
   <li><strong>Admin Panel</strong> — User management with roles and status</li>
   <li><strong>Responsive Design</strong> — Full mobile layout for field use</li>
 </ul>
 
+<!-- WHAT'S NEEDED -->
 <h2>What's Needed to Go Live</h2>
 <ul>
-  <li>A production database to replace hardcoded prototype data</li>
-  <li>User authentication (login/logout, session management, role enforcement)</li>
-  <li>Data persistence for all CRUD operations (contacts, deals, notes, calls, activity)</li>
-  <li>CSV import tool for bulk loading 6,000 existing contacts</li>
-  <li>Production hosting and deployment</li>
+  <li>Supabase project — production database, authentication, Row Level Security</li>
+  <li>Data persistence — all CRUD operations (contacts, deals, notes, calls, activity) wired to real database</li>
+  <li>DataTools integration — address autocomplete on contact creation, address validation on CSV import</li>
+  <li>CSV import tool — bulk load and validate 6,000 existing contacts</li>
+  <li>Production deployment — Vercel hosting, domain configuration</li>
 </ul>
 
-<!-- OPTION A -->
+<!-- PREREQUISITES -->
 <div class="page-break"></div>
-<h2>Option A: Direct to Supabase <span class="badge badge-green">Recommended</span></h2>
-<p>Frontend communicates directly with the database via the Supabase client library. Row Level Security (RLS) policies enforce permissions at the database level — no custom API layer required.</p>
+<h2>Prerequisites (Before Week 1)</h2>
+<p>The following items are needed before development begins. Gathering these in advance prevents delays during the build.</p>
 
-<div class="option-card recommended">
-
-<h3>Week 1 — Foundation &amp; Authentication</h3>
-<ul>
-  <li>Set up Supabase project (database, auth, storage)</li>
-  <li>Design and create database schema (contacts, deals, notes, calls, activity_log, users)</li>
-  <li>Configure email/password authentication for 10 users</li>
-  <li>Set up Row Level Security policies (reps see own data, managers see team, admin sees all)</li>
-  <li>Create the 10 user accounts with correct roles</li>
+<div class="week-card">
+<ul class="checklist">
+  <li><strong>Supabase account</strong> — Create project at supabase.com, select Sydney region. Provide project URL and anon public key</li>
+  <li><strong>Contact spreadsheet</strong> — The CSV/Excel file with 6,000+ contacts (or a sample with column headers to begin schema design)</li>
+  <li><strong>User list</strong> — 10 users with full name, email address, and role (rep / manager / admin)</li>
+  <li><strong>DataTools API credentials</strong> — API key and plan details (address autocomplete, validation, or both)</li>
+  <li><strong>Domain name</strong> (optional) — If you want a custom URL (e.g. crm.yourcompany.com.au) instead of the default Vercel URL</li>
 </ul>
-
-<h3>Week 2 — Wire Frontend to Real Data</h3>
-<ul>
-  <li>Replace all mock data with Supabase queries</li>
-  <li>Contacts — list, search, create, edit, call logging, notes</li>
-  <li>Deals — create, stage transitions, won/lost flows with reasons</li>
-  <li>Activity log — auto-writes on every action, feeds KPI dashboards</li>
-  <li>KPI calculations from real data (call counts, quote turnaround, weighted pipeline value)</li>
-</ul>
-
-<h3>Week 3 — Import, Polish &amp; Deploy</h3>
-<ul>
-  <li>CSV import tool (Supabase Edge Function — parse, validate, bulk insert 6,000 contacts)</li>
-  <li>Contact spreadsheet data cleanup (duplicates, formatting)</li>
-  <li>End-to-end testing across all user roles and flows</li>
-  <li>Deploy to production (Vercel + Supabase)</li>
-  <li>Import real contact data and onboard 10 users</li>
-  <li>Bug fixes from initial use</li>
-</ul>
-
-<h3>Week 4 — Buffer (if needed)</h3>
-<ul>
-  <li>Edge cases discovered during real usage</li>
-  <li>Feedback adjustments from the team</li>
-  <li>Data cleanup issues from CSV import</li>
-</ul>
-
 </div>
+
+<!-- WEEK BY WEEK -->
+<h2>Implementation Plan — Week by Week</h2>
+
+<!-- WEEK 1 -->
+<div class="week-card">
+  <div class="week-header">
+    <h3>Week 1 — Foundation &amp; Authentication</h3>
+    <span class="badge badge-slate">25 hrs</span>
+  </div>
+  <p>Set up the entire backend infrastructure. By end of week, all users can log in and the database is ready for data.</p>
+  <ul class="checklist">
+    <li><strong>Set up Supabase project</strong> — database, auth, storage, confirm Sydney region</li>
+    <li><strong>Design database schema</strong> — contacts, deals, notes, calls, activity_log, users tables with correct relationships and indexes</li>
+    <li><strong>Create all tables</strong> — Run SQL migrations to build the schema</li>
+    <li><strong>Configure authentication</strong> — Email/password login, session management</li>
+    <li><strong>Set up Row Level Security policies</strong> — Reps see own data, managers see their team, admin sees everything</li>
+    <li><strong>Create 10 user accounts</strong> — With correct roles assigned</li>
+    <li><strong>Connect frontend to Supabase</strong> — Install client library, configure environment variables, build login/logout flow</li>
+    <li><strong>Verify auth works</strong> — Test login as each role type (rep, manager, admin) and confirm RLS policies enforce correct data access</li>
+  </ul>
+  <p><span class="deliverable">Deliverable:</span> All 10 users can log in. Database schema complete. RLS policies verified.</p>
+</div>
+
+<!-- WEEK 2 -->
+<div class="week-card">
+  <div class="week-header">
+    <h3>Week 2 — Wire Frontend to Real Data + DataTools</h3>
+    <span class="badge badge-slate">25 hrs</span>
+  </div>
+  <p>Replace all mock/hardcoded data with live Supabase queries. Integrate DataTools for address autocomplete and validation. By end of week, the app is fully functional with real data.</p>
+
+  <h4>Contacts</h4>
+  <ul class="checklist">
+    <li><strong>Contact list &amp; search</strong> — Replace mock CONTACTS array with Supabase query, pagination for 6,000+ records</li>
+    <li><strong>Create contact</strong> — Form writes to database with DataTools address autocomplete (rep types, suggestions appear, structured address saved)</li>
+    <li><strong>Edit contact</strong> — Update existing records</li>
+    <li><strong>Call logging</strong> — Log calls against contacts, store outcome and summary</li>
+    <li><strong>Notes with reminders</strong> — Create/read typed notes (general, follow-up, meeting, pricing, internal) with reminder dates</li>
+  </ul>
+
+  <h4>Pipeline &amp; Deals</h4>
+  <ul class="checklist">
+    <li><strong>Deal list by stage</strong> — Kanban board reads from database, filtered by rep/stage</li>
+    <li><strong>Create deal</strong> — New deal form writes to database, linked to contact</li>
+    <li><strong>Stage transitions</strong> — Move deals between stages (discovery &rarr; quote request &rarr; quote sent &rarr; won/lost)</li>
+    <li><strong>Won/Lost flows</strong> — Won celebration modal + stage update, Lost with reason capture</li>
+    <li><strong>Quote timestamps</strong> — Auto-set quoteRequestedAt and quoteSentAt on stage transitions</li>
+  </ul>
+
+  <h4>Activity &amp; KPIs</h4>
+  <ul class="checklist">
+    <li><strong>Activity log</strong> — Auto-writes on every action (call logged, deal created, deal won, etc.)</li>
+    <li><strong>Rep KPI dashboard</strong> — 6 metrics calculated from real data</li>
+    <li><strong>Manager KPI dashboard</strong> — 10 aggregated metrics from real data, quote turnaround from timestamps, weighted pipeline value</li>
+    <li><strong>Weekly scorecard</strong> — Per-rep metrics table with real data</li>
+  </ul>
+  <p><span class="deliverable">Deliverable:</span> Fully functional app with real data. DataTools address autocomplete working on contact forms.</p>
+</div>
+
+<!-- WEEK 3 -->
+<div class="page-break"></div>
+<div class="week-card">
+  <div class="week-header">
+    <h3>Week 3 — Import, Polish &amp; Deploy</h3>
+    <span class="badge badge-slate">25 hrs</span>
+  </div>
+  <p>Import the 6,000 contacts, validate addresses via DataTools, deploy to production, and onboard users.</p>
+
+  <h4>CSV Import</h4>
+  <ul class="checklist">
+    <li><strong>Build CSV import tool</strong> — Supabase Edge Function to parse, validate, and bulk insert contacts</li>
+    <li><strong>Column mapping</strong> — Map spreadsheet columns to database fields</li>
+    <li><strong>DataTools address validation</strong> — Run imported addresses through DataTools to standardise and correct (e.g. "Melb" &rarr; "Melbourne, VIC 3000")</li>
+    <li><strong>Duplicate detection</strong> — Flag or merge duplicate contacts during import</li>
+    <li><strong>Import the 6,000 contacts</strong> — Run the actual import with validation report</li>
+  </ul>
+
+  <h4>Testing &amp; Deployment</h4>
+  <ul class="checklist">
+    <li><strong>End-to-end testing</strong> — Test all flows as rep, manager, and admin roles</li>
+    <li><strong>Mobile testing</strong> — Verify responsive layout works on phones/tablets</li>
+    <li><strong>Deploy to Vercel</strong> — Production environment, environment variables, domain config</li>
+    <li><strong>Onboard 10 users</strong> — Send login credentials, brief walkthrough</li>
+    <li><strong>Bug fixes from initial use</strong> — Address any issues found during first days of use</li>
+  </ul>
+  <p><span class="deliverable">Deliverable:</span> Production system live. 6,000 contacts imported and validated. 10 users onboarded.</p>
+</div>
+
+<!-- WEEK 4 -->
+<div class="week-card">
+  <div class="week-header">
+    <h3>Week 4 — Buffer &amp; Stabilisation</h3>
+    <span class="badge badge-amber">If needed</span>
+  </div>
+  <p>Reserved for issues discovered during real-world use. May not be needed if Weeks 1–3 go smoothly.</p>
+  <ul class="checklist">
+    <li><strong>Edge cases</strong> — Issues discovered from real daily use by the team</li>
+    <li><strong>Data cleanup</strong> — Fix any import issues, address validation gaps, duplicate contacts</li>
+    <li><strong>Feedback adjustments</strong> — Minor UI tweaks based on user feedback</li>
+    <li><strong>Performance tuning</strong> — Optimise slow queries if any (6,000 contact search, dashboard aggregations)</li>
+    <li><strong>Documentation</strong> — Quick-start guide for users if requested</li>
+  </ul>
+  <p><span class="deliverable">Deliverable:</span> Stable production system. All critical issues resolved.</p>
+</div>
+
+<!-- DATATOOLS -->
+<div class="page-break"></div>
+<h2>DataTools Integration — Detail</h2>
+<p>DataTools address validation and autocomplete is integrated in two key areas to improve data quality and rep efficiency.</p>
 
 <table>
-  <tr><th style="width:35%">Detail</th><th>Value</th></tr>
-  <tr><td><strong>Timeline</strong></td><td>3 weeks + 1 week buffer</td></tr>
-  <tr><td><strong>Total Hours</strong></td><td>75–100 hours at 5 hrs/day</td></tr>
-  <tr><td><strong>Go-Live</strong></td><td><strong>4 weeks from start</strong></td></tr>
-  <tr><td><strong>Tech Stack</strong></td><td>React + Supabase + Vercel</td></tr>
-  <tr><td><strong>Hosting Cost</strong></td><td>~$25–50/month (Supabase Pro + Vercel)</td></tr>
-</table>
-
-<div class="pros-cons">
-  <div>
-    <h4>Advantages</h4>
-    <ul>
-      <li>Fastest path to production</li>
-      <li>Less code to write and maintain</li>
-      <li>RLS handles permissions at database level</li>
-      <li>Real-time updates included out of the box</li>
-      <li>Ideal for internal tool with 10 users</li>
-    </ul>
-  </div>
-  <div>
-    <h4>Considerations</h4>
-    <ul>
-      <li>Frontend has direct database access (appropriate for internal use)</li>
-      <li>External integrations would require adding an API layer later</li>
-    </ul>
-  </div>
-</div>
-
-<!-- OPTION B -->
-<div class="page-break"></div>
-<h2>Option B: With Custom API Layer</h2>
-<p>Frontend communicates with Next.js API routes, which handle business logic and talk to the database. More conventional architecture with a clear separation between frontend and backend.</p>
-
-<div class="option-card">
-
-<h3>Week 1 — Foundation &amp; Authentication</h3>
-<ul>
-  <li>Set up Next.js project with Supabase (or managed PostgreSQL)</li>
-  <li>Design and create database schema</li>
-  <li>Configure authentication with session management and role middleware</li>
-  <li>Create the 10 user accounts</li>
-</ul>
-
-<h3>Week 2 — Build API Routes</h3>
-<ul>
-  <li>Contacts API — GET, POST, PUT, search, pagination for 6,000+ records</li>
-  <li>Deals API — CRUD, stage transitions, won/lost with reason capture</li>
-  <li>Notes &amp; Calls API — CRUD, linked to contacts</li>
-  <li>Activity Log API — auto-logging on all actions</li>
-  <li>Input validation and error handling on every endpoint</li>
-</ul>
-
-<h3>Week 3 — Wire Frontend to API</h3>
-<ul>
-  <li>Replace all mock data with API calls</li>
-  <li>Loading states, error states, optimistic updates</li>
-  <li>KPI calculations via aggregated API queries</li>
-  <li>Role-based data filtering enforced in API middleware</li>
-</ul>
-
-<h3>Week 4 — Import, Polish &amp; Deploy</h3>
-<ul>
-  <li>CSV import endpoint (upload, parse, validate, bulk insert)</li>
-  <li>Contact spreadsheet data cleanup</li>
-  <li>End-to-end testing across all roles and flows</li>
-  <li>Deploy to production (Vercel + Supabase/managed Postgres)</li>
-  <li>Import real data, onboard users, bug fixes</li>
-</ul>
-
-<h3>Week 5 — Buffer (if needed)</h3>
-<ul>
-  <li>Edge cases from real usage</li>
-  <li>Feedback adjustments from the team</li>
-  <li>Any data cleanup issues</li>
-</ul>
-
-</div>
-
-<table>
-  <tr><th style="width:35%">Detail</th><th>Value</th></tr>
-  <tr><td><strong>Timeline</strong></td><td>4 weeks + 1 week buffer</td></tr>
-  <tr><td><strong>Total Hours</strong></td><td>100–125 hours at 5 hrs/day</td></tr>
-  <tr><td><strong>Go-Live</strong></td><td><strong>5 weeks from start</strong></td></tr>
-  <tr><td><strong>Tech Stack</strong></td><td>Next.js API Routes + Supabase/Postgres + Vercel</td></tr>
-  <tr><td><strong>Hosting Cost</strong></td><td>~$25–50/month</td></tr>
-</table>
-
-<div class="pros-cons">
-  <div>
-    <h4>Advantages</h4>
-    <ul>
-      <li>Clean separation between frontend and backend</li>
-      <li>Easier to add integrations later (mobile app, external systems, webhooks)</li>
-      <li>API can serve multiple clients if the tool grows</li>
-      <li>More conventional architecture for future team handoff</li>
-    </ul>
-  </div>
-  <div>
-    <h4>Considerations</h4>
-    <ul>
-      <li>Additional week of development</li>
-      <li>~30% more code to maintain</li>
-      <li>Over-engineered for a 10-user internal tool</li>
-    </ul>
-  </div>
-</div>
-
-<!-- COMPARISON -->
-<div class="page-break"></div>
-<h2>Side-by-Side Comparison</h2>
-
-<table>
+  <tr><th style="width:25%">Feature</th><th style="width:35%">Where</th><th style="width:40%">How It Works</th></tr>
   <tr>
-    <th style="width:30%">Criteria</th>
-    <th style="width:35%">Option A — Direct <span class="badge badge-green">Recommended</span></th>
-    <th style="width:35%">Option B — With API</th>
+    <td><strong>Address Autocomplete</strong></td>
+    <td>New Contact form, Edit Contact form</td>
+    <td>Rep starts typing an address, DataTools returns suggestions. Rep selects one, full structured address (street, suburb, state, postcode) is auto-populated. Faster entry, consistent formatting, fewer errors.</td>
   </tr>
-  <tr><td><strong>Go-Live</strong></td><td><strong>4 weeks</strong></td><td>5 weeks</td></tr>
-  <tr><td><strong>Total Hours</strong></td><td><strong>75–100</strong></td><td>100–125</td></tr>
-  <tr><td><strong>Code Volume</strong></td><td><strong>Less</strong></td><td>~30% more</td></tr>
-  <tr><td><strong>Security Model</strong></td><td>Supabase RLS</td><td>API middleware</td></tr>
-  <tr><td><strong>Future Integrations</strong></td><td>Add API later if needed</td><td>Ready from day one</td></tr>
-  <tr><td><strong>Best For</strong></td><td><strong>Internal tool, 10 users, ship fast</strong></td><td>May go multi-tenant or public</td></tr>
-  <tr><td><strong>Maintenance</strong></td><td><strong>Lower</strong></td><td>Higher</td></tr>
-  <tr><td><strong>Monthly Cost</strong></td><td>$25–50</td><td>$25–50</td></tr>
+  <tr>
+    <td><strong>Bulk Address Validation</strong></td>
+    <td>CSV import (6,000 contacts)</td>
+    <td>During import, each address is validated via DataTools API. Invalid or incomplete addresses are flagged in a report. Valid addresses are standardised to a consistent format before saving.</td>
+  </tr>
+  <tr>
+    <td><strong>Ongoing Validation</strong></td>
+    <td>Phase 2 (optional)</td>
+    <td>Periodic batch validation to catch addresses that have degraded. Not in scope for Phase 1 but the foundation will support it.</td>
+  </tr>
 </table>
 
-<!-- RECOMMENDATION -->
-<h2>Recommendation</h2>
+<div class="box box-amber">
+  <p><strong>Required from you:</strong> DataTools API key and confirmation of which products are on your plan (address autocomplete, address validation, or both). This is needed before Week 2.</p>
+</div>
 
-<div class="box box-green">
-  <p><strong>We recommend Option A (Direct to Supabase).</strong></p>
-  <p>For a 10-user internal sales tool, the priority is speed to value. Option A delivers a production system one week faster with less code to maintain. The existing prototype UI remains largely unchanged — the work is connecting it to a real database.</p>
-  <p>If requirements evolve (more users, external integrations, mobile app), a custom API layer can be added later with real requirements guiding the design rather than hypothetical ones.</p>
+<!-- SECURITY -->
+<h2>Security Overview</h2>
+<p>For a 10-user internal sales tool, the following security measures are in place from day one.</p>
+
+<table>
+  <tr><th style="width:30%">Layer</th><th>Detail</th></tr>
+  <tr><td><strong>Encryption at rest</strong></td><td>All database data encrypted on disk (AES-256)</td></tr>
+  <tr><td><strong>Encryption in transit</strong></td><td>All connections via TLS/SSL (HTTPS)</td></tr>
+  <tr><td><strong>Authentication</strong></td><td>Supabase Auth — password hashing (bcrypt), secure session tokens</td></tr>
+  <tr><td><strong>Row Level Security</strong></td><td>Database-level policies enforce who can see/edit what — reps own data, managers team data, admin all data</td></tr>
+  <tr><td><strong>Data residency</strong></td><td>Hosted on AWS Sydney (ap-southeast-2) — data stays in Australia</td></tr>
+  <tr><td><strong>Infrastructure</strong></td><td>SOC 2 Type II compliant (Supabase)</td></tr>
+  <tr><td><strong>Daily backups</strong></td><td>Automated on Supabase Pro plan</td></tr>
+</table>
+
+<div class="box box-slate">
+  <p><strong>Phase 2 security upgrades (when needed):</strong></p>
+  <ul style="margin-bottom: 0;">
+    <li>Multi-factor authentication (MFA) — Supabase supports natively, configuration only</li>
+    <li>Audit logging — who accessed/changed what and when</li>
+    <li>IP allowlisting — restrict access to office/VPN networks</li>
+  </ul>
+</div>
+
+<!-- ARCHITECTURE -->
+<div class="page-break"></div>
+<h2>Technical Architecture</h2>
+
+<div class="box box-blue">
+<pre style="font-size: 13px; color: #1e40af; line-height: 1.8; margin: 0; white-space: pre; font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;">
+Browser (React App)
+  │
+  ├── Supabase Auth ──────── Login / Logout / Sessions
+  │
+  ├── Supabase Client ────── Direct database queries
+  │   │                      (protected by Row Level Security)
+  │   ├── contacts table
+  │   ├── deals table
+  │   ├── notes table
+  │   ├── calls table
+  │   ├── activity_log table
+  │   └── users table
+  │
+  ├── DataTools API ──────── Address autocomplete (contact forms)
+  │                          Address validation (CSV import)
+  │
+  └── Supabase Edge Fn ───── CSV import (parse, validate, bulk insert)
+
+Hosted on:
+  Frontend → Vercel
+  Database → Supabase (AWS Sydney)
+</pre>
 </div>
 
 <!-- RISKS -->
-<h2>Key Risks &amp; Mitigations</h2>
+<h2>Risks &amp; Mitigations</h2>
 
 <table>
-  <tr><th style="width:30%">Risk</th><th style="width:35%">Impact</th><th style="width:35%">Mitigation</th></tr>
-  <tr><td>Messy contact spreadsheet</td><td>Import delays, data quality issues</td><td>Begin data cleanup now, before development starts</td></tr>
-  <tr><td>Scope creep during build</td><td>Timeline extends beyond buffer</td><td>Lock feature scope at prototype level; log requests for Phase 2</td></tr>
-  <tr><td>Integration requests (email, calendar, phone)</td><td>Significant additional work</td><td>Treat as a separate phase after go-live</td></tr>
-  <tr><td>User adoption</td><td>System goes unused</td><td>Involve 1–2 reps in testing during Week 3</td></tr>
+  <tr><th style="width:25%">Risk</th><th style="width:35%">Impact</th><th style="width:40%">Mitigation</th></tr>
+  <tr><td>Messy contact spreadsheet</td><td>Import delays, data quality issues</td><td>Begin data cleanup now. DataTools validation will catch most issues during import.</td></tr>
+  <tr><td>Scope creep during build</td><td>Timeline extends beyond buffer</td><td>Lock feature scope at prototype level. Log new requests for Phase 2.</td></tr>
+  <tr><td>DataTools API issues</td><td>Address features delayed</td><td>Get API credentials early. Test in Week 1 alongside foundation work.</td></tr>
+  <tr><td>Integration requests</td><td>Significant additional work</td><td>Email, calendar, phone integrations treated as Phase 2.</td></tr>
+  <tr><td>User adoption</td><td>System goes unused</td><td>Involve 1–2 reps in testing during Week 3.</td></tr>
+</table>
+
+<!-- PHASE 2 -->
+<h2>Phase 2 — Future Enhancements</h2>
+<p>The following items are out of scope for Phase 1 but have been identified for future consideration.</p>
+
+<table>
+  <tr><th style="width:35%">Enhancement</th><th>Notes</th></tr>
+  <tr><td>Multi-factor authentication (MFA)</td><td>Supabase native — configuration only, no code changes</td></tr>
+  <tr><td>Audit logging</td><td>Track who accessed/changed data and when</td></tr>
+  <tr><td>Periodic address validation</td><td>Batch DataTools validation on existing contacts</td></tr>
+  <tr><td>Email integration</td><td>Send quotes/follow-ups from within CRM</td></tr>
+  <tr><td>Calendar integration</td><td>Sync meetings with Google/Outlook calendars</td></tr>
+  <tr><td>Phone system integration</td><td>Click-to-call, auto call logging</td></tr>
+  <tr><td>Custom API layer</td><td>If needed for external system integrations or mobile app</td></tr>
+  <tr><td>Advanced reporting</td><td>Export to PDF/Excel, custom date range reports</td></tr>
+</table>
+
+<!-- PROGRESS TRACKER -->
+<div class="page-break"></div>
+<h2>Progress Tracker</h2>
+<p>Use this section to track overall progress. Update status and dates as each milestone is completed.</p>
+
+<table>
+  <tr>
+    <th style="width:8%">#</th>
+    <th style="width:32%">Milestone</th>
+    <th style="width:20%">Target</th>
+    <th style="width:15%">Status</th>
+    <th style="width:25%">Completed</th>
+  </tr>
+  <tr>
+    <td>0</td>
+    <td><strong>Prototype presented &amp; approved</strong></td>
+    <td>—</td>
+    <td><span class="badge badge-green">Done</span></td>
+    <td>Feb 2026</td>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td><strong>Prerequisites gathered</strong><br><small>Supabase account, spreadsheet, user list, DataTools key</small></td>
+    <td>Before Week 1</td>
+    <td><span class="badge badge-amber">Pending</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><strong>Week 1 complete</strong><br><small>Database, auth, RLS, users can log in</small></td>
+    <td>End of Week 1</td>
+    <td><span class="badge badge-slate">Not started</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><strong>Week 2 complete</strong><br><small>All features wired to real data, DataTools integrated</small></td>
+    <td>End of Week 2</td>
+    <td><span class="badge badge-slate">Not started</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td><strong>Contacts imported</strong><br><small>6,000 contacts loaded and validated</small></td>
+    <td>Week 3</td>
+    <td><span class="badge badge-slate">Not started</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td><strong>Deployed to production</strong><br><small>Live on Vercel + Supabase</small></td>
+    <td>Week 3</td>
+    <td><span class="badge badge-slate">Not started</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td><strong>10 users onboarded</strong><br><small>All users have credentials and have logged in</small></td>
+    <td>End of Week 3</td>
+    <td><span class="badge badge-slate">Not started</span></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td><strong>Go-Live — system stable</strong><br><small>Buffer week complete, all critical issues resolved</small></td>
+    <td>End of Week 4</td>
+    <td><span class="badge badge-slate">Not started</span></td>
+    <td></td>
+  </tr>
 </table>
 
 <!-- NEXT STEPS -->
-<h2>Next Steps</h2>
+<h2>Immediate Next Steps</h2>
 
-<div class="box box-blue">
+<div class="box box-green">
   <ol style="margin-left: 20px; margin-bottom: 0;">
-    <li style="font-size: 14px; color: #475569; margin-bottom: 8px;"><strong>Approve approach</strong> — Confirm Option A or B</li>
-    <li style="font-size: 14px; color: #475569; margin-bottom: 8px;"><strong>Provide contact spreadsheet</strong> — Begin data review and cleanup</li>
-    <li style="font-size: 14px; color: #475569; margin-bottom: 8px;"><strong>Confirm user list</strong> — 10 users with names, emails, and roles (rep/manager/admin)</li>
-    <li style="font-size: 14px; color: #475569; margin-bottom: 8px;"><strong>Set start date</strong> — Development begins immediately on confirmation</li>
-    <li style="font-size: 14px; color: #475569; margin-bottom: 0;"><strong>Go-live target</strong> — 4 weeks from start (Option A) or 5 weeks (Option B)</li>
+    <li style="font-size: 14px; color: #475569; margin-bottom: 8px;"><strong>Create Supabase account</strong> — supabase.com, select Sydney region, share project URL + anon key</li>
+    <li style="font-size: 14px; color: #475569; margin-bottom: 8px;"><strong>Provide contact spreadsheet</strong> — Full CSV/Excel, or column headers to begin schema design</li>
+    <li style="font-size: 14px; color: #475569; margin-bottom: 8px;"><strong>Provide user list</strong> — 10 users: name, email, role (rep / manager / admin)</li>
+    <li style="font-size: 14px; color: #475569; margin-bottom: 8px;"><strong>Obtain DataTools API credentials</strong> — API key + confirm plan (autocomplete, validation, or both)</li>
+    <li style="font-size: 14px; color: #475569; margin-bottom: 0;"><strong>Set start date</strong> — Week 1 begins as soon as prerequisites are gathered</li>
   </ol>
 </div>
 
