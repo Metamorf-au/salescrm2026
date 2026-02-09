@@ -221,7 +221,7 @@ export async function fetchActivityLog(userId, isManagerOrAdmin) {
 // INSERT HELPERS
 // ============================================================
 
-export async function insertContact({ firstName, lastName, email, phone, companyName, suburb, state, ownerId }) {
+export async function insertContact({ firstName, lastName, email, phone, mobile, jobTitle, industry, companyName, addressLine1, suburb, state, postcode, ownerId }) {
   // Find or create company
   let companyId = null;
   if (companyName?.trim()) {
@@ -236,7 +236,13 @@ export async function insertContact({ firstName, lastName, email, phone, company
     } else {
       const { data: newCo, error: coErr } = await supabase
         .from("companies")
-        .insert({ name: companyName.trim(), owner_id: ownerId })
+        .insert({
+          name: companyName.trim(),
+          owner_id: ownerId,
+          city: suburb?.trim() || null,
+          state: state?.trim() || null,
+          industry: industry?.trim() || null,
+        })
         .select("id")
         .single();
       if (coErr) console.error("Error creating company:", coErr);
@@ -250,10 +256,15 @@ export async function insertContact({ firstName, lastName, email, phone, company
       last_name: lastName.trim(),
       email: email?.trim() || null,
       phone: phone?.trim() || null,
+      mobile: mobile?.trim() || null,
+      job_title: jobTitle?.trim() || null,
+      industry: industry?.trim() || null,
       company_id: companyId,
       owner_id: ownerId,
+      address_line1: addressLine1?.trim() || null,
       suburb: suburb?.trim() || null,
       state: state?.trim() || null,
+      postcode: postcode?.trim() || null,
       status: "new",
     })
     .select("id")

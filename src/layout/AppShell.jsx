@@ -212,9 +212,14 @@ export default function AppShell() {
       lastName: data.lastName,
       email: data.email,
       phone: data.phone,
+      mobile: data.mobile,
+      jobTitle: data.jobTitle,
+      industry: data.industry,
       companyName: data.company,
+      addressLine1: data.addressLine1,
       suburb: data.suburb,
       state: data.state,
+      postcode: data.postcode,
       ownerId: currentUser.id,
     });
     await insertActivity({
