@@ -2175,7 +2175,7 @@ function AdminView({ isMobile, currentUser }) {
       )}
 
       {/* User Management */}
-      <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-stone-200 overflow-visible">
         <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
           <div>
             <h2 className="text-base font-semibold text-slate-700">Users</h2>
@@ -2230,7 +2230,7 @@ function AdminView({ isMobile, currentUser }) {
                             <Settings size={14} />
                           </button>
                           {userMenu === u.id && (
-                            <div className="absolute right-0 top-7 z-30 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-48">
+                            <div className="absolute right-0 bottom-full mb-1 z-30 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-48">
                               <button onClick={() => handleResetPassword(u)} disabled={actionLoading}
                                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left disabled:opacity-50">
                                 <Lock size={14} className="text-slate-400" />Reset Password
@@ -2276,7 +2276,7 @@ function AdminView({ isMobile, currentUser }) {
                         <Settings size={14} />
                       </button>
                       {userMenu === u.id && (
-                        <div className="absolute right-0 top-8 z-30 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-48">
+                        <div className="absolute right-0 bottom-full mb-1 z-30 bg-white rounded-xl shadow-lg border border-stone-200 py-1 w-48">
                           <button onClick={() => handleResetPassword(u)} disabled={actionLoading}
                             className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-stone-50 transition text-left disabled:opacity-50">
                             <Lock size={14} className="text-slate-400" />Reset Password
