@@ -339,6 +339,23 @@ export async function deleteContact(contactId) {
   if (error) throw new Error(error.message);
 }
 
+export async function bulkDeleteContacts(contactIds) {
+  // Clean up associated data
+  await supabase.from("notes").delete().in("contact_id", contactIds);
+  await supabase.from("calls").delete().in("contact_id", contactIds);
+  await supabase.from("deals").update({ contact_id: null }).in("contact_id", contactIds);
+  const { error } = await supabase.from("contacts").delete().in("id", contactIds);
+  if (error) throw new Error(error.message);
+}
+
+export async function bulkReassignContacts(contactIds, newOwnerId) {
+  const { error } = await supabase
+    .from("contacts")
+    .update({ owner_id: newOwnerId })
+    .in("id", contactIds);
+  if (error) throw new Error(error.message);
+}
+
 export async function insertCall({ contactId, callerId, outcome, summary, calledAt }) {
   const { data, error } = await supabase
     .from("calls")

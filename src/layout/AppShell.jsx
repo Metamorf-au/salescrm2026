@@ -4,7 +4,8 @@ import { User, BookOpen, Columns, LayoutDashboard, Settings, Target } from "luci
 import {
   fetchContacts, fetchDeals, fetchAllNotes, fetchAllCalls, fetchReps,
   fetchActivityLog, groupCallsByContact,
-  insertContact, updateContact, deleteContact, insertCall, insertNote, insertDeal, updateDeal, insertActivity,
+  insertContact, updateContact, deleteContact, bulkDeleteContacts, bulkReassignContacts,
+  insertCall, insertNote, insertDeal, updateDeal, insertActivity,
 } from "../supabaseData";
 
 // Views
@@ -273,6 +274,28 @@ export default function AppShell() {
     await loadAllData();
   }
 
+  async function handleBulkDelete(ids, selectedContacts) {
+    await bulkDeleteContacts(ids);
+    await insertActivity({
+      userId: currentUser.id,
+      activityType: "contact_updated",
+      contactName: `${ids.length} contacts`,
+      summary: `Bulk deleted ${ids.length} contacts`,
+    });
+    await loadAllData();
+  }
+
+  async function handleBulkReassign(ids, newOwnerId, newOwnerName) {
+    await bulkReassignContacts(ids, newOwnerId);
+    await insertActivity({
+      userId: currentUser.id,
+      activityType: "contact_updated",
+      contactName: `${ids.length} contacts`,
+      summary: `Reassigned ${ids.length} contacts to ${newOwnerName}`,
+    });
+    await loadAllData();
+  }
+
   async function handleSaveDeal(data) {
     await insertDeal({
       title: data.title,
@@ -469,6 +492,8 @@ export default function AppShell() {
                     onAddInlineNote={handleAddInlineNote}
                     onEditContact={(contact) => setEditContact(contact)}
                     onDeleteContact={handleDeleteContact}
+                    onBulkDelete={handleBulkDelete}
+                    onBulkReassign={handleBulkReassign}
                     isMobile={isMobile}
                   />
                 )}

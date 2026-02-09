@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Search, Users } from "lucide-react";
+import { Search, Users, Trash2, UserCog, X, CheckSquare } from "lucide-react";
 import ContactCard from "./ContactCard";
 
-export default function ContactsView({ contacts, deals, callsByContact, notesByContact, reps, currentUser, onNewContact, onNewDeal, onAddNote, onLogCall, onAddInlineNote, onEditContact, onDeleteContact, isMobile }) {
+export default function ContactsView({ contacts, deals, callsByContact, notesByContact, reps, currentUser, onNewContact, onNewDeal, onAddNote, onLogCall, onAddInlineNote, onEditContact, onDeleteContact, onBulkDelete, onBulkReassign, isMobile }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkAction, setBulkAction] = useState(null); // "delete" | "reassign"
+  const [reassignTo, setReassignTo] = useState("");
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const isRepOnly = currentUser.role === "rep";
 
@@ -19,6 +23,70 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
     if (statusFilter !== "all" && c.status !== statusFilter) return false;
     return true;
   });
+
+  const filteredIds = new Set(filtered.map(c => c.id));
+  const visibleSelectedCount = [...selectedIds].filter(id => filteredIds.has(id)).length;
+  const allVisibleSelected = filtered.length > 0 && visibleSelectedCount === filtered.length;
+
+  function toggleSelect(id) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (allVisibleSelected) {
+      // Deselect all visible
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        filtered.forEach(c => next.delete(c.id));
+        return next;
+      });
+    } else {
+      // Select all visible
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        filtered.forEach(c => next.add(c.id));
+        return next;
+      });
+    }
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+    setBulkAction(null);
+    setReassignTo("");
+  }
+
+  async function handleBulkDelete() {
+    setBulkLoading(true);
+    try {
+      const ids = [...selectedIds];
+      const selected = contacts.filter(c => selectedIds.has(c.id));
+      await onBulkDelete(ids, selected);
+      clearSelection();
+    } catch (err) {
+      console.error(err);
+    }
+    setBulkLoading(false);
+  }
+
+  async function handleBulkReassign() {
+    if (!reassignTo) return;
+    setBulkLoading(true);
+    try {
+      const ids = [...selectedIds];
+      const rep = reps.find(r => r.id === reassignTo);
+      await onBulkReassign(ids, reassignTo, rep?.name || "");
+      clearSelection();
+    } catch (err) {
+      console.error(err);
+    }
+    setBulkLoading(false);
+  }
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? "space-y-4" : "space-y-6"}`}>
@@ -74,6 +142,20 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
         </div>
       </div>
 
+      {/* Select All */}
+      {filtered.length > 0 && (
+        <div className="flex items-center gap-3">
+          <button onClick={toggleSelectAll}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${allVisibleSelected ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-white border-stone-200 text-slate-500 hover:border-stone-300"}`}>
+            <CheckSquare size={14} />
+            {allVisibleSelected ? "Deselect All" : "Select All"}
+          </button>
+          {selectedIds.size > 0 && (
+            <span className="text-xs text-slate-500">{selectedIds.size} selected</span>
+          )}
+        </div>
+      )}
+
       {/* Contact List */}
       <div className="space-y-2">
         {filtered.map(c => {
@@ -93,6 +175,8 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
               onAddNote={onAddInlineNote}
               onEdit={onEditContact}
               onDelete={onDeleteContact}
+              isSelected={selectedIds.has(c.id)}
+              onSelect={toggleSelect}
               isMobile={isMobile}
             />
           );
@@ -104,6 +188,67 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
           </div>
         )}
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+          <div className="bg-slate-800 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4">
+            <span className="text-sm font-medium whitespace-nowrap">{selectedIds.size} selected</span>
+            <div className="w-px h-6 bg-slate-600" />
+
+            {!bulkAction && (
+              <>
+                {!isRepOnly && (
+                  <button onClick={() => setBulkAction("reassign")}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-600 rounded-lg text-xs font-medium transition">
+                    <UserCog size={14} /> Change Owner
+                  </button>
+                )}
+                <button onClick={() => setBulkAction("delete")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500 hover:bg-rose-600 rounded-lg text-xs font-medium transition">
+                  <Trash2 size={14} /> Delete
+                </button>
+              </>
+            )}
+
+            {bulkAction === "delete" && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-rose-300">Delete {selectedIds.size} contact{selectedIds.size > 1 ? "s" : ""}?</span>
+                <button onClick={handleBulkDelete} disabled={bulkLoading}
+                  className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 rounded-lg text-xs font-semibold transition disabled:opacity-50">
+                  {bulkLoading ? "Deleting..." : "Confirm"}
+                </button>
+                <button onClick={() => setBulkAction(null)} disabled={bulkLoading}
+                  className="px-2 py-1.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs transition disabled:opacity-50">
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {bulkAction === "reassign" && (
+              <div className="flex items-center gap-2">
+                <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
+                  className="px-2 py-1.5 bg-slate-700 border border-slate-600 rounded-lg text-xs text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                  <option value="">Assign to...</option>
+                  {reps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+                <button onClick={handleBulkReassign} disabled={bulkLoading || !reassignTo}
+                  className="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 rounded-lg text-xs font-semibold transition disabled:opacity-50">
+                  {bulkLoading ? "Saving..." : "Confirm"}
+                </button>
+                <button onClick={() => { setBulkAction(null); setReassignTo(""); }} disabled={bulkLoading}
+                  className="px-2 py-1.5 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs transition disabled:opacity-50">
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            <button onClick={clearSelection} className="ml-1 p-1 hover:bg-slate-700 rounded-lg transition" title="Clear selection">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

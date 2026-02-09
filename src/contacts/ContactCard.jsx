@@ -3,7 +3,7 @@ import { Phone, Mail, MapPin, User, Building2, ChevronRight, Briefcase, StickyNo
 import { contactStatusStyle, outcomeConfig, stageConfig, noteTypeConfig, NOTE_TYPES, REMINDER_PRESETS } from "../shared/constants";
 import { formatCurrency, formatReminderDate, getReminderDate, isOverdue } from "../shared/formatters";
 
-export default function ContactCard({ contact, deals, calls, notes, isExpanded, onToggle, onNewDeal, onAddNote, onEdit, onDelete, isMobile }) {
+export default function ContactCard({ contact, deals, calls, notes, isExpanded, onToggle, onNewDeal, onAddNote, onEdit, onDelete, isSelected, onSelect, isMobile }) {
   const [noteText, setNoteText] = useState("");
   const [noteType, setNoteType] = useState("general");
   const [reminderOn, setReminderOn] = useState(false);
@@ -43,6 +43,9 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
       <div className="p-4 cursor-pointer hover:bg-stone-50 transition" onClick={onToggle}>
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
+            <input type="checkbox" checked={isSelected} onChange={(e) => { e.stopPropagation(); onSelect(contact.id); }}
+              onClick={e => e.stopPropagation()}
+              className="mt-2.5 w-4 h-4 rounded border-stone-300 text-amber-500 focus:ring-amber-400 cursor-pointer flex-shrink-0" />
             <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-600 flex-shrink-0">
               {contact.name.split(" ").map(n => n[0]).join("")}
             </div>
