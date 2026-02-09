@@ -1,0 +1,88 @@
+import { useState } from "react";
+import Modal from "../shared/Modal";
+import SuccessScreen from "../shared/SuccessScreen";
+
+export default function NewContactModal({ currentUser, onSave, onClose }) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [company, setCompany] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [suburb, setSuburb] = useState("");
+  const [state, setState] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSave() {
+    if (!firstName.trim() || !lastName.trim()) return;
+    setError("");
+    setSaving(true);
+    try {
+      await onSave({ firstName, lastName, company, phone, email, suburb, state });
+      setSaved(true);
+      setTimeout(() => onClose(), 1200);
+    } catch (err) {
+      setError(err.message);
+    }
+    setSaving(false);
+  }
+
+  return (
+    <Modal title="New Contact" onClose={onClose}>
+      {saved ? (
+        <SuccessScreen message="Contact Created" sub={`${firstName} ${lastName} has been added.`} />
+      ) : (
+        <div className="px-6 py-5 space-y-4 overflow-y-auto" style={{ maxHeight: "calc(90vh - 140px)" }}>
+          {error && <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-1.5">First Name *</label>
+              <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="e.g. David"
+                className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-1.5">Last Name *</label>
+              <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="e.g. Harrison"
+                className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1.5">Company</label>
+            <input type="text" value={company} onChange={e => setCompany(e.target.value)} placeholder="e.g. Apex Building Solutions"
+              className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1.5">Phone</label>
+            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 0412 345 678"
+              className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1.5">Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="e.g. david@apexbuilding.com.au"
+              className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-1.5">Suburb</label>
+              <input type="text" value={suburb} onChange={e => setSuburb(e.target.value)} placeholder="e.g. Sydney"
+                className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-1.5">State</label>
+              <select value={state} onChange={e => setState(e.target.value)}
+                className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent">
+                <option value="">Select...</option>
+                {["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+          <button onClick={handleSave} disabled={!firstName.trim() || !lastName.trim() || saving}
+            className="w-full py-3 rounded-xl font-semibold text-white transition bg-violet-500 hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed">
+            {saving ? "Creating..." : "Create Contact"}
+          </button>
+        </div>
+      )}
+    </Modal>
+  );
+}

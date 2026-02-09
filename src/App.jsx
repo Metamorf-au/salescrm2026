@@ -1,5 +1,5 @@
-import PrecisionCRM from './precision-crm-prototype.jsx'
+import AppShell from './layout/AppShell'
 
 export default function App() {
-  return <PrecisionCRM />
+  return <AppShell />
 }
