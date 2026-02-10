@@ -312,12 +312,16 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                 const done = isCompleted(todo);
                 const overdue = !done && isOverdue(todo.reminder);
                 return (
-                  <div key={todo.uid} onClick={() => handleToggleTodo(todo)}
-                    className={`bg-white rounded-xl border p-4 hover:shadow-md transition cursor-pointer group ${overdue ? "border-red-300 bg-red-50/40" : "border-stone-200"} ${done ? "opacity-60" : ""}`}>
+                  <div key={todo.uid}
+                    className={`bg-white rounded-xl border p-4 transition group ${overdue ? "border-red-300 bg-red-50/40" : "border-stone-200"} ${done ? "opacity-60" : ""}`}>
                     <div className="flex items-start gap-3">
-                      <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${done ? "bg-emerald-500 border-emerald-500" : overdue ? "border-red-400 group-hover:border-red-500" : "border-stone-300 group-hover:border-amber-400"}`}>
-                        {done && <CheckCircle size={14} className="text-white" />}
-                      </div>
+                      <button type="button" onClick={() => handleToggleTodo(todo)}
+                        className={`mt-0.5 w-8 h-8 -m-1.5 rounded-lg flex items-center justify-center flex-shrink-0 transition ${done ? "" : "cursor-pointer hover:bg-stone-100 active:bg-stone-200"}`}
+                        disabled={done}>
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition ${done ? "bg-emerald-500 border-emerald-500" : overdue ? "border-red-400 group-hover:border-red-500" : "border-stone-300 group-hover:border-amber-400"}`}>
+                          {done && <CheckCircle size={14} className="text-white" />}
+                        </div>
+                      </button>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className={`font-semibold text-slate-800 ${done ? "line-through text-slate-400" : ""}`}>{todo.contactName}</p>
