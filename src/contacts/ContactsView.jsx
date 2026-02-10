@@ -191,6 +191,12 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
             placeholder="Search contacts or companies..."
             className="w-full pl-9 pr-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
         </div>
+        {hasActiveFilters && (
+          <button onClick={clearFilters} title="Clear all filters"
+            className="p-2.5 bg-white border border-stone-200 rounded-xl text-slate-400 hover:text-amber-600 hover:border-amber-400 transition">
+            <FilterX size={16} />
+          </button>
+        )}
         <div className="flex gap-2">
           {!isRepOnly && (
             <select value={ownerFilter} onChange={e => setOwnerFilter(e.target.value)}
@@ -214,20 +220,18 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
             <option value="60">60+ days</option>
             <option value="90">90+ days</option>
           </select>
-          {hasActiveFilters && (
-            <button onClick={clearFilters} title="Clear all filters"
-              className="p-2.5 bg-white border border-stone-200 rounded-xl text-slate-400 hover:text-amber-600 hover:border-amber-400 transition">
-              <FilterX size={16} />
-            </button>
-          )}
-          {isViewingArchived && (
-            <button onClick={exportCsv} title="Export to CSV"
-              className="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
-              <Download size={14} /> CSV
-            </button>
-          )}
         </div>
       </div>
+
+      {/* CSV Export (archived view) */}
+      {isViewingArchived && (
+        <div>
+          <button onClick={exportCsv} title="Export to CSV"
+            className="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
+            <Download size={14} /> Export CSV
+          </button>
+        </div>
+      )}
 
       {/* Select All + Bulk Actions */}
       {filtered.length > 0 && (
