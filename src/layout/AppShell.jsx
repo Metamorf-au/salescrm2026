@@ -468,9 +468,8 @@ export default function AppShell() {
 
   async function handleCompleteTodo(todo) {
     try {
-      if (todo.type === "deal") {
-        await completeDealTodo(todo.dealId);
-      } else {
+      // Notes: write completed_at to DB immediately so it persists across refresh
+      if (todo.type !== "deal") {
         await completeNote(todo.noteId);
       }
       await insertActivity({
@@ -485,7 +484,15 @@ export default function AppShell() {
     }
   }
 
-  async function handleClearCompleted() {
+  async function handleClearCompleted(dealTodos) {
+    try {
+      // Only deal to-dos need DB writes on clear (notes already have completed_at)
+      for (const todo of dealTodos) {
+        await completeDealTodo(todo.dealId);
+      }
+    } catch (err) {
+      console.error("Error clearing completed todos:", err);
+    }
     await loadAllData();
   }
 
