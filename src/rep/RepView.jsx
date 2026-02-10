@@ -33,14 +33,19 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const dailyPct = Math.min((callsToday / DAILY_TARGET) * 100, 100);
   const weeklyPct = Math.min((callsWeek / WEEKLY_TARGET) * 100, 100);
 
-  // Build to-do list from follow_up/meeting notes (not completed) + deal next dates
+  // Build to-do list from follow_up/meeting notes + deal next dates
   const myTodos = [];
   for (const [contactId, notes] of Object.entries(notesByContact)) {
     const contact = contacts.find(c => String(c.id) === String(contactId));
     if (!contact) continue;
     for (const note of notes) {
-      if ((note.type === "follow_up" || note.type === "meeting") && !note.completedAt) {
-        myTodos.push({ ...note, uid: `${contactId}-${note.id}`, noteId: note.id, contactName: contact.name, company: contact.company, contactId });
+      if (note.type === "follow_up" || note.type === "meeting") {
+        const todo = { ...note, uid: `${contactId}-${note.id}`, noteId: note.id, contactName: contact.name, company: contact.company, contactId };
+        // If already completed in DB, pre-mark as completed
+        if (note.completedAt) {
+          todo.dbCompleted = true;
+        }
+        myTodos.push(todo);
       }
     }
   }
@@ -65,7 +70,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   function filterTodos(todos, filterKey) {
     return todos.filter(todo => {
-      const done = completedIds[todo.uid];
+      const done = isCompleted(todo);
       // Always show completed items (they get removed on "Clear Completed")
       if (done) return true;
 
@@ -96,24 +101,25 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   // Sort: overdue first, then by date ascending, completed last
   filteredTodos.sort((a, b) => {
-    const aDone = completedIds[a.uid] ? 1 : 0;
-    const bDone = completedIds[b.uid] ? 1 : 0;
+    const aDone = isCompleted(a) ? 1 : 0;
+    const bDone = isCompleted(b) ? 1 : 0;
     if (aDone !== bDone) return aDone - bDone;
     const aDate = a.reminder ? new Date(a.reminder) : new Date("9999-12-31");
     const bDate = b.reminder ? new Date(b.reminder) : new Date("9999-12-31");
     return aDate - bDate;
   });
 
-  const pendingCount = myTodos.filter(t => !completedIds[t.uid]).length;
-  const completedCount = Object.keys(completedIds).length;
+  // Merge DB-completed and locally-completed
+  const isCompleted = (todo) => todo.dbCompleted || completedIds[todo.uid];
+  const pendingCount = myTodos.filter(t => !isCompleted(t)).length;
+  const completedCount = myTodos.filter(t => isCompleted(t)).length;
 
   // CRM compliance based on all todos (not just filtered)
   const totalTodos = myTodos.length;
-  const allCompleted = myTodos.filter(t => completedIds[t.uid]).length;
-  const crmCompliance = totalTodos > 0 ? Math.round((allCompleted / totalTodos) * 100) : (activityLog.length > 0 ? 100 : 0);
+  const crmCompliance = totalTodos > 0 ? Math.round((completedCount / totalTodos) * 100) : (activityLog.length > 0 ? 100 : 0);
 
   function handleToggleTodo(todo) {
-    if (completedIds[todo.uid]) return; // Can't uncheck - it's persisted in DB
+    if (isCompleted(todo)) return; // Can't uncheck
     setCompletedIds(prev => ({ ...prev, [todo.uid]: true }));
     if (onCompleteTodo) {
       onCompleteTodo(todo);
@@ -121,8 +127,10 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   }
 
   function handleClearCompleted() {
+    // Collect all locally-completed todos (not already persisted in DB) to persist now
+    const todosToCommit = myTodos.filter(t => completedIds[t.uid] && !t.dbCompleted);
     setCompletedIds({});
-    if (onClearCompleted) onClearCompleted();
+    if (onClearCompleted) onClearCompleted(todosToCommit);
   }
 
   const activeFilter = TODO_FILTERS.find(f => f.key === todoFilter);
@@ -234,7 +242,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                 const isDeal = todo.type === "deal";
                 const ntc = isDeal ? null : noteTypeConfig(todo.type);
                 const sc = isDeal ? stageConfig(todo.dealStage) : null;
-                const done = completedIds[todo.uid];
+                const done = isCompleted(todo);
                 const overdue = !done && isOverdue(todo.reminder);
                 return (
                   <div key={todo.uid} onClick={() => handleToggleTodo(todo)}

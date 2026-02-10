@@ -468,11 +468,6 @@ export default function AppShell() {
 
   async function handleCompleteTodo(todo) {
     try {
-      if (todo.type === "deal") {
-        await completeDealTodo(todo.dealId);
-      } else {
-        await completeNote(todo.noteId);
-      }
       await insertActivity({
         userId: currentUser.id,
         activityType: "todo_completed",
@@ -481,11 +476,22 @@ export default function AppShell() {
         summary: `To-do completed: ${todo.text.substring(0, 60)}`,
       });
     } catch (err) {
-      console.error("Error completing todo:", err);
+      console.error("Error logging todo completion:", err);
     }
   }
 
-  async function handleClearCompleted() {
+  async function handleClearCompleted(completedTodos) {
+    try {
+      for (const todo of completedTodos) {
+        if (todo.type === "deal") {
+          await completeDealTodo(todo.dealId);
+        } else {
+          await completeNote(todo.noteId);
+        }
+      }
+    } catch (err) {
+      console.error("Error clearing completed todos:", err);
+    }
     await loadAllData();
   }
 
