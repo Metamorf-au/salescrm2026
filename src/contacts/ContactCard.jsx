@@ -41,7 +41,7 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
   return (
     <div className={`bg-white rounded-xl border overflow-hidden transition-all ${isExpanded ? "border-amber-400 ring-1 ring-amber-200" : "border-stone-200"}`}>
       {/* Collapsed Tile */}
-      <div className="p-4 cursor-pointer hover:bg-stone-50 transition" onClick={onToggle}>
+      <div className={`${isMobile ? "p-4" : "px-4 py-3"} cursor-pointer hover:bg-stone-50 transition`} onClick={onToggle}>
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
             <input type="checkbox" checked={isSelected} onChange={(e) => { e.stopPropagation(); onSelect(contact.id); }}
@@ -63,14 +63,20 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
               </p>
             </div>
           </div>
-          <div className="text-right text-xs text-slate-400">
-            <p>Last contact:</p>
-            <p>{contact.lastContact}</p>
+          <div className="text-right text-xs text-slate-400 flex-shrink-0">
+            {isMobile ? (
+              <>
+                <p>Last contact:</p>
+                <p>{contact.lastContact}</p>
+              </>
+            ) : (
+              <p>Last contact: {contact.lastContact}</p>
+            )}
             {deals.length > 0 && <p className="mt-1 font-medium text-amber-600">{deals.length} deal{deals.length > 1 ? "s" : ""}</p>}
           </div>
         </div>
-        <div className="flex items-end gap-3 mt-3">
-          <div className={`grid ${isMobile ? "grid-cols-1 gap-1.5" : "grid-cols-2 gap-x-4 gap-y-1.5"} flex-1 text-xs text-slate-500`}>
+        <div className="flex items-end gap-3 mt-2">
+          <div className={`grid ${isMobile ? "grid-cols-1 gap-1.5" : "grid-cols-4 gap-x-4"} flex-1 text-xs text-slate-500`}>
             <a href={`tel:${contact.phone || contact.mobile}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-slate-500 hover:text-amber-600 underline decoration-slate-300 hover:decoration-amber-400 transition"><Phone size={12} /> {contact.phone || contact.mobile}</a>
             <a href={`mailto:${contact.email}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-slate-500 hover:text-amber-600 underline decoration-slate-300 hover:decoration-amber-400 transition"><Mail size={12} /> {contact.email}</a>
             <span className="flex items-center gap-1"><MapPin size={12} /> {contact.location}</span>
