@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { fetchAdminActivityLog } from "../supabaseData";
-import { activityTypeConfig } from "../shared/constants";
+import { activityTypeConfig } from "./constants";
 import { ChevronDown, User, Calendar, Activity, Download } from "lucide-react";
 
 const ACTIVITY_TYPES = [

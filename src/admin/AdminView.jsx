@@ -9,7 +9,6 @@ import {
   CheckCircle, XCircle, X, Settings, Lock, Shield, Eye,
   UserPlus, Users, Building2
 } from "lucide-react";
-import AdminActivityLog from "./AdminActivityLog";
 
 export default function AdminView({ isMobile, currentUser }) {
   const [showAddUser, setShowAddUser] = useState(false);
@@ -240,9 +239,6 @@ export default function AdminView({ isMobile, currentUser }) {
           )}
         </div>
       </div>
-
-      {/* Activity Log Deep-Dive */}
-      <AdminActivityLog isMobile={isMobile} />
 
       {/* Data Import */}
       <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">

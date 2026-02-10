@@ -5,6 +5,7 @@ import { DAILY_TARGET, WEEKLY_TARGET, getStatus, statusConfig } from "../shared/
 import { formatCurrency } from "../shared/formatters";
 import { computeRepMetrics } from "../supabaseData";
 import StatusBadge from "../shared/StatusBadge";
+import ActivityLogExplorer from "../shared/ActivityLogExplorer";
 
 export default function ManagerDashboard({ reps, deals, contacts, rawCalls, currentUser, isMobile }) {
   const isRepOnly = currentUser.role === "rep";
@@ -225,6 +226,9 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
           </table>
         </div>
       </div>
+
+      {/* Activity Log */}
+      {!isRepOnly && <ActivityLogExplorer isMobile={isMobile} />}
     </div>
   );
 }
