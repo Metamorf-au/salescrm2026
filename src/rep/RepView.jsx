@@ -4,7 +4,19 @@ import { DAILY_TARGET, WEEKLY_TARGET, outcomeConfig, activityTypeConfig, noteTyp
 import { formatReminderDate, formatCurrency, isOverdue } from "../shared/formatters";
 
 export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, isMobile }) {
-  const [checkedTodos, setCheckedTodos] = useState({});
+  // Persist checked to-dos in localStorage per user
+  const storageKey = `crm_todos_${currentUser.id}`;
+  const [checkedTodos, setCheckedTodos] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch { return {}; }
+  });
+
+  function toggleTodo(uid) {
+    setCheckedTodos(prev => {
+      const next = { ...prev, [uid]: !prev[uid] };
+      localStorage.setItem(storageKey, JSON.stringify(next));
+      return next;
+    });
+  }
 
   // Compute KPIs from real data
   const now = new Date();
@@ -51,10 +63,6 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   const completedTodos = myTodos.filter(t => checkedTodos[t.uid]).length;
   const crmCompliance = myTodos.length > 0 ? Math.round((completedTodos / myTodos.length) * 100) : (activityLog.length > 0 ? 100 : 0);
-
-  function toggleTodo(uid) {
-    setCheckedTodos(prev => ({ ...prev, [uid]: !prev[uid] }));
-  }
 
   const userName = currentUser.name.split(" ")[0];
 
