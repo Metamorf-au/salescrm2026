@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audit": "npm audit --production",
+    "audit:fix": "npm audit fix --production",
+    "outdated": "npm outdated"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
