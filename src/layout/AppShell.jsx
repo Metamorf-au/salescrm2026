@@ -573,6 +573,7 @@ export default function AppShell() {
                     deals={deals} reps={reps} currentUser={currentUser}
                     onDealWon={handleDealWon} onDealLost={handleDealLost} onDealVoid={handleDealVoid}
                     onEditDeal={(deal) => setEditDeal(deal)}
+                    onDealStageChange={handleEditDeal}
                     isMobile={isMobile}
                   />
                 )}
