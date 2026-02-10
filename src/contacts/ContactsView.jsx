@@ -12,6 +12,8 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
   const [bulkAction, setBulkAction] = useState(null); // "delete" | "reassign" | "archive"
   const [reassignTo, setReassignTo] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
+  const PAGE_SIZE = 25;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const isRepOnly = currentUser.role === "rep";
   const isViewingArchived = statusFilter === "archived";
@@ -22,6 +24,7 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
     setOwnerFilter("all");
     setStatusFilter("all");
     setActivityFilter("all");
+    setVisibleCount(PAGE_SIZE);
   }
 
   function exportCsv() {
@@ -341,7 +344,7 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
 
       {/* Contact List */}
       <div className="space-y-2">
-        {filtered.map(c => {
+        {filtered.slice(0, visibleCount).map(c => {
           const contactDeals = deals.filter(d => d.contactId === c.id);
           const contactCalls = callsByContact[c.id] || [];
           const contactNotes = notesByContact[c.id] || [];
@@ -368,6 +371,14 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
           <div className="text-center py-12 text-slate-400">
             <Users size={32} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm">No contacts match your filters</p>
+          </div>
+        )}
+        {visibleCount < filtered.length && (
+          <div className="text-center pt-2 pb-4">
+            <button onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
+              className="px-6 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
+              Show more ({filtered.length - visibleCount} remaining)
+            </button>
           </div>
         )}
       </div>
