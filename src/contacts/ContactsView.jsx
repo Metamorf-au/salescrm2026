@@ -185,7 +185,7 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
 
       {/* Filters */}
       <div className={isMobile ? "space-y-2" : "flex items-center gap-3"}>
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${isMobile ? "" : "flex-1"}`}>
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
