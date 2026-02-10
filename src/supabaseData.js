@@ -557,19 +557,38 @@ export async function fetchAdminActivityLog({ activityType, startDate, endDate, 
 // COMPUTE REP METRICS (for Manager Dashboard)
 // ============================================================
 
-export function computeRepMetrics(repId, rawCalls, deals, contacts) {
+export function computeRepMetrics(repId, rawCalls, deals, contacts, dateRange) {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const weekStart = new Date(todayStart);
   const dayOfWeek = weekStart.getDay();
   weekStart.setDate(weekStart.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Monday start
 
+  // Use provided date range or default to this week
+  const rangeStart = dateRange?.start || weekStart;
+  const rangeEnd = dateRange?.end || null; // null = up to now
+
   const repCalls = rawCalls.filter(c => c.callerId === repId);
+
+  // Always compute today's calls (used for status traffic-light)
   const callsToday = repCalls.filter(c => new Date(c.calledAt) >= todayStart).length;
   const callsWeek = repCalls.filter(c => new Date(c.calledAt) >= weekStart).length;
 
-  const meetingsSet = repCalls.filter(c => c.outcome === "meeting" && new Date(c.calledAt) >= weekStart).length;
-  const newContacts = contacts.filter(c => c.ownerId === repId && c.createdAt && new Date(c.createdAt) >= weekStart).length;
+  // Range-filtered metrics
+  const callsInRange = repCalls.filter(c => {
+    const d = new Date(c.calledAt);
+    return d >= rangeStart && (!rangeEnd || d < rangeEnd);
+  }).length;
+
+  const meetingsSet = repCalls.filter(c => {
+    const d = new Date(c.calledAt);
+    return c.outcome === "meeting" && d >= rangeStart && (!rangeEnd || d < rangeEnd);
+  }).length;
+
+  const newContacts = contacts.filter(c => {
+    const d = c.createdAt ? new Date(c.createdAt) : null;
+    return c.ownerId === repId && d && d >= rangeStart && (!rangeEnd || d < rangeEnd);
+  }).length;
 
   const repDeals = deals.filter(d => d.ownerId === repId);
   const activeDeals = repDeals.filter(d => !["won", "lost", "closed"].includes(d.stage));
@@ -584,6 +603,7 @@ export function computeRepMetrics(repId, rawCalls, deals, contacts) {
   return {
     callsToday,
     callsWeek,
+    callsInRange,
     crmCompliance,
     meetingsSet,
     newContacts,
