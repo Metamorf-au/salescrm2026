@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell } from "lucide-react";
-import { DAILY_TARGET, WEEKLY_TARGET, outcomeConfig, activityTypeConfig, noteTypeConfig } from "../shared/constants";
-import { formatReminderDate, isOverdue } from "../shared/formatters";
+import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, Briefcase } from "lucide-react";
+import { DAILY_TARGET, WEEKLY_TARGET, outcomeConfig, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
+import { formatReminderDate, formatCurrency, isOverdue } from "../shared/formatters";
 
 export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, isMobile }) {
   const [checkedTodos, setCheckedTodos] = useState({});
@@ -23,7 +23,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const dailyPct = Math.min((callsToday / DAILY_TARGET) * 100, 100);
   const weeklyPct = Math.min((callsWeek / WEEKLY_TARGET) * 100, 100);
 
-  // Build to-do list from follow_up and meeting notes
+  // Build to-do list from follow_up/meeting notes + deal next dates
   const myTodos = [];
   for (const [contactId, notes] of Object.entries(notesByContact)) {
     const contact = contacts.find(c => String(c.id) === String(contactId));
@@ -33,6 +33,20 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
         myTodos.push({ ...note, uid: `${contactId}-${note.id}`, contactName: contact.name, company: contact.company, contactId });
       }
     }
+  }
+  // Add active deals with next dates as to-dos
+  const myActiveDeals = deals.filter(d => d.ownerId === currentUser.id && d.nextDate && !["won", "lost", "closed"].includes(d.stage));
+  for (const deal of myActiveDeals) {
+    myTodos.push({
+      uid: `deal-${deal.id}`,
+      type: "deal",
+      contactName: deal.contact,
+      company: deal.company,
+      text: `${deal.title}${deal.nextAction ? ` – ${deal.nextAction}` : ""}`,
+      reminder: deal.nextDate,
+      dealValue: deal.value,
+      dealStage: deal.stage,
+    });
   }
 
   const completedTodos = myTodos.filter(t => checkedTodos[t.uid]).length;
@@ -110,7 +124,9 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
           {myTodos.length > 0 ? (
             <div className="space-y-2">
               {myTodos.map(todo => {
-                const ntc = noteTypeConfig(todo.type);
+                const isDeal = todo.type === "deal";
+                const ntc = isDeal ? null : noteTypeConfig(todo.type);
+                const sc = isDeal ? stageConfig(todo.dealStage) : null;
                 const done = checkedTodos[todo.uid];
                 const overdue = !done && isOverdue(todo.reminder);
                 return (
@@ -123,11 +139,18 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className={`font-semibold text-slate-800 ${done ? "line-through text-slate-400" : ""}`}>{todo.contactName}</p>
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
+                          {isDeal ? (
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${sc.bg} ${sc.text}`}>{sc.label}</span>
+                          ) : (
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
+                          )}
                           {overdue && <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-600">Overdue</span>}
                         </div>
                         <p className={`text-sm text-slate-500 ${done ? "line-through" : ""}`}>{todo.company}</p>
                         <p className={`text-sm mt-1.5 ${done ? "line-through text-slate-400" : "text-slate-600"}`}>{todo.text}</p>
+                        {isDeal && todo.dealValue > 0 && (
+                          <p className={`text-xs font-medium mt-1 ${done ? "text-slate-400" : "text-emerald-600"}`}>{formatCurrency(todo.dealValue)}</p>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {todo.reminder && (
@@ -143,7 +166,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-stone-200 p-6 text-center">
-              <p className="text-sm text-slate-400">No to-do's right now. Add a Follow-up or Meeting note to see it here.</p>
+              <p className="text-sm text-slate-400">No to-do's right now. Add a Follow-up, Meeting note, or set a Next Date on a deal to see it here.</p>
             </div>
           )}
         </div>

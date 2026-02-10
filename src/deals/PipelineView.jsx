@@ -220,34 +220,40 @@ export default function PipelineView({ deals, reps, currentUser, onDealWon, onDe
           <h1 className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-slate-800`}>Deal Pipeline</h1>
           <p className="text-slate-500 mt-0.5 text-sm">Visual overview of all deals by stage</p>
         </div>
-        <div className={`flex ${isMobile ? "flex-wrap" : "items-center"} gap-4`}>
-          <div className="bg-white border border-stone-200 rounded-xl px-4 py-2 text-center">
-            <p className="text-xs text-slate-400">Active Pipeline</p>
-            <p className="text-lg font-bold text-slate-800">{formatCurrency(totalActive)}</p>
-          </div>
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 text-center">
-            <p className="text-xs text-amber-600">Weighted Pipeline</p>
-            <p className="text-lg font-bold text-amber-700">{formatCurrency(weightedTotal)}</p>
-          </div>
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 text-center">
-            <p className="text-xs text-emerald-600">Won This Month</p>
-            <p className="text-lg font-bold text-emerald-700">{formatCurrency(totalWon)}</p>
-          </div>
-          <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-2 text-center">
-            <p className="text-xs text-rose-600">Lost This Month</p>
-            <p className="text-lg font-bold text-rose-700">{formatCurrency(totalLost)}</p>
-          </div>
-          {staleCount > 0 && (
-            <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-2 text-center">
-              <p className="text-xs text-orange-600 flex items-center justify-center gap-1"><AlertTriangle size={10} /> Overdue</p>
-              <p className="text-lg font-bold text-orange-700">{staleCount}</p>
+        <div className={isMobile ? "space-y-3" : "flex items-center gap-4"}>
+          <div className={`grid grid-cols-2 ${isMobile ? "gap-3" : "flex gap-4 contents"}`}>
+            <div className="bg-white border border-stone-200 rounded-xl px-4 py-2 text-center">
+              <p className="text-xs text-slate-400">Active Pipeline</p>
+              <p className="text-lg font-bold text-slate-800">{formatCurrency(totalActive)}</p>
             </div>
-          )}
-          {closedDeals.length > 0 && (
-            <button onClick={() => setShowGraveyard(!showGraveyard)} className={`border rounded-xl px-4 py-2 text-center transition ${showGraveyard ? "bg-slate-200 border-slate-400" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}>
-              <p className="text-xs text-slate-500">Voided</p>
-              <p className="text-lg font-bold text-slate-600">{closedDeals.length}</p>
-            </button>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 text-center">
+              <p className="text-xs text-amber-600">Weighted Pipeline</p>
+              <p className="text-lg font-bold text-amber-700">{formatCurrency(weightedTotal)}</p>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 text-center">
+              <p className="text-xs text-emerald-600">Won This Month</p>
+              <p className="text-lg font-bold text-emerald-700">{formatCurrency(totalWon)}</p>
+            </div>
+            <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-2 text-center">
+              <p className="text-xs text-rose-600">Lost This Month</p>
+              <p className="text-lg font-bold text-rose-700">{formatCurrency(totalLost)}</p>
+            </div>
+          </div>
+          {(staleCount > 0 || closedDeals.length > 0) && (
+            <div className={`flex ${isMobile ? "" : ""} gap-3`}>
+              {staleCount > 0 && (
+                <div className={`bg-orange-50 border border-orange-200 rounded-xl px-4 py-2 text-center ${isMobile ? "flex-1" : ""}`}>
+                  <p className="text-xs text-orange-600 flex items-center justify-center gap-1"><AlertTriangle size={10} /> Overdue</p>
+                  <p className="text-lg font-bold text-orange-700">{staleCount}</p>
+                </div>
+              )}
+              {closedDeals.length > 0 && (
+                <button onClick={() => setShowGraveyard(!showGraveyard)} className={`border rounded-xl px-4 py-2 text-center transition ${isMobile ? "flex-1" : ""} ${showGraveyard ? "bg-slate-200 border-slate-400" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}>
+                  <p className="text-xs text-slate-500">Voided</p>
+                  <p className="text-lg font-bold text-slate-600">{closedDeals.length}</p>
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
