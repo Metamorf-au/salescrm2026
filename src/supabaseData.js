@@ -365,6 +365,14 @@ export async function bulkArchiveContacts(contactIds) {
   if (error) throw new Error(error.message);
 }
 
+export async function bulkUnarchiveContacts(contactIds) {
+  const { error } = await supabase
+    .from("contacts")
+    .update({ status: "active" })
+    .in("id", contactIds);
+  if (error) throw new Error(error.message);
+}
+
 export async function insertCall({ contactId, callerId, outcome, summary, calledAt }) {
   const { data, error } = await supabase
     .from("calls")

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Search, Users, Trash2, UserCog, CheckSquare, Archive } from "lucide-react";
+import { Search, Users, Trash2, UserCog, CheckSquare, Archive, ArchiveRestore, Download, FilterX } from "lucide-react";
 import ContactCard from "./ContactCard";
 
-export default function ContactsView({ contacts, deals, callsByContact, notesByContact, reps, currentUser, onNewContact, onNewDeal, onAddNote, onLogCall, onAddInlineNote, onEditContact, onDeleteContact, onBulkDelete, onBulkReassign, onBulkArchive, isMobile }) {
+export default function ContactsView({ contacts, deals, callsByContact, notesByContact, reps, currentUser, onNewContact, onNewDeal, onAddNote, onLogCall, onAddInlineNote, onEditContact, onDeleteContact, onBulkDelete, onBulkReassign, onBulkArchive, onBulkUnarchive, isMobile }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -14,6 +14,31 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
   const [bulkLoading, setBulkLoading] = useState(false);
 
   const isRepOnly = currentUser.role === "rep";
+  const isViewingArchived = statusFilter === "archived";
+  const hasActiveFilters = searchTerm || ownerFilter !== "all" || statusFilter !== "all" || activityFilter !== "all";
+
+  function clearFilters() {
+    setSearchTerm("");
+    setOwnerFilter("all");
+    setStatusFilter("all");
+    setActivityFilter("all");
+  }
+
+  function exportCsv() {
+    const headers = ["Name", "Company", "Phone", "Mobile", "Email", "Job Title", "Industry", "Location", "Owner", "Last Contact"];
+    const rows = filtered.map(c => [
+      c.name, c.company, c.phone, c.mobile, c.email, c.jobTitle || "", c.industry || "",
+      c.location, c.owner, c.lastContact
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${(v || "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `contacts-${statusFilter}-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   const now = new Date();
   const filtered = contacts.filter(c => {
@@ -104,6 +129,18 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
     setBulkLoading(false);
   }
 
+  async function handleBulkUnarchive() {
+    setBulkLoading(true);
+    try {
+      const ids = [...selectedIds];
+      await onBulkUnarchive(ids);
+      clearSelection();
+    } catch (err) {
+      console.error(err);
+    }
+    setBulkLoading(false);
+  }
+
   async function handleBulkReassign() {
     if (!reassignTo) return;
     setBulkLoading(true);
@@ -167,7 +204,6 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
             <option value="new">New</option>
-            <option value="stale">Stale</option>
             <option value="archived">Archived</option>
           </select>
           <select value={activityFilter} onChange={e => setActivityFilter(e.target.value)}
@@ -178,6 +214,18 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
             <option value="60">60+ days</option>
             <option value="90">90+ days</option>
           </select>
+          {hasActiveFilters && (
+            <button onClick={clearFilters} title="Clear all filters"
+              className="p-2.5 bg-white border border-stone-200 rounded-xl text-slate-400 hover:text-amber-600 hover:border-amber-400 transition">
+              <FilterX size={16} />
+            </button>
+          )}
+          {isViewingArchived && (
+            <button onClick={exportCsv} title="Export to CSV"
+              className="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
+              <Download size={14} /> CSV
+            </button>
+          )}
         </div>
       </div>
 
@@ -205,15 +253,36 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
                       <UserCog size={13} /> Change Owner
                     </button>
                   )}
-                  <button onClick={() => setBulkAction("archive")}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
-                    <Archive size={13} /> Archive
-                  </button>
+                  {isViewingArchived ? (
+                    <button onClick={() => setBulkAction("unarchive")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 transition">
+                      <ArchiveRestore size={13} /> Restore
+                    </button>
+                  ) : (
+                    <button onClick={() => setBulkAction("archive")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
+                      <Archive size={13} /> Archive
+                    </button>
+                  )}
                   <button onClick={() => setBulkAction("delete")}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-rose-600 hover:border-rose-400 hover:bg-rose-50 transition">
                     <Trash2 size={13} /> Delete
                   </button>
                 </>
+              )}
+
+              {bulkAction === "unarchive" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-emerald-600 font-medium">Restore {selectedIds.size} contact{selectedIds.size > 1 ? "s" : ""}?</span>
+                  <button onClick={handleBulkUnarchive} disabled={bulkLoading}
+                    className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition disabled:opacity-50">
+                    {bulkLoading ? "Restoring..." : "Confirm"}
+                  </button>
+                  <button onClick={() => setBulkAction(null)} disabled={bulkLoading}
+                    className="px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-stone-50 transition disabled:opacity-50">
+                    Cancel
+                  </button>
+                </div>
               )}
 
               {bulkAction === "archive" && (
