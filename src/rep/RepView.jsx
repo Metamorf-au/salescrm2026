@@ -148,9 +148,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                         </div>
                         <p className={`text-sm text-slate-500 ${done ? "line-through" : ""}`}>{todo.company}</p>
                         <p className={`text-sm mt-1.5 ${done ? "line-through text-slate-400" : "text-slate-600"}`}>{todo.text}</p>
-                        {isDeal && todo.dealValue > 0 && (
-                          <p className={`text-xs font-medium mt-1 ${done ? "text-slate-400" : "text-emerald-600"}`}>{formatCurrency(todo.dealValue)}</p>
-                        )}
+
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {todo.reminder && (
