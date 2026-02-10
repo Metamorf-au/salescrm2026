@@ -404,7 +404,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
               <>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Activity size={18} className="text-slate-400" />
-                  <h2 className="text-base font-semibold text-slate-700">Activity</h2>
+                  <h2 className="text-base font-semibold text-slate-700">My Activity</h2>
                   <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full min-w-[24px] text-center ${filteredActivity.length > 0 ? "bg-sky-500 text-white" : "bg-stone-100 text-slate-400"}`}>
                     {filteredActivity.length}
                   </span>
