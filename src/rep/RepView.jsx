@@ -38,7 +38,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   const [todoFilter, setTodoFilter] = useState("3days");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [activityFilter, setActivityFilter] = useState("today");
+  const [activityFilter, setActivityFilter] = useState("3days");
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
 
   // Auto-expire deal to-dos older than 14 days (on mount)
