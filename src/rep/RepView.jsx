@@ -1,10 +1,20 @@
 import { useState } from "react";
-import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, Briefcase } from "lucide-react";
+import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, Briefcase, ChevronDown, Trash2, Filter } from "lucide-react";
 import { DAILY_TARGET, WEEKLY_TARGET, outcomeConfig, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
-import { formatReminderDate, formatCurrency, isOverdue } from "../shared/formatters";
+import { formatReminderDate, isOverdue } from "../shared/formatters";
 
-export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, isMobile }) {
-  const [checkedTodos, setCheckedTodos] = useState({});
+const TODO_FILTERS = [
+  { key: "today", label: "Due Today", days: 0 },
+  { key: "3days", label: "Next 3 Days", days: 3 },
+  { key: "7days", label: "Next 7 Days", days: 7 },
+  { key: "14days", label: "Next 14 Days", days: 14 },
+  { key: "overdue", label: "Overdue", days: -1 },
+];
+
+export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, onCompleteTodo, onClearCompleted, isMobile }) {
+  const [completedIds, setCompletedIds] = useState({});
+  const [todoFilter, setTodoFilter] = useState("3days");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   // Compute KPIs from real data
   const now = new Date();
@@ -23,14 +33,14 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const dailyPct = Math.min((callsToday / DAILY_TARGET) * 100, 100);
   const weeklyPct = Math.min((callsWeek / WEEKLY_TARGET) * 100, 100);
 
-  // Build to-do list from follow_up/meeting notes + deal next dates
+  // Build to-do list from follow_up/meeting notes (not completed) + deal next dates
   const myTodos = [];
   for (const [contactId, notes] of Object.entries(notesByContact)) {
     const contact = contacts.find(c => String(c.id) === String(contactId));
     if (!contact) continue;
     for (const note of notes) {
-      if (note.type === "follow_up" || note.type === "meeting") {
-        myTodos.push({ ...note, uid: `${contactId}-${note.id}`, contactName: contact.name, company: contact.company, contactId });
+      if ((note.type === "follow_up" || note.type === "meeting") && !note.completedAt) {
+        myTodos.push({ ...note, uid: `${contactId}-${note.id}`, noteId: note.id, contactName: contact.name, company: contact.company, contactId });
       }
     }
   }
@@ -39,23 +49,83 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   for (const deal of myActiveDeals) {
     myTodos.push({
       uid: `deal-${deal.id}`,
+      dealId: deal.id,
       type: "deal",
       contactName: deal.contact,
       company: deal.company,
       text: `${deal.title}${deal.nextAction ? ` – ${deal.nextAction}` : ""}`,
       reminder: deal.nextDate,
-      dealValue: deal.value,
       dealStage: deal.stage,
     });
   }
 
-  const completedTodos = myTodos.filter(t => checkedTodos[t.uid]).length;
-  const crmCompliance = myTodos.length > 0 ? Math.round((completedTodos / myTodos.length) * 100) : (activityLog.length > 0 ? 100 : 0);
+  // Filter to-dos based on selected filter
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
 
-  function toggleTodo(uid) {
-    setCheckedTodos(prev => ({ ...prev, [uid]: !prev[uid] }));
+  function filterTodos(todos, filterKey) {
+    return todos.filter(todo => {
+      const done = completedIds[todo.uid];
+      // Always show completed items (they get removed on "Clear Completed")
+      if (done) return true;
+
+      const reminderDate = todo.reminder ? new Date(todo.reminder) : null;
+      const overdueItem = reminderDate && reminderDate < todayStart;
+
+      if (filterKey === "overdue") {
+        return overdueItem;
+      }
+
+      // For forward-looking filters, always include overdue items
+      if (overdueItem) return true;
+
+      if (!reminderDate) {
+        // Items with no reminder show in all forward-looking filters
+        return true;
+      }
+
+      const filterDef = TODO_FILTERS.find(f => f.key === filterKey);
+      const cutoff = new Date(todayStart);
+      cutoff.setDate(cutoff.getDate() + filterDef.days + 1);
+
+      return reminderDate < cutoff;
+    });
   }
 
+  const filteredTodos = filterTodos(myTodos, todoFilter);
+
+  // Sort: overdue first, then by date ascending, completed last
+  filteredTodos.sort((a, b) => {
+    const aDone = completedIds[a.uid] ? 1 : 0;
+    const bDone = completedIds[b.uid] ? 1 : 0;
+    if (aDone !== bDone) return aDone - bDone;
+    const aDate = a.reminder ? new Date(a.reminder) : new Date("9999-12-31");
+    const bDate = b.reminder ? new Date(b.reminder) : new Date("9999-12-31");
+    return aDate - bDate;
+  });
+
+  const pendingCount = myTodos.filter(t => !completedIds[t.uid]).length;
+  const completedCount = Object.keys(completedIds).length;
+
+  // CRM compliance based on all todos (not just filtered)
+  const totalTodos = myTodos.length;
+  const allCompleted = myTodos.filter(t => completedIds[t.uid]).length;
+  const crmCompliance = totalTodos > 0 ? Math.round((allCompleted / totalTodos) * 100) : (activityLog.length > 0 ? 100 : 0);
+
+  function handleToggleTodo(todo) {
+    if (completedIds[todo.uid]) return; // Can't uncheck - it's persisted in DB
+    setCompletedIds(prev => ({ ...prev, [todo.uid]: true }));
+    if (onCompleteTodo) {
+      onCompleteTodo(todo);
+    }
+  }
+
+  function handleClearCompleted() {
+    setCompletedIds({});
+    if (onClearCompleted) onClearCompleted();
+  }
+
+  const activeFilter = TODO_FILTERS.find(f => f.key === todoFilter);
   const userName = currentUser.name.split(" ")[0];
 
   return (
@@ -116,21 +186,58 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* My To-Do's */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <CheckCircle size={18} className="text-slate-400" />
             <h2 className="text-base font-semibold text-slate-700">My To-Do's</h2>
-            <span className="ml-auto text-xs font-medium text-slate-400 bg-stone-100 px-2 py-0.5 rounded-full">{myTodos.length}</span>
+            {pendingCount > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full min-w-[24px] text-center shadow-sm animate-pulse">
+                {pendingCount}
+              </span>
+            )}
+            {pendingCount === 0 && myTodos.length > 0 && (
+              <span className="bg-emerald-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full min-w-[24px] text-center">
+                0
+              </span>
+            )}
+            <div className="ml-auto flex items-center gap-2">
+              {completedCount > 0 && (
+                <button onClick={handleClearCompleted}
+                  className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-red-500 transition px-2 py-1 rounded-lg hover:bg-red-50">
+                  <Trash2 size={12} />Clear Done
+                </button>
+              )}
+              {/* Filter dropdown */}
+              <div className="relative">
+                <button onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-stone-100 hover:bg-stone-200 px-2.5 py-1.5 rounded-lg transition">
+                  <Filter size={12} />{activeFilter.label}<ChevronDown size={12} />
+                </button>
+                {showFilterDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowFilterDropdown(false)} />
+                    <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl border border-stone-200 shadow-lg z-20 py-1 overflow-hidden">
+                      {TODO_FILTERS.map(f => (
+                        <button key={f.key} onClick={() => { setTodoFilter(f.key); setShowFilterDropdown(false); }}
+                          className={`w-full text-left px-3 py-2 text-xs font-medium transition ${todoFilter === f.key ? "bg-amber-50 text-amber-700" : "text-slate-600 hover:bg-stone-50"}`}>
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
-          {myTodos.length > 0 ? (
+          {filteredTodos.length > 0 ? (
             <div className="space-y-2">
-              {myTodos.map(todo => {
+              {filteredTodos.map(todo => {
                 const isDeal = todo.type === "deal";
                 const ntc = isDeal ? null : noteTypeConfig(todo.type);
                 const sc = isDeal ? stageConfig(todo.dealStage) : null;
-                const done = checkedTodos[todo.uid];
+                const done = completedIds[todo.uid];
                 const overdue = !done && isOverdue(todo.reminder);
                 return (
-                  <div key={todo.uid} onClick={() => toggleTodo(todo.uid)}
+                  <div key={todo.uid} onClick={() => handleToggleTodo(todo)}
                     className={`bg-white rounded-xl border p-4 hover:shadow-md transition cursor-pointer group ${overdue ? "border-red-300 bg-red-50/40" : "border-stone-200"} ${done ? "opacity-60" : ""}`}>
                     <div className="flex items-start gap-3">
                       <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${done ? "bg-emerald-500 border-emerald-500" : overdue ? "border-red-400 group-hover:border-red-500" : "border-stone-300 group-hover:border-amber-400"}`}>
@@ -148,7 +255,6 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                         </div>
                         <p className={`text-sm text-slate-500 ${done ? "line-through" : ""}`}>{todo.company}</p>
                         <p className={`text-sm mt-1.5 ${done ? "line-through text-slate-400" : "text-slate-600"}`}>{todo.text}</p>
-
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {todo.reminder && (
@@ -164,7 +270,9 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-stone-200 p-6 text-center">
-              <p className="text-sm text-slate-400">No to-do's right now. Add a Follow-up, Meeting note, or set a Next Date on a deal to see it here.</p>
+              <p className="text-sm text-slate-400">
+                {todoFilter === "overdue" ? "No overdue to-do's. Nice work!" : "No to-do's for this period. Add a Follow-up, Meeting note, or set a Next Date on a deal to see it here."}
+              </p>
             </div>
           )}
         </div>

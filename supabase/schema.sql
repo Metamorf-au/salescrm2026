@@ -137,6 +137,7 @@ create table public.notes (
   type text not null default 'general' check (type in ('general', 'follow_up', 'meeting', 'pricing', 'internal')),
   text text not null,
   reminder_at timestamptz,
+  completed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -175,7 +176,7 @@ create table public.activity_log (
   activity_type text not null check (activity_type in (
     'call', 'new_contact', 'new_deal', 'deal_won', 'deal_lost',
     'deal_voided', 'quote_sent', 'quote_requested', 'note_added',
-    'contact_updated', 'deal_updated'
+    'contact_updated', 'deal_updated', 'todo_completed'
   )),
   contact_name text,
   company_name text,

@@ -6,6 +6,7 @@ import {
   fetchActivityLog, groupCallsByContact,
   insertContact, updateContact, deleteContact, bulkDeleteContacts, bulkReassignContacts, bulkArchiveContacts, bulkUnarchiveContacts,
   insertCall, insertNote, insertDeal, updateDeal, insertActivity,
+  completeNote, completeDealTodo,
 } from "../supabaseData";
 
 // Views
@@ -465,6 +466,29 @@ export default function AppShell() {
     await loadAllData();
   }
 
+  async function handleCompleteTodo(todo) {
+    try {
+      if (todo.type === "deal") {
+        await completeDealTodo(todo.dealId);
+      } else {
+        await completeNote(todo.noteId);
+      }
+      await insertActivity({
+        userId: currentUser.id,
+        activityType: "todo_completed",
+        contactName: todo.contactName,
+        companyName: todo.company,
+        summary: `To-do completed: ${todo.text.substring(0, 60)}`,
+      });
+    } catch (err) {
+      console.error("Error completing todo:", err);
+    }
+  }
+
+  async function handleClearCompleted() {
+    await loadAllData();
+  }
+
   function openDealModal(contactId) {
     setDealContactId(contactId || null);
     setShowDealModal(true);
@@ -547,6 +571,8 @@ export default function AppShell() {
                     onNewDeal={() => openDealModal()}
                     onAddNote={() => setShowNoteModal(true)}
                     onNewContact={() => setShowContactModal(true)}
+                    onCompleteTodo={handleCompleteTodo}
+                    onClearCompleted={handleClearCompleted}
                     isMobile={isMobile}
                   />
                 )}

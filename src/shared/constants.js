@@ -102,6 +102,7 @@ export function activityTypeConfig(type) {
     note_added: { bg: "bg-sky-100", color: "text-sky-600", icon: MessageSquare, label: "Note Added" },
     contact_updated: { bg: "bg-slate-100", color: "text-slate-500", icon: UserPlus, label: "Updated" },
     deal_updated: { bg: "bg-amber-100", color: "text-amber-600", icon: DollarSign, label: "Deal Updated" },
+    todo_completed: { bg: "bg-emerald-100", color: "text-emerald-600", icon: CheckCircle, label: "To-Do Done" },
   };
   return map[type] || { bg: "bg-slate-100", color: "text-slate-500", icon: Activity, label: type };
 }
