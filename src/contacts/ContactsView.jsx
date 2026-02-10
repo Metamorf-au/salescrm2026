@@ -240,12 +240,6 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {isViewingArchived && (
-              <button onClick={exportCsv} title="Export to CSV"
-                className="flex items-center gap-1 px-2.5 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-slate-500 hover:border-amber-400 hover:text-amber-600 transition">
-                <Download size={12} /> CSV
-              </button>
-            )}
             {selectedIds.size > 0 && (
               <>
               {!bulkAction && (
@@ -336,6 +330,12 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
               </>
             )}
             </div>
+          {isViewingArchived && !isMobile && (
+            <button onClick={exportCsv} title="Export to CSV"
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-xs font-semibold transition ml-auto">
+              <Download size={12} /> CSV
+            </button>
+          )}
         </div>
       )}
 
