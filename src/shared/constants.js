@@ -5,7 +5,7 @@
 import {
   Phone, CheckCircle, AlertTriangle, XCircle, Calendar,
   Send, UserPlus, Briefcase, MessageSquare, Activity,
-  TrendingUp, DollarSign
+  TrendingUp, DollarSign, Trophy
 } from "lucide-react";
 
 export const DAILY_TARGET = 20;
@@ -92,9 +92,10 @@ export function contactStatusStyle(status) {
 
 export function activityTypeConfig(type) {
   const map = {
+    call: { bg: "bg-sky-100", color: "text-sky-600", icon: Phone, label: "Call" },
     new_contact: { bg: "bg-sky-100", color: "text-sky-600", icon: UserPlus, label: "New Contact" },
     new_deal: { bg: "bg-emerald-100", color: "text-emerald-600", icon: Briefcase, label: "New Deal" },
-    deal_won: { bg: "bg-emerald-100", color: "text-emerald-600", icon: TrendingUp, label: "Deal Won" },
+    deal_won: { bg: "bg-emerald-100", color: "text-emerald-600", icon: Trophy, label: "Deal Won" },
     deal_lost: { bg: "bg-rose-100", color: "text-rose-600", icon: XCircle, label: "Deal Lost" },
     deal_voided: { bg: "bg-slate-100", color: "text-slate-500", icon: XCircle, label: "Voided" },
     quote_sent: { bg: "bg-amber-100", color: "text-amber-600", icon: Send, label: "Quote Sent" },
