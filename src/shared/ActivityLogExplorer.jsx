@@ -26,10 +26,13 @@ const DATE_RANGES = [
   { key: "7days", label: "Last 7 Days" },
   { key: "14days", label: "Last 14 Days" },
   { key: "30days", label: "Last 30 Days" },
+  { key: "this_month", label: "This Month" },
+  { key: "last_month", label: "Last Month" },
   { key: "all", label: "All Time" },
+  { key: "custom", label: "Custom" },
 ];
 
-function getDateRange(key) {
+function getDateRange(key, customFrom, customTo) {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -56,6 +59,20 @@ function getDateRange(key) {
       d.setDate(d.getDate() - 30);
       return { startDate: d.toISOString(), endDate: null };
     }
+    case "this_month": {
+      const ms = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { startDate: ms.toISOString(), endDate: null };
+    }
+    case "last_month": {
+      const ms = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const me = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { startDate: ms.toISOString(), endDate: me.toISOString() };
+    }
+    case "custom": {
+      const s = customFrom ? new Date(customFrom).toISOString() : null;
+      const e = customTo ? new Date(customTo + "T23:59:59.999").toISOString() : null;
+      return { startDate: s, endDate: e };
+    }
     default:
       return { startDate: null, endDate: null };
   }
@@ -74,9 +91,11 @@ function formatActivityDateTime(dateStr) {
   return d.toLocaleDateString("en-AU", { day: "numeric", month: "short" }) + ` ${time}`;
 }
 
-export default function AdminActivityLog({ isMobile }) {
+export default function ActivityLogExplorer({ isMobile }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("7days");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
   const [repFilter, setRepFilter] = useState("all");
   const [activities, setActivities] = useState([]);
   const [reps, setReps] = useState([]);
@@ -97,7 +116,7 @@ export default function AdminActivityLog({ isMobile }) {
 
   const loadActivities = useCallback(async () => {
     setLoading(true);
-    const { startDate, endDate } = getDateRange(dateFilter);
+    const { startDate, endDate } = getDateRange(dateFilter, customFrom, customTo);
     const data = await fetchAdminActivityLog({
       activityType: typeFilter === "all" ? null : typeFilter,
       startDate,
@@ -106,7 +125,7 @@ export default function AdminActivityLog({ isMobile }) {
     });
     setActivities(data);
     setLoading(false);
-  }, [typeFilter, dateFilter, repFilter]);
+  }, [typeFilter, dateFilter, customFrom, customTo, repFilter]);
 
   useEffect(() => { loadActivities(); }, [loadActivities]);
 
@@ -171,6 +190,17 @@ export default function AdminActivityLog({ isMobile }) {
               <Calendar size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
+
+            {/* Custom date inputs */}
+            {dateFilter === "custom" && (
+              <>
+                <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+                  className="px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 w-[120px]" />
+                <span className="text-[10px] text-slate-400">to</span>
+                <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+                  className="px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 w-[120px]" />
+              </>
+            )}
 
             {/* Per-Rep Filter */}
             <div className="relative">

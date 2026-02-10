@@ -1,16 +1,77 @@
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell, CartesianGrid } from "recharts";
-import { Phone, Target, CheckCircle, XCircle, Calendar, Clock, UserPlus, FileText, Send, DollarSign, Users, User, Download } from "lucide-react";
+import { Phone, Target, CheckCircle, XCircle, Calendar, Clock, UserPlus, FileText, Send, DollarSign, Users, User, Download, ChevronDown } from "lucide-react";
 import { DAILY_TARGET, WEEKLY_TARGET, getStatus, statusConfig } from "../shared/constants";
 import { formatCurrency } from "../shared/formatters";
 import { computeRepMetrics } from "../supabaseData";
 import StatusBadge from "../shared/StatusBadge";
 import ActivityLogExplorer from "../shared/ActivityLogExplorer";
 
+const EXPORT_DATE_PRESETS = [
+  { key: "this_week", label: "This Week" },
+  { key: "last_7", label: "Last 7 Days" },
+  { key: "last_14", label: "Last 14 Days" },
+  { key: "last_30", label: "Last 30 Days" },
+  { key: "this_month", label: "This Month" },
+  { key: "last_month", label: "Last Month" },
+  { key: "custom", label: "Custom" },
+];
+
+function getExportDateRange(presetKey, customFrom, customTo) {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+
+  switch (presetKey) {
+    case "this_week": {
+      const ws = new Date(todayStart);
+      const dow = ws.getDay();
+      ws.setDate(ws.getDate() - (dow === 0 ? 6 : dow - 1));
+      return { start: ws, end: todayEnd, label: "This Week" };
+    }
+    case "last_7": {
+      const d = new Date(todayStart);
+      d.setDate(d.getDate() - 7);
+      return { start: d, end: todayEnd, label: "Last 7 Days" };
+    }
+    case "last_14": {
+      const d = new Date(todayStart);
+      d.setDate(d.getDate() - 14);
+      return { start: d, end: todayEnd, label: "Last 14 Days" };
+    }
+    case "last_30": {
+      const d = new Date(todayStart);
+      d.setDate(d.getDate() - 30);
+      return { start: d, end: todayEnd, label: "Last 30 Days" };
+    }
+    case "this_month": {
+      const ms = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { start: ms, end: todayEnd, label: "This Month" };
+    }
+    case "last_month": {
+      const ms = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const me = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { start: ms, end: me, label: "Last Month" };
+    }
+    case "custom": {
+      const s = customFrom ? new Date(customFrom) : new Date(0);
+      const e = customTo ? new Date(customTo + "T23:59:59.999") : todayEnd;
+      const label = `${customFrom || "?"} – ${customTo || "?"}`;
+      return { start: s, end: e, label };
+    }
+    default:
+      return { start: todayStart, end: todayEnd, label: "Today" };
+  }
+}
+
 export default function ManagerDashboard({ reps, deals, contacts, rawCalls, currentUser, isMobile }) {
   const isRepOnly = currentUser.role === "rep";
   const repUser = isRepOnly ? reps.find(r => r.name === currentUser.name) : null;
   const [selectedRep, setSelectedRep] = useState(isRepOnly && repUser ? repUser.id : "all");
+  const [exportDatePreset, setExportDatePreset] = useState("this_week");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   // Only show reps (not managers/admins) in the dashboard
   const repList = reps.filter(r => r.role === "rep");
@@ -53,18 +114,22 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
   const pipelineValue = activePipelineDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
 
   function handleExport() {
-    const headers = ["Rep", "Calls Today", "Calls This Week", "CRM Discipline %", "Quote Turnaround (h)", "Opp Progression %", "Pipeline Clean", "Status"];
+    const range = getExportDateRange(exportDatePreset, customFrom, customTo);
+    const headers = ["Rep", `Calls (${range.label})`, "Meetings Set", "CRM Discipline %", "Quote Turnaround (h)", "Opp Progression %", "Pipeline Clean", "Status"];
     const rows = filteredReps.map(r => {
       const m = metricsMap[r.id] || {};
       const st = getStatus(m);
+      // Count calls within the selected date range
+      const repCallsInRange = rawCalls.filter(c => c.callerId === r.id && new Date(c.calledAt) >= range.start && new Date(c.calledAt) < range.end).length;
+      const meetingsInRange = rawCalls.filter(c => c.callerId === r.id && c.outcome === "meeting" && new Date(c.calledAt) >= range.start && new Date(c.calledAt) < range.end).length;
       const repTurnaroundDeals = deals.filter(d => d.ownerId === r.id && d.quoteRequestedAt && d.quoteSentAt);
       const repTurnaround = repTurnaroundDeals.length > 0
         ? Math.round(repTurnaroundDeals.reduce((s, d) => s + (new Date(d.quoteSentAt) - new Date(d.quoteRequestedAt)) / 3600000, 0) / repTurnaroundDeals.length * 10) / 10
         : "";
       return [
         r.name,
-        m.callsToday || 0,
-        m.callsWeek || 0,
+        repCallsInRange,
+        meetingsInRange,
         m.crmCompliance || 0,
         repTurnaround,
         m.oppWithNext || 0,
@@ -102,9 +167,27 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
           <h1 className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-slate-800`}>KPI Dashboard</h1>
           <p className="text-slate-500 mt-0.5 text-sm">{new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} – Real-time overview</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${isMobile ? "flex-wrap" : ""}`}>
           {!isRepOnly && (
             <>
+              {/* Export date range */}
+              <div className="relative">
+                <select value={exportDatePreset} onChange={e => setExportDatePreset(e.target.value)}
+                  className="appearance-none pl-7 pr-7 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer">
+                  {EXPORT_DATE_PRESETS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
+                </select>
+                <Calendar size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+              {exportDatePreset === "custom" && (
+                <>
+                  <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+                    className="px-2 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 w-[130px]" />
+                  <span className="text-xs text-slate-400">to</span>
+                  <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+                    className="px-2 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 w-[130px]" />
+                </>
+              )}
               <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium hover:bg-stone-50 transition">
                 <Download size={15} />Export
               </button>
