@@ -81,7 +81,7 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
               <a href={`tel:${contact.phone || contact.mobile}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-slate-500 hover:text-amber-600 underline decoration-slate-300 hover:decoration-amber-400 transition"><Phone size={12} /> {contact.phone || contact.mobile}</a>
               <a href={`mailto:${contact.email}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-slate-500 hover:text-amber-600 underline decoration-slate-300 hover:decoration-amber-400 transition"><Mail size={12} /> {contact.email}</a>
             </div>
-            <div className="flex flex-col gap-3 flex-shrink-0">
+            <div className="flex flex-col gap-2 flex-shrink-0">
               <button onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
                 className="flex items-center justify-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-500 bg-white border border-stone-200 rounded-lg hover:border-amber-400 hover:text-amber-600 transition">
                 <Pencil size={11} /> Edit
