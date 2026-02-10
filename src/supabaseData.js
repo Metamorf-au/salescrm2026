@@ -433,6 +433,8 @@ export async function insertDeal({ title, contactId, companyId, stage, value, ne
 
 export async function updateDeal(dealId, updates) {
   const dbUpdates = {};
+  if (updates.title !== undefined) dbUpdates.title = updates.title;
+  if (updates.value !== undefined) dbUpdates.value = updates.value;
   if (updates.stage !== undefined) dbUpdates.stage = updates.stage;
   if (updates.lostReason !== undefined) dbUpdates.lost_reason = updates.lostReason;
   if (updates.closedReason !== undefined) dbUpdates.closed_reason = updates.closedReason;

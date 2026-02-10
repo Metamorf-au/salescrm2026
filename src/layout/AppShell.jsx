@@ -20,6 +20,7 @@ import CallLogModal from "../contacts/CallLogModal";
 import NewContactModal from "../contacts/NewContactModal";
 import EditContactModal from "../contacts/EditContactModal";
 import NewDealModal from "../deals/NewDealModal";
+import EditDealModal from "../deals/EditDealModal";
 import QuickNoteModal from "../contacts/QuickNoteModal";
 import MyProfileModal from "../profile/MyProfileModal";
 
@@ -61,6 +62,7 @@ export default function AppShell() {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showMyProfile, setShowMyProfile] = useState(false);
   const [editContact, setEditContact] = useState(null);
+  const [editDeal, setEditDeal] = useState(null);
   const [dealContactId, setDealContactId] = useState(null);
 
   // Responsive
@@ -418,6 +420,51 @@ export default function AppShell() {
     await loadAllData();
   }
 
+  async function handleEditDeal(deal, updates) {
+    await updateDeal(deal.id, updates);
+    const parts = [];
+    if (updates.title && updates.title !== deal.title) parts.push("title");
+    if (updates.value !== undefined && updates.value !== deal.value) parts.push("value");
+    if (updates.nextAction !== undefined && updates.nextAction !== deal.nextAction) parts.push("next action");
+    if (updates.nextDate !== undefined && updates.nextDate !== deal.nextDate) parts.push("next date");
+    if (updates.stage && updates.stage !== deal.stage) {
+      await insertActivity({
+        userId: currentUser.id,
+        activityType: "deal_updated",
+        contactName: deal.contact,
+        companyName: deal.company,
+        summary: `Deal "${deal.title}" advanced to ${updates.stage.replace("_", " ")}`,
+        metadata: { fromStage: deal.stage, toStage: updates.stage },
+      });
+      if (updates.stage === "quote_request") {
+        await insertActivity({
+          userId: currentUser.id,
+          activityType: "quote_requested",
+          contactName: deal.contact,
+          companyName: deal.company,
+          summary: `Quote requested for "${deal.title}"`,
+        });
+      } else if (updates.stage === "quote_sent") {
+        await insertActivity({
+          userId: currentUser.id,
+          activityType: "quote_sent",
+          contactName: deal.contact,
+          companyName: deal.company,
+          summary: `Quote sent for "${deal.title}"`,
+        });
+      }
+    } else if (parts.length > 0) {
+      await insertActivity({
+        userId: currentUser.id,
+        activityType: "deal_updated",
+        contactName: deal.contact,
+        companyName: deal.company,
+        summary: `Deal "${deal.title}" updated: ${parts.join(", ")}`,
+      });
+    }
+    await loadAllData();
+  }
+
   function openDealModal(contactId) {
     setDealContactId(contactId || null);
     setShowDealModal(true);
@@ -525,6 +572,8 @@ export default function AppShell() {
                   <PipelineView
                     deals={deals} reps={reps} currentUser={currentUser}
                     onDealWon={handleDealWon} onDealLost={handleDealLost} onDealVoid={handleDealVoid}
+                    onEditDeal={(deal) => setEditDeal(deal)}
+                    onDealStageChange={handleEditDeal}
                     isMobile={isMobile}
                   />
                 )}
@@ -560,6 +609,9 @@ export default function AppShell() {
           )}
           {editContact && (
             <EditContactModal contact={editContact} onSave={handleEditContact} onClose={() => setEditContact(null)} />
+          )}
+          {editDeal && (
+            <EditDealModal deal={editDeal} onSave={handleEditDeal} onClose={() => setEditDeal(null)} />
           )}
         </div>
       )}
