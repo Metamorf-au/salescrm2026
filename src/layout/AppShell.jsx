@@ -35,6 +35,13 @@ import ResetPasswordScreen from "../auth/ResetPasswordScreen";
 
 import { formatCurrency } from "../shared/formatters";
 
+const VALID_VIEWS = ["rep", "contacts", "pipeline", "manager", "admin"];
+
+function getViewFromHash() {
+  const hash = window.location.hash.replace("#", "");
+  return VALID_VIEWS.includes(hash) ? hash : null;
+}
+
 export default function AppShell() {
   // Auth state
   const [authLoading, setAuthLoading] = useState(true);
@@ -46,6 +53,11 @@ export default function AppShell() {
   // Navigation
   const [activeView, setActiveView] = useState("rep");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  function navigateTo(view) {
+    setActiveView(view);
+    window.location.hash = view;
+  }
 
   // Data state
   const [contacts, setContacts] = useState([]);
@@ -71,6 +83,16 @@ export default function AppShell() {
     const onResize = () => setIsMobile(window.innerWidth < 640);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // Hash-based routing: sync activeView from browser back/forward
+  useEffect(() => {
+    function onHashChange() {
+      const view = getViewFromHash();
+      if (view) setActiveView(view);
+    }
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
   // ============================================================
@@ -116,7 +138,12 @@ export default function AppShell() {
       const initials = names.map(n => n[0]).join("").toUpperCase();
       const user = { id: userId, name: data.name, email: data.email, role: data.role, initials };
       setCurrentUser(user);
-      setActiveView(user.role === "admin" ? "manager" : "rep");
+      // Restore view from URL hash, or use role-based default
+      const hashView = getViewFromHash();
+      const roleDefault = user.role === "admin" ? "manager" : "rep";
+      const view = hashView || roleDefault;
+      setActiveView(view);
+      window.location.hash = view;
       setIsLoggedIn(true);
     }
     setAuthLoading(false);
@@ -125,6 +152,7 @@ export default function AppShell() {
   async function handleLogout() {
     await supabase.auth.signOut();
     setActiveView("rep");
+    window.location.hash = "";
     setIsLoggedIn(false);
     setCurrentUser(null);
     setContacts([]);
@@ -547,13 +575,13 @@ export default function AppShell() {
         <div style={{ fontFamily: "'Outfit', sans-serif" }} className={`flex ${isMobile ? "flex-col" : "flex-row"} h-screen bg-stone-50`}>
           {!isMobile && (
             <DesktopSidebar
-              navItems={navItems} activeView={activeView} setActiveView={setActiveView}
+              navItems={navItems} activeView={activeView} setActiveView={navigateTo}
               currentUser={currentUser} onMyProfile={() => setShowMyProfile(true)} onLogout={handleLogout}
             />
           )}
           {isMobile && (
             <MobileTabBar
-              navItems={navItems} activeView={activeView} setActiveView={setActiveView}
+              navItems={navItems} activeView={activeView} setActiveView={navigateTo}
               currentUser={currentUser} onMyProfile={() => setShowMyProfile(true)} onLogout={handleLogout}
             />
           )}
