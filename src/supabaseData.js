@@ -117,7 +117,7 @@ export async function fetchAllNotes() {
   const { data, error } = await supabase
     .from("notes")
     .select(`
-      id, contact_id, type, text, reminder_at, created_at,
+      id, contact_id, type, text, reminder_at, completed_at, created_at,
       profiles!notes_author_id_fkey(name)
     `)
     .order("created_at", { ascending: false });
@@ -132,9 +132,26 @@ export async function fetchAllNotes() {
       author: n.profiles?.name || "",
       type: n.type,
       reminder: n.reminder_at || undefined,
+      completedAt: n.completed_at || null,
     });
   }
   return grouped;
+}
+
+export async function completeNote(noteId) {
+  const { error } = await supabase
+    .from("notes")
+    .update({ completed_at: new Date().toISOString() })
+    .eq("id", noteId);
+  if (error) throw new Error(error.message);
+}
+
+export async function completeDealTodo(dealId) {
+  const { error } = await supabase
+    .from("deals")
+    .update({ next_action: null, next_date: null })
+    .eq("id", dealId);
+  if (error) throw new Error(error.message);
 }
 
 // ============================================================
