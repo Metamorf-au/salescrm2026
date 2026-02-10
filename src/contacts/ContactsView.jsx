@@ -199,7 +199,7 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
             </button>
           )}
         </div>
-        <div className={`grid ${isMobile ? "grid-cols-2" : "flex"} gap-2`}>
+        <div className={isMobile ? "grid grid-cols-2 gap-2" : "flex gap-2"}>
           {!isRepOnly && (
             <select value={ownerFilter} onChange={e => setOwnerFilter(e.target.value)}
               className="px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent">
@@ -237,15 +237,15 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
 
       {/* Select All + Bulk Actions */}
       {filtered.length > 0 && (
-        <div className={`flex flex-wrap items-center ${isMobile ? "gap-2" : "justify-between"}`}>
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <button onClick={toggleSelectAll}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${allVisibleSelected ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-white border-stone-200 text-slate-500 hover:border-stone-300"}`}>
               <CheckSquare size={14} />
               {allVisibleSelected ? "Deselect All" : "Select All"}
             </button>
             {selectedIds.size > 0 && (
-              <span className="text-xs text-slate-500">{selectedIds.size} selected</span>
+              <span className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-500 text-white text-xs font-bold">{selectedIds.size}</span>
             )}
           </div>
 
