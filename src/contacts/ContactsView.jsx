@@ -225,16 +225,6 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
         </div>
       </div>
 
-      {/* CSV Export (archived view) */}
-      {isViewingArchived && (
-        <div className="flex justify-end">
-          <button onClick={exportCsv} title="Export to CSV"
-            className="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
-            <Download size={14} /> Export CSV
-          </button>
-        </div>
-      )}
-
       {/* Select All + Bulk Actions */}
       {filtered.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -249,8 +239,15 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
             )}
           </div>
 
-          {selectedIds.size > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {isViewingArchived && (
+              <button onClick={exportCsv} title="Export to CSV"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-slate-500 hover:border-amber-400 hover:text-amber-600 transition">
+                <Download size={12} /> CSV
+              </button>
+            )}
+            {selectedIds.size > 0 && (
+              <>
               {!bulkAction && (
                 <>
                   {!isRepOnly && !isMobile && (
@@ -336,8 +333,9 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
                   </button>
                 </div>
               )}
+              </>
+            )}
             </div>
-          )}
         </div>
       )}
 
