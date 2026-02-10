@@ -479,6 +479,81 @@ export async function insertActivity({ userId, activityType, contactName, compan
 }
 
 // ============================================================
+// WEEKLY SUMMARIES
+// ============================================================
+
+export function getCurrentWeekStart() {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dayOfWeek = todayStart.getDay();
+  todayStart.setDate(todayStart.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Monday
+  return todayStart.toISOString().slice(0, 10); // "YYYY-MM-DD"
+}
+
+export async function fetchWeeklySummary(userId, weekStart) {
+  const { data, error } = await supabase
+    .from("weekly_summaries")
+    .select("id, summary")
+    .eq("user_id", userId)
+    .eq("week_start", weekStart)
+    .maybeSingle();
+  if (error) { console.error("Error loading weekly summary:", error); return ""; }
+  return data?.summary || "";
+}
+
+export async function upsertWeeklySummary(userId, weekStart, summary) {
+  const { error } = await supabase
+    .from("weekly_summaries")
+    .upsert(
+      { user_id: userId, week_start: weekStart, summary },
+      { onConflict: "user_id,week_start" }
+    );
+  if (error) throw new Error(error.message);
+}
+
+// ============================================================
+// FETCH ADMIN ACTIVITY LOG (with server-side filters)
+// ============================================================
+
+export async function fetchAdminActivityLog({ activityType, startDate, endDate, userId, limit = 500 } = {}) {
+  let query = supabase
+    .from("activity_log")
+    .select(`
+      id, user_id, activity_type, contact_name, company_name, summary, metadata, created_at,
+      profiles!activity_log_user_id_fkey(name)
+    `)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (activityType) {
+    query = query.eq("activity_type", activityType);
+  }
+  if (startDate) {
+    query = query.gte("created_at", startDate);
+  }
+  if (endDate) {
+    query = query.lte("created_at", endDate);
+  }
+  if (userId) {
+    query = query.eq("user_id", userId);
+  }
+
+  const { data, error } = await query;
+  if (error) { console.error("Error loading admin activity log:", error); return []; }
+  return (data || []).map(a => ({
+    id: a.id,
+    userId: a.user_id,
+    userName: a.profiles?.name || "",
+    activityType: a.activity_type,
+    contact: a.contact_name || "",
+    company: a.company_name || "",
+    summary: a.summary || "",
+    outcome: a.metadata?.outcome,
+    createdAt: a.created_at,
+  }));
+}
+
+// ============================================================
 // COMPUTE REP METRICS (for Manager Dashboard)
 // ============================================================
 

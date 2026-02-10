@@ -51,6 +51,36 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
   const activePipelineDeals = repDeals.filter(d => !["won", "lost", "closed"].includes(d.stage));
   const pipelineValue = activePipelineDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
 
+  function handleExport() {
+    const headers = ["Rep", "Calls Today", "Calls This Week", "CRM Discipline %", "Quote Turnaround (h)", "Opp Progression %", "Pipeline Clean", "Status"];
+    const rows = filteredReps.map(r => {
+      const m = metricsMap[r.id] || {};
+      const st = getStatus(m);
+      const repTurnaroundDeals = deals.filter(d => d.ownerId === r.id && d.quoteRequestedAt && d.quoteSentAt);
+      const repTurnaround = repTurnaroundDeals.length > 0
+        ? Math.round(repTurnaroundDeals.reduce((s, d) => s + (new Date(d.quoteSentAt) - new Date(d.quoteRequestedAt)) / 3600000, 0) / repTurnaroundDeals.length * 10) / 10
+        : "";
+      return [
+        r.name,
+        m.callsToday || 0,
+        m.callsWeek || 0,
+        m.crmCompliance || 0,
+        repTurnaround,
+        m.oppWithNext || 0,
+        m.pipelineClean ? "Yes" : "No",
+        st === "green" ? "On Track" : st === "amber" ? "Needs Attention" : "At Risk",
+      ];
+    });
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kpi-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const summaryCards = [
     { label: isFiltered ? "Calls Today" : "Total Calls Today", value: totalCallsToday, sub: `Target: ${isFiltered ? DAILY_TARGET : DAILY_TARGET * repList.length}`, icon: Phone, accent: "bg-sky-50 text-sky-600" },
     { label: isFiltered ? "Calls This Week" : "Total Calls Week", value: totalCallsWeek, sub: `Target: ${isFiltered ? WEEKLY_TARGET : WEEKLY_TARGET * repList.length}`, icon: Target, accent: "bg-sky-50 text-sky-600" },
@@ -74,7 +104,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
         <div className="flex items-center gap-2">
           {!isRepOnly && (
             <>
-              <button className="flex items-center gap-2 px-3 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium hover:bg-stone-50 transition">
+              <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium hover:bg-stone-50 transition">
                 <Download size={15} />Export
               </button>
               <User size={16} className="text-slate-400" />

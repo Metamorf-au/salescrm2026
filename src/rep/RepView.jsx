@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
-import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, Briefcase, ChevronDown, Trash2, Filter } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, Briefcase, ChevronDown, Trash2, Filter, Save } from "lucide-react";
 import { DAILY_TARGET, WEEKLY_TARGET, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
 import { formatReminderDate, isOverdue } from "../shared/formatters";
+import { fetchWeeklySummary, upsertWeeklySummary, getCurrentWeekStart } from "../supabaseData";
 
 const TODO_FILTERS = [
   { key: "today", label: "Due Today", days: 0 },
@@ -40,6 +41,37 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [activityFilter, setActivityFilter] = useState("3days");
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
+
+  // Weekly summary persistence
+  const [weeklySummary, setWeeklySummary] = useState("");
+  const [summarySaving, setSummarySaving] = useState(false);
+  const [summarySaved, setSummarySaved] = useState(false);
+  const summaryTimerRef = useRef(null);
+  const summaryWeekStart = getCurrentWeekStart();
+
+  useEffect(() => {
+    fetchWeeklySummary(currentUser.id, summaryWeekStart).then(text => setWeeklySummary(text));
+  }, [currentUser.id, summaryWeekStart]);
+
+  const saveWeeklySummary = useCallback(async (text) => {
+    setSummarySaving(true);
+    try {
+      await upsertWeeklySummary(currentUser.id, summaryWeekStart, text);
+      setSummarySaved(true);
+      setTimeout(() => setSummarySaved(false), 2000);
+    } catch (err) {
+      console.error("Error saving weekly summary:", err);
+    }
+    setSummarySaving(false);
+  }, [currentUser.id, summaryWeekStart]);
+
+  function handleSummaryChange(text) {
+    setWeeklySummary(text);
+    setSummarySaved(false);
+    // Debounced auto-save after 1.5s of no typing
+    if (summaryTimerRef.current) clearTimeout(summaryTimerRef.current);
+    summaryTimerRef.current = setTimeout(() => saveWeeklySummary(text), 1500);
+  }
 
   // Auto-expire deal to-dos older than 14 days (on mount)
   const hasAutoExpired = useRef(false);
@@ -469,12 +501,23 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
         <div className="flex items-center gap-3 mb-3">
           <h3 className="text-base font-semibold text-slate-700">Weekly Summary</h3>
           <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">Due Friday</span>
+          {summarySaving && <span className="text-xs text-slate-400">Saving...</span>}
+          {summarySaved && <span className="text-xs text-emerald-500 flex items-center gap-1"><CheckCircle size={12} />Saved</span>}
         </div>
-        <textarea placeholder="Highlights, challenges, and plan for next week..." rows={3}
-          className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none mb-3" />
+        <textarea
+          placeholder="Highlights, challenges, and plan for next week..."
+          rows={3}
+          value={weeklySummary}
+          onChange={e => handleSummaryChange(e.target.value)}
+          className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none mb-3"
+        />
         <div className="flex justify-start">
-          <button className="py-2.5 px-8 rounded-xl font-medium text-white bg-amber-500 hover:bg-amber-600 transition text-sm shadow-md">
-            Submit Weekly Summary
+          <button
+            onClick={() => saveWeeklySummary(weeklySummary)}
+            disabled={summarySaving}
+            className="flex items-center gap-2 py-2.5 px-8 rounded-xl font-medium text-white bg-amber-500 hover:bg-amber-600 transition text-sm shadow-md disabled:opacity-50"
+          >
+            <Save size={15} />Submit Weekly Summary
           </button>
         </div>
       </div>
