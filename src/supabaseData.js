@@ -357,6 +357,14 @@ export async function bulkReassignContacts(contactIds, newOwnerId) {
   if (error) throw new Error(error.message);
 }
 
+export async function bulkArchiveContacts(contactIds) {
+  const { error } = await supabase
+    .from("contacts")
+    .update({ status: "archived" })
+    .in("id", contactIds);
+  if (error) throw new Error(error.message);
+}
+
 export async function insertCall({ contactId, callerId, outcome, summary, calledAt }) {
   const { data, error } = await supabase
     .from("calls")

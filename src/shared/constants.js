@@ -85,6 +85,7 @@ export function contactStatusStyle(status) {
     stale: { dot: "bg-amber-500", label: "Stale" },
     new: { dot: "bg-sky-500", label: "New" },
     inactive: { dot: "bg-slate-400", label: "Inactive" },
+    archived: { dot: "bg-stone-400", label: "Archived" },
   };
   return map[status] || map.active;
 }

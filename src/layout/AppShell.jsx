@@ -4,7 +4,7 @@ import { User, BookOpen, Columns, LayoutDashboard, Settings, Target } from "luci
 import {
   fetchContacts, fetchDeals, fetchAllNotes, fetchAllCalls, fetchReps,
   fetchActivityLog, groupCallsByContact,
-  insertContact, updateContact, deleteContact, bulkDeleteContacts, bulkReassignContacts,
+  insertContact, updateContact, deleteContact, bulkDeleteContacts, bulkReassignContacts, bulkArchiveContacts,
   insertCall, insertNote, insertDeal, updateDeal, insertActivity,
 } from "../supabaseData";
 
@@ -285,6 +285,17 @@ export default function AppShell() {
     await loadAllData();
   }
 
+  async function handleBulkArchive(ids) {
+    await bulkArchiveContacts(ids);
+    await insertActivity({
+      userId: currentUser.id,
+      activityType: "contact_updated",
+      contactName: `${ids.length} contacts`,
+      summary: `Archived ${ids.length} contacts`,
+    });
+    await loadAllData();
+  }
+
   async function handleBulkReassign(ids, newOwnerId, newOwnerName) {
     await bulkReassignContacts(ids, newOwnerId);
     await insertActivity({
@@ -494,6 +505,7 @@ export default function AppShell() {
                     onDeleteContact={handleDeleteContact}
                     onBulkDelete={handleBulkDelete}
                     onBulkReassign={handleBulkReassign}
+                    onBulkArchive={handleBulkArchive}
                     isMobile={isMobile}
                   />
                 )}
