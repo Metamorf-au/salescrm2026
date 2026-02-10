@@ -39,6 +39,9 @@ export default function EditDealModal({ deal, onSave, onClose }) {
           updates.quoteRequestedAt = new Date().toISOString();
         } else if (currentStage.next === "quote_sent") {
           updates.quoteSentAt = new Date().toISOString();
+          // Quote has been sent — clear next action/date since it's now timestamped
+          updates.nextAction = null;
+          updates.nextDate = null;
         }
       }
       await onSave(deal, updates);
