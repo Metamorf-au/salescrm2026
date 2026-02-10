@@ -116,7 +116,7 @@ export default function AppShell() {
       const initials = names.map(n => n[0]).join("").toUpperCase();
       const user = { id: userId, name: data.name, email: data.email, role: data.role, initials };
       setCurrentUser(user);
-      setActiveView(user.role === "admin" ? "manager" : user.role === "manager" ? "manager" : "rep");
+      setActiveView(user.role === "admin" ? "manager" : "rep");
       setIsLoggedIn(true);
     }
     setAuthLoading(false);
