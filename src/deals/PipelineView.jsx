@@ -187,7 +187,7 @@ export default function PipelineView({ deals, reps, currentUser, onDealWon, onDe
           <div className={`${isColumn ? "mt-2 pt-2 border-t border-stone-100 space-y-1.5" : "mt-2 space-y-1.5"}`}>
             {canEdit && (
               <button onClick={() => onEditDeal(d)} className="w-full py-1.5 text-xs font-medium text-slate-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-md transition flex items-center justify-center gap-1.5">
-                <Pencil size={10} />Edit
+                <Pencil size={10} />Edit Deal
               </button>
             )}
             <button onClick={() => setCloseModal(d)} className="w-full py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition">
@@ -199,7 +199,7 @@ export default function PipelineView({ deals, reps, currentUser, onDealWon, onDe
           <div className={`${isColumn ? "mt-2 pt-2 border-t border-stone-100 space-y-1.5" : "mt-2 space-y-1.5"}`}>
             {canEdit && (
               <button onClick={() => onEditDeal(d)} className="w-full py-1.5 text-xs font-medium text-slate-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-md transition flex items-center justify-center gap-1.5">
-                <Pencil size={10} />Edit
+                <Pencil size={10} />Edit Deal
               </button>
             )}
             <div className="flex gap-1.5">
