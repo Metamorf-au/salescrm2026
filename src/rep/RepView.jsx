@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, Briefcase, ChevronDown, Trash2, Filter } from "lucide-react";
-import { DAILY_TARGET, WEEKLY_TARGET, outcomeConfig, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
+import { DAILY_TARGET, WEEKLY_TARGET, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
 import { formatReminderDate, isOverdue } from "../shared/formatters";
 
 const TODO_FILTERS = [
@@ -431,9 +431,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                 {filteredActivity.length > 0 ? (
                   <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
                     {filteredActivity.map(c => {
-                      const atc = c.activityType !== "call" ? activityTypeConfig(c.activityType) : null;
-                      const oc = c.activityType === "call" ? outcomeConfig(c.outcome) : null;
-                      const cfg = atc || oc;
+                      const cfg = activityTypeConfig(c.activityType);
                       if (!cfg) return null;
                       const Icon = cfg.icon;
                       return (
@@ -444,7 +442,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
-                              {atc && <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>}
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
                             </div>
                             <p className="text-xs text-slate-500 truncate">{c.summary}</p>
                           </div>
