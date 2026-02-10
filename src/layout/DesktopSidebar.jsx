@@ -47,7 +47,7 @@ export default function DesktopSidebar({ navItems, activeView, setActiveView, cu
               <p className="text-white font-medium text-sm truncate">{currentUser.name}</p>
               <p className="mt-0.5 truncate">{currentUser.role === "admin" ? "Administrator" : currentUser.role === "manager" ? "Sales Manager" : "Sales Representative"}</p>
             </div>
-            <LogOut size={15} className="text-slate-500 flex-shrink-0" />
+            <LogOut size={15} className="text-white flex-shrink-0" />
           </div>
         </div>
         {showMenu && (
