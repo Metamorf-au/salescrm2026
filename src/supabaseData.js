@@ -225,7 +225,7 @@ export async function fetchActivityLog(userId, isManagerOrAdmin) {
     .from("activity_log")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(200);
   if (!isManagerOrAdmin && userId) {
     query = query.eq("user_id", userId);
   }
@@ -238,6 +238,7 @@ export async function fetchActivityLog(userId, isManagerOrAdmin) {
     company: a.company_name || "",
     summary: a.summary || "",
     outcome: a.metadata?.outcome,
+    createdAt: a.created_at,
     time: new Date(a.created_at).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase(),
     userId: a.user_id,
   }));
