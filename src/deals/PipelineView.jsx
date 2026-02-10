@@ -115,14 +115,19 @@ export default function PipelineView({ deals, reps, currentUser, onDealWon, onDe
       return;
     }
 
-    // Active stage transition
-    if (onDealStageChange && draggableStages.includes(targetStage)) {
+    // Active stage transition — forward only
+    const stageOrder = ["discovery", "quote_request", "quote_sent"];
+    const fromIndex = stageOrder.indexOf(dragDeal.stage);
+    const toIndex = stageOrder.indexOf(targetStage);
+    if (onDealStageChange && toIndex > fromIndex && toIndex >= 0) {
       const updates = { stage: targetStage };
       if (targetStage === "quote_request" && !dragDeal.quoteRequestedAt) {
         updates.quoteRequestedAt = new Date().toISOString();
       }
       if (targetStage === "quote_sent" && !dragDeal.quoteSentAt) {
         updates.quoteSentAt = new Date().toISOString();
+        updates.nextAction = null;
+        updates.nextDate = null;
       }
       onDealStageChange(dragDeal, updates);
     }

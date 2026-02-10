@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Save } from "lucide-react";
 import Modal from "../shared/Modal";
 import SuccessScreen from "../shared/SuccessScreen";
 import { formatCurrency } from "../shared/formatters";
@@ -39,6 +39,9 @@ export default function EditDealModal({ deal, onSave, onClose }) {
           updates.quoteRequestedAt = new Date().toISOString();
         } else if (currentStage.next === "quote_sent") {
           updates.quoteSentAt = new Date().toISOString();
+          // Quote has been sent — clear next action/date since it's now timestamped
+          updates.nextAction = null;
+          updates.nextDate = null;
         }
       }
       await onSave(deal, updates);
@@ -98,7 +101,8 @@ export default function EditDealModal({ deal, onSave, onClose }) {
           {/* Action buttons */}
           <div className="space-y-2 pt-1">
             <button onClick={() => handleSave(false)} disabled={!title.trim() || saving}
-              className="w-full py-3 rounded-xl font-semibold text-white transition bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed">
+              className="w-full py-3 rounded-xl font-semibold text-white transition bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              <Save size={16} />
               {saving ? "Saving..." : "Save Changes"}
             </button>
 
@@ -106,7 +110,7 @@ export default function EditDealModal({ deal, onSave, onClose }) {
               <button onClick={() => handleSave(true)} disabled={!title.trim() || saving}
                 className="w-full py-3 rounded-xl font-semibold text-white transition bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                 <ArrowRight size={16} />
-                {saving ? "Saving..." : `Save & Advance to ${currentStage.nextLabel}`}
+                {saving ? "Saving..." : "Save & Advance"}
               </button>
             )}
           </div>
