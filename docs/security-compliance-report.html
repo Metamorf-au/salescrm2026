@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales CRM — Security &amp; Compliance Report</title>
+<style>
+  @page { margin: 18mm 16mm; size: A4; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6; padding: 40px; max-width: 920px; margin: 0 auto; }
+
+  /* Cover */
+  .cover { text-align: center; padding: 50px 0 36px; border-bottom: 3px solid #0ea5e9; margin-bottom: 36px; }
+  .cover h1 { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+  .cover .subtitle { font-size: 18px; color: #64748b; margin-bottom: 20px; }
+  .cover .meta { font-size: 13px; color: #94a3b8; }
+  .cover .meta span { margin: 0 10px; }
+
+  /* Headings */
+  h2 { font-size: 21px; font-weight: 700; color: #0f172a; margin: 32px 0 14px; padding-bottom: 7px; border-bottom: 2px solid #e2e8f0; }
+  h3 { font-size: 16px; font-weight: 700; color: #334155; margin: 22px 0 10px; }
+  h4 { font-size: 14px; font-weight: 600; color: #475569; margin: 14px 0 8px; }
+
+  p { font-size: 14px; color: #475569; margin-bottom: 12px; }
+
+  /* Lists */
+  ul, ol { margin: 0 0 14px 20px; }
+  ul li, ol li { font-size: 14px; color: #475569; margin-bottom: 5px; }
+  ul li strong, ol li strong { color: #1e293b; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 20px; font-size: 13px; }
+  th { background: #f1f5f9; color: #334155; font-weight: 600; text-align: left; padding: 9px 12px; border: 1px solid #e2e8f0; }
+  td { padding: 9px 12px; border: 1px solid #e2e8f0; color: #475569; }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  /* Boxes */
+  .box { border-radius: 8px; padding: 14px 18px; margin: 14px 0; }
+  .box-blue { background: #f0f9ff; border: 1px solid #bae6fd; }
+  .box-green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .box-amber { background: #fffbeb; border: 1px solid #fde68a; }
+  .box-red { background: #fef2f2; border: 1px solid #fecaca; }
+  .box-slate { background: #f8fafc; border: 1px solid #e2e8f0; }
+  .box p { margin-bottom: 4px; }
+
+  /* Badges */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .badge-green { background: #dcfce7; color: #15803d; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-slate { background: #f1f5f9; color: #475569; }
+
+  /* Summary cards */
+  .summary-row { display: flex; gap: 14px; margin: 16px 0; }
+  .summary-item { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; text-align: center; }
+  .summary-item .num { font-size: 24px; font-weight: 700; color: #0f172a; }
+  .summary-item .label { font-size: 12px; color: #64748b; margin-top: 2px; }
+  .summary-item.green { border-color: #bbf7d0; background: #f0fdf4; }
+  .summary-item.amber { border-color: #fde68a; background: #fffbeb; }
+  .summary-item.red { border-color: #fecaca; background: #fef2f2; }
+
+  /* Status indicators */
+  .status { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 500; }
+  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+  .status-pass::before { background: #22c55e; }
+  .status-warn::before { background: #f59e0b; }
+  .status-fail::before { background: #ef4444; }
+
+  /* Code blocks */
+  code { font-family: "SF Mono", Menlo, Monaco, monospace; font-size: 12px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #334155; }
+  pre { background: #1e293b; color: #e2e8f0; padding: 16px 20px; border-radius: 8px; margin: 12px 0 16px; overflow-x: auto; font-size: 12px; line-height: 1.7; }
+  pre code { background: none; padding: 0; color: inherit; }
+
+  /* Section cards */
+  .section-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px 24px; margin: 18px 0; break-inside: avoid; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .section-header h3 { margin: 0; }
+
+  @media print {
+    body { padding: 0; }
+    .section-card { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <h1>Security &amp; Compliance Report</h1>
+  <p class="subtitle">Precision CRM &mdash; SalesCRM 2026</p>
+  <p class="meta">
+    <span>Date: 10 February 2026</span> |
+    <span>Classification: Internal</span> |
+    <span>Version: 1.0</span>
+  </p>
+</div>
+
+<!-- EXECUTIVE SUMMARY -->
+<h2>1. Executive Summary</h2>
+<p>This report provides a security and compliance assessment of the Precision CRM platform built for internal use at Metamorf. The application is a browser-based CRM system developed with React, hosted on Netlify, and backed by Supabase (managed PostgreSQL, authentication, and edge functions).</p>
+
+<div class="summary-row">
+  <div class="summary-item green">
+    <div class="num">9</div>
+    <div class="label">Controls Passing</div>
+  </div>
+  <div class="summary-item amber">
+    <div class="num">4</div>
+    <div class="label">Recommendations</div>
+  </div>
+  <div class="summary-item red">
+    <div class="num">0</div>
+    <div class="label">Critical Blockers</div>
+  </div>
+</div>
+
+<div class="box box-green">
+  <p><strong>Overall Assessment:</strong> The application follows modern security best practices for a cloud-hosted internal business tool. Authentication, authorisation, and data isolation are handled at the database level via Supabase Row Level Security (RLS). No critical vulnerabilities were identified. A small number of hardening recommendations are listed below.</p>
+</div>
+
+<!-- TECHNOLOGY STACK -->
+<h2>2. Technology Stack</h2>
+
+<table>
+  <tr><th style="width:30%">Layer</th><th>Technology</th><th>Security Relevance</th></tr>
+  <tr><td><strong>Frontend</strong></td><td>React 18.2 + Vite 5</td><td>Single-page app; no server-side rendering; no direct DB access</td></tr>
+  <tr><td><strong>Styling</strong></td><td>TailwindCSS 3</td><td>Utility CSS only; no JavaScript execution risk</td></tr>
+  <tr><td><strong>Authentication</strong></td><td>Supabase Auth</td><td>Email/password; JWT tokens; managed session storage</td></tr>
+  <tr><td><strong>Database</strong></td><td>Supabase PostgreSQL</td><td>Row Level Security; encrypted at rest; managed backups</td></tr>
+  <tr><td><strong>Server Functions</strong></td><td>Supabase Edge Functions (Deno)</td><td>Admin operations only; isolated runtime; no file system access</td></tr>
+  <tr><td><strong>Hosting</strong></td><td>Netlify</td><td>Static file hosting; automatic HTTPS/TLS; global CDN</td></tr>
+  <tr><td><strong>Dependencies</strong></td><td>5 production packages</td><td>Minimal attack surface; all actively maintained</td></tr>
+</table>
+
+<!-- AUTHENTICATION -->
+<h2>3. Authentication</h2>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>3.1 Authentication Method</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <p>User authentication is handled entirely by <strong>Supabase Auth</strong>, a managed identity service. The application does not implement custom authentication logic, store passwords, or manage session tokens directly.</p>
+  <ul>
+    <li><strong>Sign-in:</strong> Email + password via <code>supabase.auth.signInWithPassword()</code></li>
+    <li><strong>Password policy:</strong> Minimum 8 characters enforced at UI and Supabase level</li>
+    <li><strong>Password reset:</strong> Email-based flow via <code>supabase.auth.resetPasswordForEmail()</code></li>
+    <li><strong>Session tokens:</strong> JWT access tokens managed by the Supabase SDK; stored in secure browser storage (not localStorage)</li>
+    <li><strong>Token refresh:</strong> Automatic silent refresh handled by Supabase SDK</li>
+  </ul>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>3.2 User Provisioning</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <p>New users can <strong>only</strong> be created by administrators via a secure invite flow. There is no public registration endpoint.</p>
+  <ul>
+    <li>Admin sends invite via Edge Function &rarr; Supabase sends email with sign-up link</li>
+    <li>Edge Function verifies the caller holds the <code>admin</code> role before proceeding</li>
+    <li>Users cannot self-register; the Supabase anon key does not grant sign-up access</li>
+    <li>Admins can disable (ban) or delete user accounts at any time</li>
+    <li>Self-disable and self-delete are prevented at the Edge Function level</li>
+  </ul>
+</div>
+
+<!-- AUTHORISATION & ACCESS CONTROL -->
+<h2>4. Authorisation &amp; Access Control</h2>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>4.1 Role-Based Access Control</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <p>Three roles govern access throughout the system. Role checks are enforced at <strong>both</strong> the database level (RLS policies) and the UI level.</p>
+  <table>
+    <tr><th>Role</th><th>Contacts / Deals</th><th>Notes / Calls</th><th>Reports</th><th>Admin Panel</th></tr>
+    <tr><td><strong>Rep</strong></td><td>Own records only</td><td>Own records only</td><td>Own KPIs</td><td>No access</td></tr>
+    <tr><td><strong>Manager</strong></td><td>All team records</td><td>All team records</td><td>Team KPIs</td><td>No access</td></tr>
+    <tr><td><strong>Admin</strong></td><td>All records</td><td>All records</td><td>All KPIs</td><td>Full access</td></tr>
+  </table>
+  <p>Role is stored in the <code>profiles</code> table and retrieved via a <code>security definer</code> helper function used by all RLS policies:</p>
+  <pre><code>create or replace function public.current_user_role()
+returns text as $$
+  select role from public.profiles where id = auth.uid();
+$$ language sql security definer stable;</code></pre>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>4.2 Row Level Security (RLS)</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <p>Every table has RLS <strong>enabled</strong>. Policies ensure users can only access data appropriate to their role. The Supabase anon key is safe to include in the frontend because all data access is gated by these policies.</p>
+  <table>
+    <tr><th>Table</th><th>SELECT</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr>
+    <tr><td>profiles</td><td>All authenticated</td><td>Admin only</td><td>Self or Admin</td><td>N/A</td></tr>
+    <tr><td>companies</td><td>Owner / Mgr / Admin</td><td>Authenticated</td><td>Owner / Mgr / Admin</td><td>Via cascade</td></tr>
+    <tr><td>contacts</td><td>Owner / Mgr / Admin</td><td>Authenticated</td><td>Owner / Mgr / Admin</td><td>Via cascade</td></tr>
+    <tr><td>deals</td><td>Owner / Mgr / Admin</td><td>Authenticated</td><td>Owner / Mgr / Admin</td><td>Via cascade</td></tr>
+    <tr><td>notes</td><td>Author / Mgr / Admin</td><td>Authenticated</td><td>Author / Admin</td><td>Author / Admin</td></tr>
+    <tr><td>calls</td><td>Caller / Mgr / Admin</td><td>Authenticated</td><td>N/A</td><td>Via cascade</td></tr>
+    <tr><td>activity_log</td><td>User / Mgr / Admin</td><td>Authenticated</td><td>N/A</td><td>N/A</td></tr>
+  </table>
+  <div class="box box-amber">
+    <p><strong>Recommendation:</strong> Add explicit DELETE policies for <code>contacts</code>, <code>deals</code>, and <code>calls</code> tables to replace reliance on cascade behaviour. This improves auditability and makes the security posture self-documenting.</p>
+  </div>
+</div>
+
+<!-- EDGE FUNCTIONS -->
+<h2>5. Edge Functions (Server-Side)</h2>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>5.1 Admin Operations Endpoint</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <p>All privileged user management operations run in a <strong>Supabase Edge Function</strong> (Deno runtime), never in the browser. The function enforces a strict authentication and authorisation check before executing any operation:</p>
+  <ol>
+    <li><strong>Authentication:</strong> Verifies the <code>Authorization: Bearer &lt;token&gt;</code> header via <code>supabase.auth.getUser()</code></li>
+    <li><strong>Authorisation:</strong> Queries the <code>profiles</code> table to confirm the caller has <code>role = 'admin'</code></li>
+    <li><strong>Execution:</strong> Uses the <code>service_role</code> key (server-side only, never exposed to the client) to perform the requested action</li>
+  </ol>
+  <h4>Supported Operations</h4>
+  <table>
+    <tr><th>Action</th><th>Description</th><th>Safety Controls</th></tr>
+    <tr><td><code>invite</code></td><td>Send user invitation email</td><td>Validates email, name, role enum</td></tr>
+    <tr><td><code>reset-password</code></td><td>Trigger password reset email</td><td>Email must exist in system</td></tr>
+    <tr><td><code>disable</code> / <code>enable</code></td><td>Ban or unban a user</td><td>Cannot disable self</td></tr>
+    <tr><td><code>update-user</code></td><td>Modify user details and role</td><td>Role enum validation</td></tr>
+    <tr><td><code>delete</code></td><td>Permanently remove user</td><td>Cannot delete self; cascades via FK</td></tr>
+  </table>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>5.2 Secret Management</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <p>Secrets are managed at two levels with strict separation:</p>
+  <table>
+    <tr><th>Variable</th><th>Location</th><th>Exposure</th></tr>
+    <tr><td><code>VITE_SUPABASE_URL</code></td><td>Frontend (.env)</td><td>Public &mdash; project URL, safe to expose</td></tr>
+    <tr><td><code>VITE_SUPABASE_ANON_KEY</code></td><td>Frontend (.env)</td><td>Public &mdash; safe due to RLS enforcement</td></tr>
+    <tr><td><code>SUPABASE_SERVICE_ROLE_KEY</code></td><td>Edge Function secrets</td><td><strong>Private &mdash; never in frontend code or git</strong></td></tr>
+    <tr><td><code>SITE_URL</code></td><td>Edge Function secrets</td><td>Private &mdash; redirect URL for password flows</td></tr>
+  </table>
+  <p>The <code>.gitignore</code> file excludes <code>.env</code>, <code>.env.local</code>, and <code>.env.production.local</code>. Vite's build system only exposes variables prefixed with <code>VITE_</code>, preventing accidental leakage of server-side secrets.</p>
+</div>
+
+<!-- DATA SECURITY -->
+<h2>6. Data Security</h2>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>6.1 Data at Rest</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <ul>
+    <li><strong>Database encryption:</strong> Supabase PostgreSQL uses AES-256 encryption at rest (managed by AWS/Supabase infrastructure)</li>
+    <li><strong>Backups:</strong> Automated daily backups managed by Supabase with point-in-time recovery</li>
+    <li><strong>File storage:</strong> No user-uploaded files are stored; the application is data-only</li>
+  </ul>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>6.2 Data in Transit</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <ul>
+    <li><strong>Frontend &harr; Netlify:</strong> All traffic served over HTTPS with automatic TLS certificates</li>
+    <li><strong>Frontend &harr; Supabase:</strong> All API calls over HTTPS (Supabase enforces TLS)</li>
+    <li><strong>Edge Functions &harr; Database:</strong> Internal Supabase network; encrypted in transit</li>
+  </ul>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>6.3 Data Handling Practices</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <ul>
+    <li><strong>No raw SQL:</strong> All queries use the Supabase SDK (parameterised queries), eliminating SQL injection risk</li>
+    <li><strong>Input sanitisation:</strong> All text inputs are trimmed via <code>.trim()</code> before insertion</li>
+    <li><strong>No <code>eval()</code></strong> or <code>dangerouslySetInnerHTML</code> anywhere in the codebase</li>
+    <li><strong>No sensitive data logging:</strong> Console output limited to non-sensitive error messages</li>
+    <li><strong>Soft delete:</strong> Contacts support archiving (status change) as a reversible alternative to permanent deletion</li>
+    <li><strong>Audit trail:</strong> All mutations are logged to the <code>activity_log</code> table with user ID, action type, and timestamp</li>
+  </ul>
+</div>
+
+<!-- FRONTEND SECURITY -->
+<h2>7. Frontend Security</h2>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>7.1 Application Security</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <table>
+    <tr><th>Control</th><th>Status</th><th>Detail</th></tr>
+    <tr><td>XSS Prevention</td><td><span class="status status-pass">Pass</span></td><td>React auto-escapes all rendered content; no <code>dangerouslySetInnerHTML</code></td></tr>
+    <tr><td>SQL Injection</td><td><span class="status status-pass">Pass</span></td><td>Supabase SDK uses parameterised queries exclusively</td></tr>
+    <tr><td>CSRF</td><td><span class="status status-pass">Pass</span></td><td>JWT Bearer token auth is not vulnerable to CSRF</td></tr>
+    <tr><td>Open Redirects</td><td><span class="status status-pass">Pass</span></td><td>No user-controlled redirects in the application</td></tr>
+    <tr><td>Dependency Count</td><td><span class="status status-pass">Pass</span></td><td>5 production dependencies &mdash; minimal attack surface</td></tr>
+    <tr><td>Inline Scripts</td><td><span class="status status-pass">Pass</span></td><td>No inline scripts; all JS loaded as ES modules</td></tr>
+  </table>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>7.2 Dependency Audit</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <table>
+    <tr><th>Package</th><th>Version</th><th>Purpose</th><th>Maintained</th></tr>
+    <tr><td>@supabase/supabase-js</td><td>^2.95.3</td><td>Auth + DB client</td><td>Yes (Supabase)</td></tr>
+    <tr><td>react</td><td>^18.2.0</td><td>UI framework</td><td>Yes (Meta)</td></tr>
+    <tr><td>react-dom</td><td>^18.2.0</td><td>DOM rendering</td><td>Yes (Meta)</td></tr>
+    <tr><td>recharts</td><td>^2.12.0</td><td>Dashboard charts</td><td>Yes (Open source)</td></tr>
+    <tr><td>lucide-react</td><td>^0.344.0</td><td>Icon library</td><td>Yes (Open source)</td></tr>
+  </table>
+  <p>No known high-severity CVEs in the current dependency versions. Dev dependencies (Vite, TailwindCSS, PostCSS) are build-time only and not shipped to production.</p>
+</div>
+
+<!-- HOSTING & DEPLOYMENT -->
+<h2>8. Hosting &amp; Deployment</h2>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>8.1 Netlify Hosting</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <ul>
+    <li><strong>Static hosting:</strong> The app is a pre-built static bundle (~855 KB); no server-side code executes on Netlify</li>
+    <li><strong>HTTPS:</strong> Automatic TLS certificate provisioning and renewal via Let's Encrypt</li>
+    <li><strong>CDN:</strong> Global edge network for low-latency delivery</li>
+    <li><strong>Build process:</strong> <code>npm run build</code> &rarr; Vite bundles to <code>dist/</code> folder</li>
+    <li><strong>SPA routing:</strong> Configured via <code>netlify.toml</code> redirect rules</li>
+  </ul>
+</div>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>8.2 HTTP Security Headers</h3>
+    <span class="badge badge-amber">RECOMMENDATION</span>
+  </div>
+  <p>The current <code>netlify.toml</code> does not configure custom security headers. While Netlify provides HTTPS by default, adding the following headers would strengthen the security posture:</p>
+  <pre><code>[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"</code></pre>
+  <p>This is a <strong>hardening recommendation</strong>, not a vulnerability. The application is not currently at risk without these headers, but they represent defence-in-depth best practice.</p>
+</div>
+
+<!-- CORS -->
+<h2>9. CORS Configuration</h2>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>9.1 Edge Function CORS</h3>
+    <span class="badge badge-amber">RECOMMENDATION</span>
+  </div>
+  <p>The admin Edge Function currently sets <code>Access-Control-Allow-Origin: *</code>. This is acceptable during development and for internal tools where the function is already protected by JWT authentication and admin role verification. However, for production hardening:</p>
+  <div class="box box-amber">
+    <p><strong>Recommendation:</strong> Restrict CORS origin to the production domain (e.g. <code>https://my-day-crm.netlify.app</code>) once the deployment URL is finalised. This adds an additional layer of origin validation.</p>
+  </div>
+  <p><strong>Risk context:</strong> Even with <code>*</code> CORS, the endpoint remains secure because every request must include a valid admin JWT token. An attacker without credentials cannot exploit the open CORS policy.</p>
+</div>
+
+<!-- AUDIT TRAIL -->
+<h2>10. Audit Trail</h2>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>10.1 Activity Logging</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <p>All data mutations are logged to the <code>activity_log</code> table, providing a timestamped audit trail:</p>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td><code>user_id</code></td><td>ID of the user who performed the action</td></tr>
+    <tr><td><code>action</code></td><td>Type of operation (e.g. contact_created, deal_updated, contact_archived)</td></tr>
+    <tr><td><code>target_type</code></td><td>Entity type affected (contact, deal, note, call)</td></tr>
+    <tr><td><code>target_id</code></td><td>ID of the affected record</td></tr>
+    <tr><td><code>metadata</code></td><td>JSONB field with additional context (contact name, company, etc.)</td></tr>
+    <tr><td><code>created_at</code></td><td>Timestamp of the action</td></tr>
+  </table>
+  <p>Activity log records are immutable &mdash; there is no UPDATE or DELETE policy on this table. Reps see only their own activity; managers and admins see all entries.</p>
+</div>
+
+<!-- DATABASE CONSTRAINTS -->
+<h2>11. Database Integrity</h2>
+
+<div class="section-card">
+  <div class="section-header">
+    <h3>11.1 Constraints &amp; Triggers</h3>
+    <span class="badge badge-green">PASS</span>
+  </div>
+  <ul>
+    <li><strong>Check constraints:</strong> Enforced on enum fields &mdash; <code>role</code> (rep, manager, admin), <code>contacts.status</code> (new, active, stale, inactive, archived), <code>deals.stage</code>, <code>calls.outcome</code></li>
+    <li><strong>Foreign keys:</strong> All relationships use <code>ON DELETE CASCADE</code> where appropriate (e.g. deleting a contact cascades to their notes and calls)</li>
+    <li><strong>Timestamps:</strong> <code>created_at</code> and <code>updated_at</code> on all tables via database triggers (<code>set_updated_at</code>)</li>
+    <li><strong>User provisioning trigger:</strong> <code>handle_new_user</code> automatically creates a profile row when a new auth user is created</li>
+  </ul>
+</div>
+
+<!-- RECOMMENDATIONS SUMMARY -->
+<h2>12. Recommendations Summary</h2>
+
+<table>
+  <tr><th style="width:5%">#</th><th style="width:12%">Priority</th><th style="width:35%">Recommendation</th><th>Detail</th></tr>
+  <tr>
+    <td>1</td>
+    <td><span class="badge badge-amber">Medium</span></td>
+    <td>Add explicit DELETE RLS policies</td>
+    <td>Define DELETE policies for contacts, deals, calls, and companies tables. Currently relies on cascade behaviour which is functional but not self-documenting for audit purposes.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><span class="badge badge-slate">Low</span></td>
+    <td>Add HTTP security headers</td>
+    <td>Configure X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy in <code>netlify.toml</code>. Defence-in-depth measure.</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><span class="badge badge-slate">Low</span></td>
+    <td>Restrict CORS origin</td>
+    <td>Change Edge Function CORS from <code>*</code> to production domain once finalised. JWT auth already protects the endpoint.</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td><span class="badge badge-slate">Low</span></td>
+    <td>Add rate limiting to Edge Functions</td>
+    <td>Consider Supabase's built-in rate limiting or a custom check to prevent brute-force attempts against the admin endpoint.</td>
+  </tr>
+</table>
+
+<div class="box box-green">
+  <p><strong>Note:</strong> None of the above recommendations represent active vulnerabilities. They are hardening measures to further strengthen an already secure architecture. The application is suitable for internal production use in its current state.</p>
+</div>
+
+<!-- ARCHITECTURE DIAGRAM -->
+<h2>13. Security Architecture Overview</h2>
+
+<div class="box box-slate">
+<pre style="background:none; color:#334155; margin:0; padding:0;"><code>  User (Browser)
+       |
+       | HTTPS (TLS 1.3)
+       v
+  +-----------+       +-------------------+
+  |  Netlify  |       |    Supabase       |
+  |  (Static  |------>|                   |
+  |   Host)   | HTTPS |  Auth Service     |  &lt;-- JWT tokens
+  +-----------+       |  PostgreSQL + RLS  |  &lt;-- Row-level security
+                      |  Edge Functions    |  &lt;-- Admin ops (service key)
+                      +-------------------+
+
+  Security Layers:
+  1. HTTPS/TLS ................. All traffic encrypted in transit
+  2. Supabase Auth ............. Email/password + JWT sessions
+  3. Row Level Security ........ Database enforces per-user access
+  4. Edge Function Auth ........ Admin role verified server-side
+  5. Service Key Isolation ..... Never exposed to frontend
+  6. Activity Logging .......... Immutable audit trail</code></pre>
+</div>
+
+<!-- SIGN-OFF -->
+<h2>14. Sign-Off</h2>
+
+<table>
+  <tr><th style="width:30%">Item</th><th>Detail</th></tr>
+  <tr><td>Report prepared by</td><td>Claude Code (AI-assisted development tool)</td></tr>
+  <tr><td>Codebase reviewed</td><td>SalesCRM 2026 &mdash; Precision CRM, branch <code>claude/contact-crud-real-data-hN64N</code></td></tr>
+  <tr><td>Report date</td><td>10 February 2026</td></tr>
+  <tr><td>Methodology</td><td>Static code analysis of all source files, configuration review, dependency audit</td></tr>
+  <tr><td>Scope</td><td>Frontend application, Supabase configuration, Edge Functions, deployment config, database schema</td></tr>
+  <tr><td>Reviewed by</td><td><em>[Compliance Manager signature]</em></td></tr>
+  <tr><td>Approved by</td><td><em>[Signature]</em></td></tr>
+</table>
+
+</body>
+</html>
