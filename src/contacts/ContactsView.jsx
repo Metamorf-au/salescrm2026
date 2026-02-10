@@ -185,35 +185,37 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
 
       {/* Filters */}
       <div className={isMobile ? "space-y-2" : "flex items-center gap-3"}>
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Search contacts or companies..."
-            className="w-full pl-9 pr-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search contacts or companies..."
+              className="w-full pl-9 pr-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+          </div>
+          {hasActiveFilters && (
+            <button onClick={clearFilters} title="Clear all filters"
+              className="p-2.5 bg-white border border-stone-200 rounded-xl text-slate-400 hover:text-amber-600 hover:border-amber-400 transition flex-shrink-0">
+              <FilterX size={16} />
+            </button>
+          )}
         </div>
-        {hasActiveFilters && (
-          <button onClick={clearFilters} title="Clear all filters"
-            className="p-2.5 bg-white border border-stone-200 rounded-xl text-slate-400 hover:text-amber-600 hover:border-amber-400 transition">
-            <FilterX size={16} />
-          </button>
-        )}
-        <div className="flex gap-2">
+        <div className={`grid ${isMobile ? "grid-cols-2" : "flex"} gap-2`}>
           {!isRepOnly && (
             <select value={ownerFilter} onChange={e => setOwnerFilter(e.target.value)}
-              className={`${isMobile ? "flex-1" : ""} px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent`}>
+              className="px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent">
               <option value="all">All Owners</option>
               {reps.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
             </select>
           )}
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-            className={`${isMobile ? "flex-1" : ""} px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent`}>
+            className="px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent">
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
             <option value="new">New</option>
             <option value="archived">Archived</option>
           </select>
           <select value={activityFilter} onChange={e => setActivityFilter(e.target.value)}
-            className={`${isMobile ? "flex-1" : ""} px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent`}>
+            className="px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent">
             <option value="all">Last Activity</option>
             <option value="never">Never</option>
             <option value="30">30+ days</option>
@@ -225,7 +227,7 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
 
       {/* CSV Export (archived view) */}
       {isViewingArchived && (
-        <div>
+        <div className="flex justify-end">
           <button onClick={exportCsv} title="Export to CSV"
             className="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
             <Download size={14} /> Export CSV
@@ -235,7 +237,7 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
 
       {/* Select All + Bulk Actions */}
       {filtered.length > 0 && (
-        <div className="flex items-center justify-between">
+        <div className={`flex ${isMobile ? "flex-col gap-2" : "items-center justify-between"}`}>
           <div className="flex items-center gap-3">
             <button onClick={toggleSelectAll}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${allVisibleSelected ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-white border-stone-200 text-slate-500 hover:border-stone-300"}`}>
@@ -248,10 +250,10 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
           </div>
 
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {!bulkAction && (
                 <>
-                  {!isRepOnly && (
+                  {!isRepOnly && !isMobile && (
                     <button onClick={() => setBulkAction("reassign")}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:border-sky-400 hover:text-sky-600 transition">
                       <UserCog size={13} /> Change Owner
