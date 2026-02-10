@@ -95,7 +95,7 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3 mt-1.5">
+          <div className="flex items-center gap-3 mt-1.5 pl-20">
             <div className="flex items-center gap-3 text-xs text-slate-500">
               <a href={`tel:${contact.phone || contact.mobile}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-slate-500 hover:text-amber-600 underline decoration-slate-300 hover:decoration-amber-400 transition"><Phone size={12} /> {contact.phone || contact.mobile}</a>
               <span className="text-stone-300">·</span>
