@@ -65,6 +65,7 @@ export async function fetchContacts() {
     owner: c.profiles?.name || "",
     ownerId: c.owner_id,
     lastContact: formatRelativeDate(c.last_contact_at),
+    lastContactRaw: c.last_contact_at || null,
     status: c.status,
     createdAt: c.created_at,
   }));

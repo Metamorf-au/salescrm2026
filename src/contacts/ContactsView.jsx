@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Users, Trash2, UserCog, CheckSquare } from "lucide-react";
+import { Search, Users, Trash2, UserCog, CheckSquare, Clock } from "lucide-react";
 import ContactCard from "./ContactCard";
 
 export default function ContactsView({ contacts, deals, callsByContact, notesByContact, reps, currentUser, onNewContact, onNewDeal, onAddNote, onLogCall, onAddInlineNote, onEditContact, onDeleteContact, onBulkDelete, onBulkReassign, isMobile }) {
@@ -8,12 +8,14 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [activityFilter, setActivityFilter] = useState("all");
   const [bulkAction, setBulkAction] = useState(null); // "delete" | "reassign"
   const [reassignTo, setReassignTo] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
 
   const isRepOnly = currentUser.role === "rep";
 
+  const now = new Date();
   const filtered = contacts.filter(c => {
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
@@ -21,7 +23,22 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
     }
     if (ownerFilter !== "all" && c.owner !== ownerFilter) return false;
     if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (activityFilter !== "all") {
+      const raw = c.lastContactRaw ? new Date(c.lastContactRaw) : null;
+      const daysSince = raw ? Math.floor((now - raw) / 86400000) : Infinity;
+      if (activityFilter === "never" && raw) return false;
+      if (activityFilter === "30" && daysSince <= 30) return false;
+      if (activityFilter === "60" && daysSince <= 60) return false;
+      if (activityFilter === "90" && daysSince <= 90) return false;
+    }
     return true;
+  }).sort((a, b) => {
+    if (activityFilter !== "all") {
+      const aDate = a.lastContactRaw ? new Date(a.lastContactRaw).getTime() : 0;
+      const bDate = b.lastContactRaw ? new Date(b.lastContactRaw).getTime() : 0;
+      return aDate - bDate; // oldest first
+    }
+    return 0;
   });
 
   const filteredIds = new Set(filtered.map(c => c.id));
@@ -138,6 +155,14 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
             <option value="active">Active</option>
             <option value="new">New</option>
             <option value="stale">Stale</option>
+          </select>
+          <select value={activityFilter} onChange={e => setActivityFilter(e.target.value)}
+            className={`${isMobile ? "flex-1" : ""} px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent`}>
+            <option value="all">Last Activity</option>
+            <option value="never">No activity ever</option>
+            <option value="30">No activity 30+ days</option>
+            <option value="60">No activity 60+ days</option>
+            <option value="90">No activity 90+ days</option>
           </select>
         </div>
       </div>
