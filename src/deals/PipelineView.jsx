@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { User, Clock, AlertTriangle, ArrowRight, Send, X } from "lucide-react";
+import { User, Clock, AlertTriangle, ArrowRight, Send, X, Pencil } from "lucide-react";
 import { LOST_REASONS } from "../shared/constants";
 import { formatCurrency, formatReminderDate } from "../shared/formatters";
 import LostReasonModal from "./LostReasonModal";
 import CloseDealModal from "./CloseDealModal";
 import WonCelebrationModal from "./WonCelebrationModal";
 
-export default function PipelineView({ deals, reps, currentUser, onDealWon, onDealLost, onDealVoid, isMobile }) {
+export default function PipelineView({ deals, reps, currentUser, onDealWon, onDealLost, onDealVoid, onEditDeal, isMobile }) {
   const isRepOnly = currentUser.role === "rep";
   const [selectedRep, setSelectedRep] = useState(isRepOnly ? currentUser.name : "all");
   const [timePeriod, setTimePeriod] = useState("all");
@@ -67,22 +67,28 @@ export default function PipelineView({ deals, reps, currentUser, onDealWon, onDe
 
   const staleCount = activeDeals.filter(d => getDealAge(d)).length;
 
+  const nextStageMap = { discovery: "Quote Request", quote_request: "Quote Sent" };
+
   function renderDealCard(d, isColumn) {
     const age = getDealAge(d);
+    const isActive = !["won", "lost", "closed"].includes(d.stage);
+    const canEdit = isActive && onEditDeal;
     return (
-      <div key={d.id} className={`${isColumn ? "bg-white rounded-lg p-3 shadow-sm border hover:shadow-md transition cursor-pointer" : "px-4 py-3"} ${age ? (isColumn ? age.border : age.bg) : (isColumn ? "border-stone-200" : "")}`}>
+      <div key={d.id} className={`${isColumn ? "bg-white rounded-lg p-3 shadow-sm border hover:shadow-md transition" : "px-4 py-3"} ${age ? (isColumn ? age.border : age.bg) : (isColumn ? "border-stone-200" : "")}`}>
         {age && (
           <div className={`flex items-center gap-1 mb-1${isColumn ? ".5" : ""} ${isColumn ? `px-1.5 py-0.5 rounded ${age.bg} w-fit` : ""}`}>
             <AlertTriangle size={10} className={age.color} />
             <span className={`text-[10px] font-semibold ${age.color}`}>{age.label}</span>
           </div>
         )}
-        <div className={isColumn ? "" : "flex items-center justify-between"}>
+        <div className={isColumn ? "" : "flex items-center justify-between"} onClick={() => canEdit && onEditDeal(d)} style={canEdit ? { cursor: "pointer" } : undefined}>
           <p className="text-sm font-semibold text-slate-800 leading-tight">{d.title}</p>
           {!isColumn && <span className="text-sm font-bold text-slate-700">{formatCurrency(d.value)}</span>}
         </div>
-        <p className="text-xs text-slate-500 mt-1">{d.contact}{isColumn ? "" : ` – ${d.company}`}</p>
-        {isColumn && <p className="text-xs text-slate-400">{d.company}</p>}
+        <div onClick={() => canEdit && onEditDeal(d)} style={canEdit ? { cursor: "pointer" } : undefined}>
+          <p className="text-xs text-slate-500 mt-1">{d.contact}{isColumn ? "" : ` – ${d.company}`}</p>
+          {isColumn && <p className="text-xs text-slate-400">{d.company}</p>}
+        </div>
         {isColumn && (
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-100">
             <span className="text-sm font-bold text-slate-700">{formatCurrency(d.value)}</span>
@@ -99,7 +105,7 @@ export default function PipelineView({ deals, reps, currentUser, onDealWon, onDe
             <Clock size={10} />Requested {formatReminderDate(d.quoteRequestedAt)}
           </p>
         )}
-        {d.nextAction && !["won", "lost", "closed"].includes(d.stage) && (
+        {d.nextAction && isActive && (
           <p className={`text-xs ${isColumn ? "text-amber-600 mt-1.5 flex items-center gap-1" : "text-slate-400 mt-1"}`}>
             {isColumn && <ArrowRight size={10} />}{d.nextAction}
           </p>
@@ -111,16 +117,28 @@ export default function PipelineView({ deals, reps, currentUser, onDealWon, onDe
           <p className="text-xs text-slate-500 mt-1.5">Note: {d.closedReason}</p>
         )}
         {["discovery", "quote_request"].includes(d.stage) && (
-          <div className={isColumn ? "mt-2 pt-2 border-t border-stone-100" : "mt-2"}>
-            <button onClick={() => setCloseModal(d)} className={`${isColumn ? "w-full" : "w-full"} py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition`}>
+          <div className={`${isColumn ? "mt-2 pt-2 border-t border-stone-100 space-y-1.5" : "mt-2 space-y-1.5"}`}>
+            {canEdit && (
+              <button onClick={() => onEditDeal(d)} className="w-full py-1.5 text-xs font-medium text-slate-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-md transition flex items-center justify-center gap-1.5">
+                <Pencil size={10} />Edit / Advance to {nextStageMap[d.stage]}
+              </button>
+            )}
+            <button onClick={() => setCloseModal(d)} className="w-full py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition">
               Void Deal
             </button>
           </div>
         )}
         {d.stage === "quote_sent" && (
-          <div className={`flex gap-1.5 ${isColumn ? "mt-2 pt-2 border-t border-stone-100" : "mt-2"}`}>
-            <button onClick={() => setLostModal(d)} className="flex-1 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition">Lost</button>
-            <button onClick={() => { setWonModal(d); onDealWon(d); }} className="flex-1 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition">Won</button>
+          <div className={`${isColumn ? "mt-2 pt-2 border-t border-stone-100 space-y-1.5" : "mt-2 space-y-1.5"}`}>
+            {canEdit && (
+              <button onClick={() => onEditDeal(d)} className="w-full py-1.5 text-xs font-medium text-slate-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-md transition flex items-center justify-center gap-1.5">
+                <Pencil size={10} />Edit Deal
+              </button>
+            )}
+            <div className="flex gap-1.5">
+              <button onClick={() => setLostModal(d)} className="flex-1 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-md transition">Lost</button>
+              <button onClick={() => { setWonModal(d); onDealWon(d); }} className="flex-1 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition">Won</button>
+            </div>
           </div>
         )}
       </div>
