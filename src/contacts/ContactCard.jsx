@@ -77,11 +77,9 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
         </div>
         {isMobile ? (
           <div className="flex items-end gap-3 mt-2 pl-7">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 flex-1 text-xs text-slate-500">
+            <div className="grid grid-cols-1 gap-1.5 flex-1 text-xs text-slate-500">
               <a href={`tel:${contact.phone || contact.mobile}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-slate-500 hover:text-amber-600 underline decoration-slate-300 hover:decoration-amber-400 transition"><Phone size={12} /> {contact.phone || contact.mobile}</a>
               <a href={`mailto:${contact.email}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-slate-500 hover:text-amber-600 underline decoration-slate-300 hover:decoration-amber-400 transition"><Mail size={12} /> {contact.email}</a>
-              <span className="flex items-center gap-1"><MapPin size={12} /> {contact.location}</span>
-              <span className="flex items-center gap-1"><User size={12} /> {contact.owner}</span>
             </div>
             <div className="flex flex-col gap-1 flex-shrink-0">
               <button onClick={(e) => { e.stopPropagation(); onEdit(contact); }}
