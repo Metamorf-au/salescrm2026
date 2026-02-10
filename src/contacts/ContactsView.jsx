@@ -237,7 +237,7 @@ export default function ContactsView({ contacts, deals, callsByContact, notesByC
 
       {/* Select All + Bulk Actions */}
       {filtered.length > 0 && (
-        <div className={`flex ${isMobile ? "flex-col gap-2" : "items-center justify-between"}`}>
+        <div className={`flex flex-wrap items-center ${isMobile ? "gap-2" : "justify-between"}`}>
           <div className="flex items-center gap-3">
             <button onClick={toggleSelectAll}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${allVisibleSelected ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-white border-stone-200 text-slate-500 hover:border-stone-300"}`}>
