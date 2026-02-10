@@ -11,6 +11,14 @@ const TODO_FILTERS = [
   { key: "overdue", label: "Overdue", days: -1 },
 ];
 
+const ACTIVITY_FILTERS = [
+  { key: "today", label: "Today", days: 0 },
+  { key: "yesterday", label: "Yesterday", days: 1 },
+  { key: "3days", label: "Last 3 Days", days: 3 },
+  { key: "7days", label: "Last 7 Days", days: 7 },
+  { key: "14days", label: "Last 14 Days", days: 14 },
+];
+
 const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
 export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, onCompleteTodo, onClearCompleted, isMobile }) {
@@ -30,6 +38,8 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   const [todoFilter, setTodoFilter] = useState("3days");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [activityFilter, setActivityFilter] = useState("today");
+  const [showActivityDropdown, setShowActivityDropdown] = useState(false);
 
   // Auto-expire deal to-dos older than 14 days (on mount)
   const hasAutoExpired = useRef(false);
@@ -356,43 +366,103 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
           )}
         </div>
 
-        {/* Today's Activity */}
+        {/* Activity Log */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Activity size={18} className="text-slate-400" />
-            <h2 className="text-base font-semibold text-slate-700">Today's Activity</h2>
-            <span className="ml-auto text-xs font-medium text-slate-400 bg-stone-100 px-2 py-0.5 rounded-full">{activityLog.length}</span>
-          </div>
-          {activityLog.length > 0 ? (
-            <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
-              {activityLog.map(c => {
-                const atc = c.activityType !== "call" ? activityTypeConfig(c.activityType) : null;
-                const oc = c.activityType === "call" ? outcomeConfig(c.outcome) : null;
-                const cfg = atc || oc;
-                if (!cfg) return null;
-                const Icon = cfg.icon;
-                return (
-                  <div key={c.id} className="flex items-center gap-3 px-4 py-3">
-                    <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                      <Icon size={15} className={cfg.color} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
-                        {atc && <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>}
-                      </div>
-                      <p className="text-xs text-slate-500 truncate">{c.summary}</p>
-                    </div>
-                    <span className="text-xs text-slate-400 whitespace-nowrap">{c.time}</span>
+          {(() => {
+            // Filter activity log by selected date range
+            const activeActivityFilter = ACTIVITY_FILTERS.find(f => f.key === activityFilter);
+            const filteredActivity = activityLog.filter(a => {
+              if (!a.createdAt) return activityFilter === "today";
+              const actDate = new Date(a.createdAt);
+              if (activityFilter === "today") {
+                return actDate >= todayStart;
+              }
+              if (activityFilter === "yesterday") {
+                const yesterdayStart = new Date(todayStart);
+                yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+                return actDate >= yesterdayStart && actDate < todayStart;
+              }
+              const cutoff = new Date(todayStart);
+              cutoff.setDate(cutoff.getDate() - activeActivityFilter.days);
+              return actDate >= cutoff;
+            });
+
+            // Format time/date label for each entry
+            function formatActivityTime(a) {
+              if (!a.createdAt) return a.time;
+              const actDate = new Date(a.createdAt);
+              if (actDate >= todayStart) return a.time;
+              const yesterday = new Date(todayStart);
+              yesterday.setDate(yesterday.getDate() - 1);
+              if (actDate >= yesterday) {
+                return "Yesterday " + a.time;
+              }
+              return actDate.toLocaleDateString("en-AU", { day: "numeric", month: "short" }) + " " + a.time;
+            }
+
+            return (
+              <>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Activity size={18} className="text-slate-400" />
+                  <h2 className="text-base font-semibold text-slate-700">My Activity</h2>
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full min-w-[24px] text-center ${filteredActivity.length > 0 ? "bg-sky-500 text-white" : "bg-stone-100 text-slate-400"}`}>
+                    {filteredActivity.length}
+                  </span>
+                  <div className="ml-auto relative">
+                    <button onClick={() => setShowActivityDropdown(!showActivityDropdown)}
+                      className="flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-stone-100 hover:bg-stone-200 px-2.5 py-1.5 rounded-lg transition">
+                      <Filter size={12} />{activeActivityFilter.label}<ChevronDown size={12} />
+                    </button>
+                    {showActivityDropdown && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setShowActivityDropdown(false)} />
+                        <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl border border-stone-200 shadow-lg z-20 py-1 overflow-hidden">
+                          {ACTIVITY_FILTERS.map(f => (
+                            <button key={f.key} onClick={() => { setActivityFilter(f.key); setShowActivityDropdown(false); }}
+                              className={`w-full text-left px-3 py-2 text-xs font-medium transition ${activityFilter === f.key ? "bg-amber-50 text-amber-700" : "text-slate-600 hover:bg-stone-50"}`}>
+                              {f.label}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl border border-stone-200 p-6 text-center">
-              <p className="text-sm text-slate-400">No activity yet today. Log a call, add a contact, or create a deal to get started.</p>
-            </div>
-          )}
+                </div>
+                {filteredActivity.length > 0 ? (
+                  <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
+                    {filteredActivity.map(c => {
+                      const atc = c.activityType !== "call" ? activityTypeConfig(c.activityType) : null;
+                      const oc = c.activityType === "call" ? outcomeConfig(c.outcome) : null;
+                      const cfg = atc || oc;
+                      if (!cfg) return null;
+                      const Icon = cfg.icon;
+                      return (
+                        <div key={c.id} className="flex items-center gap-3 px-4 py-3">
+                          <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+                            <Icon size={15} className={cfg.color} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
+                              {atc && <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>}
+                            </div>
+                            <p className="text-xs text-slate-500 truncate">{c.summary}</p>
+                          </div>
+                          <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityTime(c)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-xl border border-stone-200 p-6 text-center">
+                    <p className="text-sm text-slate-400">
+                      {activityFilter === "today" ? "No activity yet today. Log a call, add a contact, or create a deal to get started." : `No activity for ${activeActivityFilter.label.toLowerCase()}.`}
+                    </p>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
 
