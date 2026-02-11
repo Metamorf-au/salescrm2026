@@ -361,7 +361,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                     </div>
                     {todo.reminder && (
                       <span className={`flex items-center gap-1 text-[13px] font-medium whitespace-nowrap flex-shrink-0 self-end ${overdue ? "text-red-500" : "text-amber-500"}`}>
-                        {overdue ? <AlertTriangle size={14} /> : <Bell size={14} />}{formatReminderDate(todo.reminder)}
+                        {overdue ? <AlertTriangle size={14} /> : <Bell size={14} />}{formatReminderDate(todo.reminder, todo.type === 'meeting')}
                       </span>
                     )}
                   </div>

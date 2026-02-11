@@ -114,7 +114,7 @@ function getReminderDate(presetKey, fromDate) {
   return d;
 }
 
-function formatReminderDate(dateStr) {
+function formatReminderDate(dateStr, showTime = false) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
   const now = new Date();
@@ -125,6 +125,13 @@ function formatReminderDate(dateStr) {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const yy = String(d.getFullYear()).slice(-2);
   const datePart = isToday ? "Today" : isTomorrow ? "Tomorrow" : `${dd}/${mm}/${yy}`;
+  if (showTime && dateStr.includes("T")) {
+    const hh = d.getHours();
+    const min = String(d.getMinutes()).padStart(2, "0");
+    const ampm = hh >= 12 ? "pm" : "am";
+    const hh12 = hh % 12 || 12;
+    return `${datePart} ${hh12}:${min}${ampm}`;
+  }
   return datePart;
 }
 
@@ -754,7 +761,7 @@ function QuickNoteModal({ onClose, currentUser }) {
                     <div key={n.id} className="px-3 py-2 bg-stone-50 rounded-lg border border-stone-100 text-xs text-slate-500">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
-                        {n.reminder && <span className="flex items-center gap-1 text-amber-500"><Bell size={10} />{formatReminderDate(n.reminder)}</span>}
+                        {n.reminder && <span className="flex items-center gap-1 text-amber-500"><Bell size={10} />{formatReminderDate(n.reminder, n.type === 'meeting')}</span>}
                       </div>
                       {n.text} <span className="text-slate-400 ml-1">· {n.date}</span>
                     </div>
@@ -1037,7 +1044,7 @@ function ContactsView({ onNewContact, onNewDeal, onAddNote, onLogCall, isMobile,
                                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
                                 {note.reminder && (
                                   <span className="flex items-center gap-1 text-[10px] text-amber-500 font-medium">
-                                    <Bell size={10} />{formatReminderDate(note.reminder)}
+                                    <Bell size={10} />{formatReminderDate(note.reminder, note.type === 'meeting')}
                                   </span>
                                 )}
                               </div>
@@ -1269,7 +1276,7 @@ function RepView({ callsLogged, onLogCall, onNewDeal, onAddNote, onNewContact, i
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {todo.reminder && (
                           <span className={`flex items-center gap-1 text-xs font-medium whitespace-nowrap ${overdue ? "text-red-500" : "text-amber-500"}`}>
-                            {overdue ? <AlertTriangle size={13} /> : <Bell size={13} />}{formatReminderDate(todo.reminder)}
+                            {overdue ? <AlertTriangle size={13} /> : <Bell size={13} />}{formatReminderDate(todo.reminder, todo.type === 'meeting')}
                           </span>
                         )}
                       </div>

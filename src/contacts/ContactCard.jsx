@@ -247,7 +247,7 @@ export default function ContactCard({ contact, deals, calls, notes, isExpanded, 
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${ntc.bg} ${ntc.text}`}>{ntc.label}</span>
                         {note.reminder && (
                           <span className="flex items-center gap-1 text-[10px] text-amber-500 font-medium">
-                            <Bell size={10} />{formatReminderDate(note.reminder)}
+                            <Bell size={10} />{formatReminderDate(note.reminder, note.type === 'meeting')}
                           </span>
                         )}
                       </div>
