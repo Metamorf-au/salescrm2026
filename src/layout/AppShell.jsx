@@ -216,6 +216,16 @@ export default function AppShell() {
       summary: data.summary || "Call logged",
       metadata: { outcome: data.outcome },
     });
+    // Log quote_requested activity if toggled on
+    if (data.quoteRequested && contact) {
+      await insertActivity({
+        userId: currentUser.id,
+        activityType: "quote_requested",
+        contactName: contact?.name,
+        companyName: contact?.company,
+        summary: `Quote requested during call with ${contact.name}`,
+      });
+    }
     // Create meeting note if outcome is meeting
     if (data.outcome === "meeting" && data.meetingDate && data.meetingTime && contact) {
       const meetingText = data.meetingNote || `Meeting with ${contact.name}`;
@@ -228,14 +238,22 @@ export default function AppShell() {
         reminderAt: reminder,
       });
     }
-    // Create follow-up note if next step provided
+    // Create follow-up to-do if next step provided
     if (data.nextStep && contact) {
+      const reminderAt = data.nextDate ? `${data.nextDate}T09:00:00` : null;
       await insertNote({
         contactId: data.contactId,
         authorId: currentUser.id,
         type: "follow_up",
         text: data.nextStep,
-        reminderAt: data.nextDate || null,
+        reminderAt,
+      });
+      await insertActivity({
+        userId: currentUser.id,
+        activityType: "note_added",
+        contactName: contact.name,
+        companyName: contact.company,
+        summary: `Follow-up: ${data.nextStep}`,
       });
     }
     await loadAllData();
