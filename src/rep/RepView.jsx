@@ -360,7 +360,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                       <p className={`text-[13px] text-slate-500 truncate ${done ? "line-through" : ""}`}>{todo.text}</p>
                     </div>
                     {todo.reminder && (
-                      <span className={`flex items-center gap-1 text-[13px] font-medium whitespace-nowrap flex-shrink-0 ${overdue ? "text-red-500" : "text-amber-500"}`}>
+                      <span className={`flex items-center gap-1 text-[13px] font-medium whitespace-nowrap flex-shrink-0 self-end ${overdue ? "text-red-500" : "text-amber-500"}`}>
                         {overdue ? <AlertTriangle size={14} /> : <Bell size={14} />}{formatReminderDate(todo.reminder)}
                       </span>
                     )}
