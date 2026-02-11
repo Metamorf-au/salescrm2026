@@ -167,13 +167,13 @@ export default function ActivityLogExplorer({ isMobile }) {
               </span>
             )}
           </div>
-          <div className={`flex items-center gap-2 ${isMobile ? "flex-wrap" : ""}`}>
+          <div className={isMobile ? "grid grid-cols-2 gap-2" : "flex items-center gap-2"}>
             {/* Activity Type Filter */}
             <div className="relative">
               <select
                 value={typeFilter}
                 onChange={e => setTypeFilter(e.target.value)}
-                className="appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer"
+                className={`appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer${isMobile ? " w-full" : ""}`}
               >
                 {ACTIVITY_TYPES.map(t => (
                   <option key={t.key} value={t.key}>{t.label}</option>
@@ -188,7 +188,7 @@ export default function ActivityLogExplorer({ isMobile }) {
               <select
                 value={dateFilter}
                 onChange={e => setDateFilter(e.target.value)}
-                className="appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer"
+                className={`appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer${isMobile ? " w-full" : ""}`}
               >
                 {DATE_RANGES.map(d => (
                   <option key={d.key} value={d.key}>{d.label}</option>
@@ -200,13 +200,13 @@ export default function ActivityLogExplorer({ isMobile }) {
 
             {/* Custom date inputs */}
             {dateFilter === "custom" && (
-              <>
+              <div className={isMobile ? "col-span-2 flex items-center gap-2" : "contents"}>
                 <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                  className="px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 w-[120px]" />
+                  className={`px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400${isMobile ? " flex-1" : " w-[120px]"}`} />
                 <span className="text-[10px] text-slate-400">to</span>
                 <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                  className="px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 w-[120px]" />
-              </>
+                  className={`px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400${isMobile ? " flex-1" : " w-[120px]"}`} />
+              </div>
             )}
 
             {/* Per-Rep Filter */}
@@ -214,7 +214,7 @@ export default function ActivityLogExplorer({ isMobile }) {
               <select
                 value={repFilter}
                 onChange={e => setRepFilter(e.target.value)}
-                className="appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer"
+                className={`appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer${isMobile ? " w-full" : ""}`}
               >
                 <option value="all">All Reps</option>
                 {reps.map(r => (
@@ -229,7 +229,7 @@ export default function ActivityLogExplorer({ isMobile }) {
             <button
               onClick={handleExportCsv}
               disabled={activities.length === 0}
-              className="flex items-center gap-1.5 px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-stone-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className={`flex items-center gap-1.5 px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-stone-100 transition disabled:opacity-40 disabled:cursor-not-allowed${isMobile ? " w-full justify-center" : ""}`}
             >
               <Download size={13} />Export
             </button>
