@@ -216,6 +216,16 @@ export default function AppShell() {
       summary: data.summary || "Call logged",
       metadata: { outcome: data.outcome },
     });
+    // Log quote_requested activity if toggled on
+    if (data.quoteRequested && contact) {
+      await insertActivity({
+        userId: currentUser.id,
+        activityType: "quote_requested",
+        contactName: contact?.name,
+        companyName: contact?.company,
+        summary: `Quote requested during call with ${contact.name}`,
+      });
+    }
     // Create meeting note if outcome is meeting
     if (data.outcome === "meeting" && data.meetingDate && data.meetingTime && contact) {
       const meetingText = data.meetingNote || `Meeting with ${contact.name}`;
