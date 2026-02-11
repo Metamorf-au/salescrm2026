@@ -262,10 +262,10 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
         <div className="lg:col-span-3 flex flex-col gap-4">
           <div className="bg-white rounded-xl border border-stone-200 p-5">
             <h2 className="text-base font-semibold text-slate-700 mb-3">Calls {isToday ? "Today" : `(${rangeLabel})`} {callsTarget ? "vs Target" : "by Rep"}</h2>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={chartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5 } : undefined}>
+            <ResponsiveContainer width="100%" height={isMobile ? 180 : 160}>
+              <BarChart data={chartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5, bottom: 10 } : undefined}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="name" interval={0} tick={{ fontSize: isMobile ? 10 : 12, fill: "#71717a" }} angle={isMobile ? -35 : 0} textAnchor={isMobile ? "end" : "middle"} axisLine={false} tickLine={false} />
                 {!isMobile && <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
                 <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
                 {callsTarget && <ReferenceLine y={callsTarget} stroke="#d97706" strokeDasharray="6 4" label={{ value: "Target", position: "right", fill: "#d97706", fontSize: 11 }} />}
@@ -279,10 +279,10 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
           </div>
           <div className="bg-white rounded-xl border border-stone-200 p-5">
             <h2 className="text-base font-semibold text-slate-700 mb-3">Quotes Sent ({rangeLabel}) by Rep</h2>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={quotesChartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5 } : undefined}>
+            <ResponsiveContainer width="100%" height={isMobile ? 180 : 160}>
+              <BarChart data={quotesChartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5, bottom: 10 } : undefined}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="name" interval={0} tick={{ fontSize: isMobile ? 10 : 12, fill: "#71717a" }} angle={isMobile ? -35 : 0} textAnchor={isMobile ? "end" : "middle"} axisLine={false} tickLine={false} />
                 {!isMobile && <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
                 <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
                 <Bar dataKey="quotes" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 60 : 40}>
