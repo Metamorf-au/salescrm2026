@@ -79,7 +79,7 @@ export async function fetchDeals() {
   const { data, error } = await supabase
     .from("deals")
     .select(`
-      id, title, stage, value, next_action, next_date,
+      id, title, stage, value, next_action, next_date, todo_completed_at,
       quote_requested_at, quote_sent_at, won_at, lost_at, lost_reason, closed_reason,
       contact_id, company_id, owner_id, created_at,
       contacts(id, first_name, last_name),
@@ -99,6 +99,7 @@ export async function fetchDeals() {
     value: Number(d.value),
     nextAction: d.next_action,
     nextDate: d.next_date,
+    todoCompletedAt: d.todo_completed_at || null,
     owner: d.profiles?.name || "",
     ownerId: d.owner_id,
     quoteRequestedAt: d.quote_requested_at,
@@ -149,7 +150,7 @@ export async function completeNote(noteId) {
 export async function completeDealTodo(dealId) {
   const { error } = await supabase
     .from("deals")
-    .update({ next_action: null, next_date: null })
+    .update({ todo_completed_at: new Date().toISOString() })
     .eq("id", dealId);
   if (error) throw new Error(error.message);
 }
@@ -459,7 +460,11 @@ export async function updateDeal(dealId, updates) {
   if (updates.wonAt !== undefined) dbUpdates.won_at = updates.wonAt;
   if (updates.lostAt !== undefined) dbUpdates.lost_at = updates.lostAt;
   if (updates.nextAction !== undefined) dbUpdates.next_action = updates.nextAction;
-  if (updates.nextDate !== undefined) dbUpdates.next_date = updates.nextDate;
+  if (updates.nextDate !== undefined) {
+    dbUpdates.next_date = updates.nextDate;
+    // Reset completion when a new next date is set (new todo cycle)
+    if (updates.nextDate) dbUpdates.todo_completed_at = null;
+  }
   if (updates.quoteSentAt !== undefined) dbUpdates.quote_sent_at = updates.quoteSentAt;
   if (updates.quoteRequestedAt !== undefined) dbUpdates.quote_requested_at = updates.quoteRequestedAt;
   const { error } = await supabase.from("deals").update(dbUpdates).eq("id", dealId);

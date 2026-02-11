@@ -109,6 +109,7 @@ create table public.deals (
   value numeric(12,2) not null default 0,
   next_action text,
   next_date date,
+  todo_completed_at timestamptz,
   owner_id uuid references public.profiles(id),
   quote_requested_at timestamptz,
   quote_sent_at timestamptz,
