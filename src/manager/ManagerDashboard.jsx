@@ -258,7 +258,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
 
       <div className={`grid grid-cols-1 ${isMobile ? "gap-4" : "lg:grid-cols-5 gap-6"}`}>
         <div className="lg:col-span-3 flex flex-col gap-4">
-          <div className="bg-white rounded-xl border border-stone-200 p-5 flex-1">
+          <div className="bg-white rounded-xl border border-stone-200 p-5">
             <h2 className="text-base font-semibold text-slate-700 mb-3">Calls {isToday ? "Today" : `(${rangeLabel})`} {callsTarget ? "vs Target" : "by Rep"}</h2>
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={chartData} barCategoryGap="25%">
@@ -275,7 +275,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="bg-white rounded-xl border border-stone-200 p-5 flex-1">
+          <div className="bg-white rounded-xl border border-stone-200 p-5">
             <h2 className="text-base font-semibold text-slate-700 mb-3">Quotes Sent ({rangeLabel}) by Rep</h2>
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={quotesChartData} barCategoryGap="25%">
