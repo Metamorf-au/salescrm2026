@@ -22,7 +22,7 @@ export default function LoginScreen() {
     <div style={{ fontFamily: "'Outfit', sans-serif" }} className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src={logo} alt="Precision Sales CRM" className="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-lg shadow-amber-500/20" />
+          <img src={logo} alt="Precision Sales CRM" className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white">Precision</h1>
           <p className="text-slate-400 text-sm mt-1">Sales CRM</p>
         </div>
