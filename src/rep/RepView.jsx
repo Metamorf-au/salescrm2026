@@ -99,7 +99,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     const contact = contacts.find(c => String(c.id) === String(contactId));
     if (!contact) continue;
     for (const note of notes) {
-      if (note.type === "follow_up" || note.type === "meeting") {
+      if (note.reminder) {
         if (note.completedAt) {
           const completedTime = new Date(note.completedAt).getTime();
           // Auto-expire: skip notes completed > 14 days ago
