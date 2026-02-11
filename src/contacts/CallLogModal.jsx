@@ -2,7 +2,7 @@ import { useState } from "react";
 import Modal from "../shared/Modal";
 import SuccessScreen from "../shared/SuccessScreen";
 import { outcomeConfig } from "../shared/constants";
-import { Phone, Calendar, MessageSquare, XCircle } from "lucide-react";
+import { Phone, Calendar, MessageSquare, XCircle, FileText } from "lucide-react";
 
 export default function CallLogModal({ contacts, currentUser, onSave, onClose }) {
   const [contact, setContact] = useState("");
@@ -11,6 +11,7 @@ export default function CallLogModal({ contacts, currentUser, onSave, onClose })
   const [meetingDate, setMeetingDate] = useState("");
   const [meetingTime, setMeetingTime] = useState("");
   const [meetingNote, setMeetingNote] = useState("");
+  const [quoteRequested, setQuoteRequested] = useState(false);
   const [nextStep, setNextStep] = useState("");
   const [nextDate, setNextDate] = useState("");
   const [saved, setSaved] = useState(false);
@@ -33,6 +34,7 @@ export default function CallLogModal({ contacts, currentUser, onSave, onClose })
         contactId: Number(contact),
         outcome,
         summary,
+        quoteRequested,
         meetingDate: outcome === "meeting" ? meetingDate : null,
         meetingTime: outcome === "meeting" ? meetingTime : null,
         meetingNote: outcome === "meeting" ? meetingNote : null,
@@ -82,6 +84,17 @@ export default function CallLogModal({ contacts, currentUser, onSave, onClose })
             <textarea value={summary} onChange={e => setSummary(e.target.value)} rows={2} placeholder="What happened on this call?"
               className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none" />
           </div>
+          <button type="button" onClick={() => setQuoteRequested(q => !q)}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition
+              ${quoteRequested ? "border-violet-400 bg-violet-50" : "border-stone-200 bg-stone-50 hover:border-stone-300"}`}>
+            <span className="flex items-center gap-2.5">
+              <FileText size={16} className={quoteRequested ? "text-violet-600" : "text-slate-400"} />
+              <span className={`text-sm font-medium ${quoteRequested ? "text-violet-700" : "text-slate-500"}`}>Quote Requested</span>
+            </span>
+            <div className={`w-9 h-5 rounded-full transition-colors relative ${quoteRequested ? "bg-violet-500" : "bg-stone-300"}`}>
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${quoteRequested ? "left-[18px]" : "left-0.5"}`} />
+            </div>
+          </button>
           {outcome === "meeting" && (
             <div className="bg-violet-50 rounded-xl border border-violet-200 p-4 space-y-3">
               <p className="text-sm font-semibold text-violet-700">Meeting Details</p>
