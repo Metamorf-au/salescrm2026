@@ -91,6 +91,8 @@ function formatActivityDateTime(dateStr) {
   return d.toLocaleDateString("en-AU", { day: "numeric", month: "short" }) + ` ${time}`;
 }
 
+const PAGE_SIZE = 25;
+
 export default function ActivityLogExplorer({ isMobile }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("7days");
@@ -100,6 +102,7 @@ export default function ActivityLogExplorer({ isMobile }) {
   const [activities, setActivities] = useState([]);
   const [reps, setReps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   // Load reps for filter dropdown
   useEffect(() => {
@@ -124,6 +127,7 @@ export default function ActivityLogExplorer({ isMobile }) {
       userId: repFilter === "all" ? null : repFilter,
     });
     setActivities(data);
+    setVisibleCount(PAGE_SIZE);
     setLoading(false);
   }, [typeFilter, dateFilter, customFrom, customTo, repFilter]);
 
@@ -154,11 +158,13 @@ export default function ActivityLogExplorer({ isMobile }) {
     <div className="bg-white rounded-xl border border-stone-200 overflow-visible">
       <div className="px-5 py-4 border-b border-stone-200">
         <div className={isMobile ? "space-y-3" : "flex items-center justify-between"}>
-          <div>
+          <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold text-slate-700">Activity Log</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {loading ? "Loading..." : `${activities.length} entries`}
-            </p>
+            {!loading && (
+              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">
+                {activities.length}
+              </span>
+            )}
           </div>
           <div className={`flex items-center gap-2 ${isMobile ? "flex-wrap" : ""}`}>
             {/* Activity Type Filter */}
@@ -224,7 +230,7 @@ export default function ActivityLogExplorer({ isMobile }) {
               disabled={activities.length === 0}
               className="flex items-center gap-1.5 px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-stone-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <Download size={13} />CSV
+              <Download size={13} />Export
             </button>
           </div>
         </div>
@@ -251,7 +257,7 @@ export default function ActivityLogExplorer({ isMobile }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
-                  {activities.map(a => {
+                  {activities.slice(0, visibleCount).map(a => {
                     const cfg = activityTypeConfig(a.activityType);
                     const Icon = cfg.icon;
                     return (
@@ -275,7 +281,7 @@ export default function ActivityLogExplorer({ isMobile }) {
           ) : (
             /* Mobile card list */
             <div className="divide-y divide-stone-100">
-              {activities.map(a => {
+              {activities.slice(0, visibleCount).map(a => {
                 const cfg = activityTypeConfig(a.activityType);
                 const Icon = cfg.icon;
                 return (
@@ -301,6 +307,14 @@ export default function ActivityLogExplorer({ isMobile }) {
                   </div>
                 );
               })}
+            </div>
+          )}
+          {visibleCount < activities.length && (
+            <div className="text-center pt-2 pb-4">
+              <button onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
+                className="px-6 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
+                Show more ({activities.length - visibleCount} remaining)
+              </button>
             </div>
           )}
         </>
