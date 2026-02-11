@@ -511,7 +511,6 @@ export default function AppShell() {
     } catch (err) {
       console.error("Error completing todo:", err);
     }
-    await loadAllData();
   }
 
   async function handleClearCompleted(dealTodos) {
