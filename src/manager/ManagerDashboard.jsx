@@ -113,15 +113,27 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
   const filteredMetrics = filteredReps.map(r => metricsMap[r.id]);
   const repCount = filteredReps.length || 1;
 
+  // Build short display names — append last initial when first names clash
+  const firstNameCounts = {};
+  filteredReps.forEach(r => {
+    const first = r.name.split(" ")[0];
+    firstNameCounts[first] = (firstNameCounts[first] || 0) + 1;
+  });
+  const shortName = (r) => {
+    const parts = r.name.split(" ");
+    const first = parts[0];
+    return firstNameCounts[first] > 1 && parts.length > 1 ? `${first} ${parts[parts.length - 1][0]}.` : first;
+  };
+
   const chartData = filteredReps.map(r => ({
-    name: r.name.split(" ")[0],
+    name: shortName(r),
     calls: metricsMap[r.id]?.callsInRange || 0,
     target: isToday ? DAILY_TARGET : isThisWeek ? WEEKLY_TARGET : null,
   }));
 
   const quotesChartData = filteredReps.map(r => {
     const count = deals.filter(d => d.ownerId === r.id && d.quoteSentAt && new Date(d.quoteSentAt) >= dateRange.start && new Date(d.quoteSentAt) < dateRange.end).length;
-    return { name: r.name.split(" ")[0], quotes: count };
+    return { name: shortName(r), quotes: count };
   });
 
   const totalCallsInRange = filteredMetrics.reduce((s, m) => s + (m?.callsInRange || 0), 0);
@@ -265,10 +277,10 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
             <div className={isMobile ? "overflow-x-auto -mx-5 px-5" : ""}>
               <div style={isMobile ? { minWidth: Math.max(300, chartData.length * 60) } : undefined}>
                 <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={chartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5 } : undefined}>
+                  <BarChart data={chartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: 10, right: 5 } : { left: -15, right: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
                     <XAxis dataKey="name" interval={0} tick={{ fontSize: isMobile ? 11 : 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                    {!isMobile && <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
+                    {!isMobile && <YAxis width={30} tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
                     <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
                     {callsTarget && <ReferenceLine y={callsTarget} stroke="#d97706" strokeDasharray="6 4" label={{ value: "Target", position: "right", fill: "#d97706", fontSize: 11 }} />}
                     <Bar dataKey="calls" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 60 : 40}>
@@ -286,10 +298,10 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
             <div className={isMobile ? "overflow-x-auto -mx-5 px-5" : ""}>
               <div style={isMobile ? { minWidth: Math.max(300, quotesChartData.length * 60) } : undefined}>
                 <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={quotesChartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5 } : undefined}>
+                  <BarChart data={quotesChartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: 10, right: 5 } : { left: -15, right: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
                     <XAxis dataKey="name" interval={0} tick={{ fontSize: isMobile ? 11 : 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                    {!isMobile && <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
+                    {!isMobile && <YAxis width={30} tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
                     <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
                     <Bar dataKey="quotes" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 60 : 40}>
                       {quotesChartData.map((d, i) => (

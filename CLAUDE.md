@@ -25,6 +25,7 @@
 - Mobile detection via `isMobile` prop passed down from app root
 - Charts use Recharts (BarChart with ResponsiveContainer)
 - On mobile, charts are horizontally scrollable (overflow-x-auto with min-width per bar) so all rep names show clearly
+- Chart labels use shortName helper — first name only, or "First L." when duplicates exist
 - Filter dropdowns use CSS grid (grid-cols-2) on mobile for symmetrical layout
 - Login inputs use text-base (16px) to prevent iOS auto-zoom on focus
 - Export CSV button hidden on mobile for KPI Dashboard top filters
@@ -36,6 +37,9 @@
 3. Fixed Activity Log filters — 2x2 grid layout on mobile (Type, Date, Rep, Export)
 4. Custom date inputs span full width (col-span-2) when active in both filter areas
 5. Made bar charts horizontally scrollable on mobile — 60px min-width per bar, interval={0} forces all labels
+6. Fixed first rep name clipped on mobile charts — changed BarChart left margin from -20 to 10
+7. Fixed desktop chart alignment — reduced YAxis width to 30px, tightened left margin so bars align with heading
+8. Added duplicate first name handling — shortName helper appends last initial (e.g. "Anthony B.") when first names clash
 
 ## Working Preferences
 - **IMPORTANT**: Always check with the user before starting any work. They prefer to work in stages and want to review/approve each step before proceeding.
