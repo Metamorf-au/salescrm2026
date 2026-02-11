@@ -191,7 +191,26 @@ create index idx_activity_date on public.activity_log(created_at);
 
 
 -- ============================================================
--- 8. UPDATED_AT TRIGGER
+-- 8. WEEKLY SUMMARIES TABLE
+-- ============================================================
+-- Stores the weekly summary text for each rep per ISO week.
+
+create table public.weekly_summaries (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.profiles(id),
+  week_start date not null,
+  summary text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(user_id, week_start)
+);
+
+create index idx_weekly_summaries_user on public.weekly_summaries(user_id);
+create index idx_weekly_summaries_week on public.weekly_summaries(week_start);
+
+
+-- ============================================================
+-- 9. UPDATED_AT TRIGGER
 -- ============================================================
 -- Automatically sets updated_at on any row change
 
@@ -208,6 +227,7 @@ create trigger set_companies_updated_at before update on public.companies for ea
 create trigger set_contacts_updated_at before update on public.contacts for each row execute function public.set_updated_at();
 create trigger set_deals_updated_at before update on public.deals for each row execute function public.set_updated_at();
 create trigger set_notes_updated_at before update on public.notes for each row execute function public.set_updated_at();
+create trigger set_weekly_summaries_updated_at before update on public.weekly_summaries for each row execute function public.set_updated_at();
 
 
 -- ============================================================
@@ -221,6 +241,7 @@ alter table public.deals enable row level security;
 alter table public.notes enable row level security;
 alter table public.calls enable row level security;
 alter table public.activity_log enable row level security;
+alter table public.weekly_summaries enable row level security;
 
 
 -- ============================================================
@@ -391,3 +412,23 @@ create policy "activity_log_select" on public.activity_log
 -- Any authenticated user can create activity log entries
 create policy "activity_log_insert" on public.activity_log
   for insert with check (auth.uid() is not null);
+
+
+-- ============================================================
+-- 18. RLS POLICIES — WEEKLY SUMMARIES
+-- ============================================================
+
+-- Users see own summaries; managers and admins see all
+create policy "weekly_summaries_select" on public.weekly_summaries
+  for select using (
+    user_id = auth.uid()
+    or public.current_user_role() in ('manager', 'admin')
+  );
+
+-- Any authenticated user can create their own summaries
+create policy "weekly_summaries_insert" on public.weekly_summaries
+  for insert with check (user_id = auth.uid());
+
+-- Users can update their own summaries
+create policy "weekly_summaries_update" on public.weekly_summaries
+  for update using (user_id = auth.uid());
