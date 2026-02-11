@@ -3063,12 +3063,12 @@ export default function PrecisionCRM() {
         {!isMobile && (
           <nav className="w-56 bg-slate-900 flex flex-col flex-shrink-0">
             <div className="px-5 py-5">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
-                  <Target size={18} className="text-white" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-amber-500 flex items-center justify-center">
+                  <Target size={20} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-bold text-sm leading-tight">Precision</p>
+                  <p className="text-white font-bold text-[15px] leading-tight">Precision</p>
                   <p className="text-slate-400 text-xs leading-tight">Sales CRM</p>
                 </div>
               </div>
