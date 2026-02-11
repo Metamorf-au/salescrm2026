@@ -501,13 +501,6 @@ export default function AppShell() {
       if (todo.type !== "deal") {
         await completeNote(todo.noteId);
       }
-      await insertActivity({
-        userId: currentUser.id,
-        activityType: "todo_completed",
-        contactName: todo.contactName,
-        companyName: todo.company,
-        summary: `To-do completed: ${todo.text.substring(0, 60)}`,
-      });
     } catch (err) {
       console.error("Error completing todo:", err);
     }
