@@ -238,14 +238,22 @@ export default function AppShell() {
         reminderAt: reminder,
       });
     }
-    // Create follow-up note if next step provided
+    // Create follow-up to-do if next step provided
     if (data.nextStep && contact) {
+      const reminderAt = data.nextDate ? `${data.nextDate}T09:00:00` : null;
       await insertNote({
         contactId: data.contactId,
         authorId: currentUser.id,
         type: "follow_up",
         text: data.nextStep,
-        reminderAt: data.nextDate || null,
+        reminderAt,
+      });
+      await insertActivity({
+        userId: currentUser.id,
+        activityType: "note_added",
+        contactName: contact.name,
+        companyName: contact.company,
+        summary: `Follow-up: ${data.nextStep}`,
       });
     }
     await loadAllData();
