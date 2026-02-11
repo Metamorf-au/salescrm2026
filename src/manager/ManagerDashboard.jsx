@@ -119,6 +119,11 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
     target: isToday ? DAILY_TARGET : isThisWeek ? WEEKLY_TARGET : null,
   }));
 
+  const quotesChartData = filteredReps.map(r => {
+    const count = deals.filter(d => d.ownerId === r.id && d.quoteSentAt && new Date(d.quoteSentAt) >= dateRange.start && new Date(d.quoteSentAt) < dateRange.end).length;
+    return { name: r.name.split(" ")[0], quotes: count };
+  });
+
   const totalCallsInRange = filteredMetrics.reduce((s, m) => s + (m?.callsInRange || 0), 0);
   const totalCallsToday = filteredMetrics.reduce((s, m) => s + (m?.callsToday || 0), 0);
   const avgCompliance = Math.round(filteredMetrics.reduce((s, m) => s + (m?.crmCompliance || 0), 0) / repCount);
@@ -252,22 +257,40 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
       </div>
 
       <div className={`grid grid-cols-1 ${isMobile ? "gap-4" : "lg:grid-cols-5 gap-6"}`}>
-        <div className="lg:col-span-3 bg-white rounded-xl border border-stone-200 p-5">
-          <h2 className="text-base font-semibold text-slate-700 mb-4">Calls {isToday ? "Today" : `(${rangeLabel})`} {callsTarget ? "vs Target" : "by Rep"}</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={chartData} barCategoryGap="25%">
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
-              {callsTarget && <ReferenceLine y={callsTarget} stroke="#d97706" strokeDasharray="6 4" label={{ value: "Target", position: "right", fill: "#d97706", fontSize: 11 }} />}
-              <Bar dataKey="calls" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                {chartData.map((d, i) => (
-                  <Cell key={i} fill={callsTarget ? (d.calls >= callsTarget ? "#16a34a" : d.calls >= callsTarget * 0.8 ? "#d97706" : "#e11d48") : "#0284c7"} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="lg:col-span-3 flex flex-col gap-4">
+          <div className="bg-white rounded-xl border border-stone-200 p-5">
+            <h2 className="text-base font-semibold text-slate-700 mb-3">Calls {isToday ? "Today" : `(${rangeLabel})`} {callsTarget ? "vs Target" : "by Rep"}</h2>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={chartData} barCategoryGap="25%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
+                {callsTarget && <ReferenceLine y={callsTarget} stroke="#d97706" strokeDasharray="6 4" label={{ value: "Target", position: "right", fill: "#d97706", fontSize: 11 }} />}
+                <Bar dataKey="calls" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                  {chartData.map((d, i) => (
+                    <Cell key={i} fill={callsTarget ? (d.calls >= callsTarget ? "#16a34a" : d.calls >= callsTarget * 0.8 ? "#d97706" : "#e11d48") : "#0284c7"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="bg-white rounded-xl border border-stone-200 p-5">
+            <h2 className="text-base font-semibold text-slate-700 mb-3">Quotes Sent ({rangeLabel}) by Rep</h2>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={quotesChartData} barCategoryGap="25%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
+                <Bar dataKey="quotes" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                  {quotesChartData.map((d, i) => (
+                    <Cell key={i} fill="#8b5cf6" />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
         <div className="lg:col-span-2 bg-white rounded-xl border border-stone-200 p-5">
           <h2 className="text-base font-semibold text-slate-700 mb-4">Status Board</h2>
