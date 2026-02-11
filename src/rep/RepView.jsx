@@ -332,7 +332,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
             </div>
           </div>
           {filteredTodos.length > 0 ? (
-            <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
+            <div className="space-y-2">
               {filteredTodos.map(todo => {
                 const isDeal = todo.type === "deal";
                 const ntc = isDeal ? null : noteTypeConfig(todo.type);
@@ -341,7 +341,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                 const overdue = !done && isOverdue(todo.reminder);
                 return (
                   <div key={todo.uid}
-                    className={`flex items-center gap-3 px-4 py-3 transition group ${overdue ? "bg-red-50/40" : ""} ${done ? "opacity-60" : ""}`}>
+                    className={`bg-white rounded-xl border flex items-center gap-3 px-4 py-3 transition group ${overdue ? "border-red-300 bg-red-50/40" : "border-stone-200"} ${done ? "opacity-60" : ""}`}>
                     <button type="button" onClick={() => handleToggleTodo(todo)}
                       className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${done ? "bg-emerald-500 border-emerald-500" : overdue ? "border-red-400 group-hover:border-red-500" : "border-stone-300 group-hover:border-amber-400"} ${done ? "" : "cursor-pointer"}`}
                       disabled={done}>
