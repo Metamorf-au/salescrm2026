@@ -32,6 +32,9 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     try { return JSON.parse(localStorage.getItem(dealDoneKey) || "{}"); } catch { return {}; }
   });
 
+  // Note completion tracking (local state for instant UI feedback; DB is source of truth)
+  const [completedNotes, setCompletedNotes] = useState({});
+
   // Timestamp of last "Clear Done" click
   const [lastCleared, setLastCleared] = useState(() => {
     try { return Number(localStorage.getItem(clearedKey)) || 0; } catch { return 0; }
@@ -158,10 +161,11 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     });
   }
 
-  // Completion check: notes use DB completedAt, deals use localStorage
+  // Completion check: notes use DB completedAt or local state, deals use localStorage
   function isCompleted(todo) {
     if (todo.dbCompleted) return true;
     if (todo.type === "deal") return !!completedDeals[todo.uid];
+    if (todo.noteId && completedNotes[todo.noteId]) return true;
     return false;
   }
 
@@ -220,6 +224,9 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
       const next = { ...completedDeals, [todo.uid]: Date.now() };
       setCompletedDeals(next);
       localStorage.setItem(dealDoneKey, JSON.stringify(next));
+    } else if (todo.noteId) {
+      // Instant visual feedback for note todos
+      setCompletedNotes(prev => ({ ...prev, [todo.noteId]: true }));
     }
     // Notes: completed_at written to DB by AppShell handler
     if (onCompleteTodo) onCompleteTodo(todo);
