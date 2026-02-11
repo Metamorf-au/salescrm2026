@@ -40,6 +40,9 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     try { return Number(localStorage.getItem(clearedKey)) || 0; } catch { return 0; }
   });
 
+  // UIDs of items removed by "Clear Done" (persists until data refresh replaces them)
+  const [clearedUIDs, setClearedUIDs] = useState(new Set());
+
   const [todoFilter, setTodoFilter] = useState("3days");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [activityFilter, setActivityFilter] = useState("3days");
@@ -198,7 +201,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     });
   }
 
-  const filteredTodos = filterTodos(myTodos, todoFilter);
+  const filteredTodos = filterTodos(myTodos, todoFilter).filter(t => !clearedUIDs.has(t.uid));
 
   // Sort: overdue first, then by date ascending, completed last
   filteredTodos.sort((a, b) => {
@@ -210,8 +213,9 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     return aDate - bDate;
   });
 
-  const pendingCount = myTodos.filter(t => !isCompleted(t)).length;
-  const completedCount = myTodos.filter(t => isCompleted(t)).length;
+  const visibleTodos = myTodos.filter(t => !clearedUIDs.has(t.uid));
+  const pendingCount = visibleTodos.filter(t => !isCompleted(t)).length;
+  const completedCount = visibleTodos.filter(t => isCompleted(t)).length;
 
   // CRM compliance based on all todos
   const totalTodos = myTodos.length;
@@ -236,12 +240,19 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     // Collect deal todos that need DB writes
     const dealTodosToCommit = myTodos.filter(t => t.type === "deal" && completedDeals[t.uid]);
 
-    // Set lastCleared timestamp to hide completed notes
+    // Set lastCleared timestamp so completed notes stay hidden after data reload
     const clearedTs = Date.now();
     setLastCleared(clearedTs);
     localStorage.setItem(clearedKey, String(clearedTs));
 
-    // Clear all local completion state
+    // Immediately remove all completed items from the visible list
+    const uidsToRemove = new Set(clearedUIDs);
+    for (const todo of myTodos) {
+      if (isCompleted(todo)) uidsToRemove.add(todo.uid);
+    }
+    setClearedUIDs(uidsToRemove);
+
+    // Clear local completion state (won't cause unchecking since items are now hidden)
     setCompletedDeals({});
     localStorage.setItem(dealDoneKey, "{}");
     setCompletedNotes({});
