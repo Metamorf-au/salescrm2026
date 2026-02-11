@@ -200,37 +200,37 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
           <h1 className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-slate-800`}>KPI Dashboard</h1>
           <p className="text-slate-500 mt-0.5 text-sm">{new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} – Real-time overview</p>
         </div>
-        <div className={`flex items-center gap-2 ${isMobile ? "flex-wrap" : ""}`}>
+        <div className={isMobile ? "grid grid-cols-2 gap-2" : "flex items-center gap-2"}>
           {!isRepOnly && (
             <>
               {/* Date range filter */}
               <div className="relative">
                 <select value={datePreset} onChange={e => setDatePreset(e.target.value)}
-                  className="appearance-none pl-7 pr-7 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer">
+                  className={`appearance-none pl-7 pr-7 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer${isMobile ? " w-full" : ""}`}>
                   {DATE_PRESETS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
                 </select>
                 <Calendar size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
-              {datePreset === "custom" && (
-                <>
-                  <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                    className="px-2 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 w-[130px]" />
-                  <span className="text-xs text-slate-400">to</span>
-                  <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                    className="px-2 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 w-[130px]" />
-                </>
-              )}
               {/* Rep filter */}
               <div className="relative">
                 <select value={selectedRep} onChange={e => setSelectedRep(e.target.value === "all" ? "all" : e.target.value)}
-                  className="appearance-none pl-7 pr-7 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer">
+                  className={`appearance-none pl-7 pr-7 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer${isMobile ? " w-full" : ""}`}>
                   <option value="all">All Reps</option>
                   {repList.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
                 <User size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
+              {datePreset === "custom" && (
+                <div className={isMobile ? "col-span-2 flex items-center gap-2" : "contents"}>
+                  <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+                    className={`px-2 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400${isMobile ? " flex-1" : " w-[130px]"}`} />
+                  <span className="text-xs text-slate-400">to</span>
+                  <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+                    className={`px-2 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-amber-400${isMobile ? " flex-1" : " w-[130px]"}`} />
+                </div>
+              )}
               {/* Export CSV */}
               {!isMobile && (
                 <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium hover:bg-stone-50 transition">
