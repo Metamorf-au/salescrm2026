@@ -17,7 +17,6 @@ const ACTIVITY_TYPES = [
   { key: "note_added", label: "Note Added" },
   { key: "contact_updated", label: "Contact Updated" },
   { key: "deal_updated", label: "Deal Updated" },
-  { key: "todo_completed", label: "To-Do Completed" },
 ];
 
 const DATE_RANGES = [
@@ -127,7 +126,7 @@ export default function ActivityLogExplorer({ isMobile }) {
       endDate,
       userId: repFilter === "all" ? null : repFilter,
     });
-    setActivities(data);
+    setActivities(data.filter(a => a.activityType !== "todo_completed"));
     setVisibleCount(PAGE_SIZE);
     setLoading(false);
   }, [typeFilter, dateFilter, customFrom, customTo, repFilter]);
