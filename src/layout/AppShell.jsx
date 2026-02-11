@@ -504,6 +504,8 @@ export default function AppShell() {
     } catch (err) {
       console.error("Error completing todo:", err);
     }
+    // Sync DB data so Clear Done can filter by completedAt timestamp
+    await loadAllData();
   }
 
   async function handleClearCompleted(dealTodos) {
