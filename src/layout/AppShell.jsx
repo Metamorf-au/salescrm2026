@@ -240,7 +240,7 @@ export default function AppShell() {
     }
     // Create follow-up to-do if next step provided
     if (data.nextStep && contact) {
-      const reminderAt = data.nextDate ? `${data.nextDate}T09:00:00` : null;
+      const reminderAt = data.nextDate || null;
       await insertNote({
         contactId: data.contactId,
         authorId: currentUser.id,
