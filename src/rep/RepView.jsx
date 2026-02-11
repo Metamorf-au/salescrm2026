@@ -347,7 +347,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                       disabled={done}>
                       {done && <CheckCircle size={14} className="text-white" />}
                     </button>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
                         <p className={`text-sm font-medium text-slate-800 truncate ${done ? "line-through text-slate-400" : ""}`}>{todo.contactName}{todo.company ? ` - ${todo.company}` : ""}</p>
                         {isDeal ? (
@@ -357,11 +357,11 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                         )}
                         {overdue && <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold flex-shrink-0 bg-red-100 text-red-600">Overdue</span>}
                       </div>
-                      <p className={`text-xs text-slate-500 truncate ${done ? "line-through" : ""}`}>{todo.text}</p>
+                      <p className={`text-[13px] text-slate-500 truncate ${done ? "line-through" : ""}`}>{todo.text}</p>
                     </div>
                     {todo.reminder && (
-                      <span className={`flex items-center gap-1 text-xs font-medium whitespace-nowrap flex-shrink-0 ${overdue ? "text-red-500" : "text-amber-500"}`}>
-                        {overdue ? <AlertTriangle size={13} /> : <Bell size={13} />}{formatReminderDate(todo.reminder)}
+                      <span className={`flex items-center gap-1 text-[13px] font-medium whitespace-nowrap flex-shrink-0 ${overdue ? "text-red-500" : "text-amber-500"}`}>
+                        {overdue ? <AlertTriangle size={14} /> : <Bell size={14} />}{formatReminderDate(todo.reminder)}
                       </span>
                     )}
                   </div>
