@@ -241,9 +241,10 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     setLastCleared(clearedTs);
     localStorage.setItem(clearedKey, String(clearedTs));
 
-    // Clear deal completions from localStorage
+    // Clear all local completion state
     setCompletedDeals({});
     localStorage.setItem(dealDoneKey, "{}");
+    setCompletedNotes({});
 
     // Commit deal fields to DB + reload
     if (onClearCompleted) onClearCompleted(dealTodosToCommit);
