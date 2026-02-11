@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
-import { Target, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
+import logo from "../assets/my-day-logo.svg";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -21,9 +22,7 @@ export default function LoginScreen() {
     <div style={{ fontFamily: "'Outfit', sans-serif" }} className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/20">
-            <Target size={32} className="text-white" />
-          </div>
+          <img src={logo} alt="Precision Sales CRM" className="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-lg shadow-amber-500/20" />
           <h1 className="text-2xl font-bold text-white">Precision</h1>
           <p className="text-slate-400 text-sm mt-1">Sales CRM</p>
         </div>
