@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
-import { User, BookOpen, Columns, LayoutDashboard, Settings, Target } from "lucide-react";
+import { User, BookOpen, Columns, LayoutDashboard, Settings } from "lucide-react";
+import logo from "../assets/my-day-logo.svg";
 import {
   fetchContacts, fetchDeals, fetchAllNotes, fetchAllCalls, fetchReps,
   fetchActivityLog, groupCallsByContact,
@@ -510,6 +511,7 @@ export default function AppShell() {
     } catch (err) {
       console.error("Error completing todo:", err);
     }
+    await loadAllData();
   }
 
   async function handleClearCompleted(dealTodos) {
@@ -561,9 +563,7 @@ export default function AppShell() {
       {authLoading ? (
         <div style={{ fontFamily: "'Outfit', sans-serif" }} className="min-h-screen bg-slate-900 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/20 animate-pulse">
-              <Target size={32} className="text-white" />
-            </div>
+            <img src={logo} alt="Loading" className="w-16 h-16 mx-auto mb-4 animate-pulse" />
             <p className="text-slate-400 text-sm">Loading...</p>
           </div>
         </div>
@@ -590,9 +590,7 @@ export default function AppShell() {
             {dataLoading && contacts.length === 0 ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center mx-auto mb-3 animate-pulse">
-                    <Target size={20} className="text-white" />
-                  </div>
+                  <img src={logo} alt="Loading" className="w-10 h-10 mx-auto mb-3 animate-pulse" />
                   <p className="text-sm text-slate-400">Loading data...</p>
                 </div>
               </div>
