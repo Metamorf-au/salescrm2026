@@ -383,6 +383,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
             // Filter activity log by selected date range
             const activeActivityFilter = ACTIVITY_FILTERS.find(f => f.key === activityFilter);
             const filteredActivity = activityLog.filter(a => {
+              if (a.activityType === "todo_completed") return false;
               if (!a.createdAt) return activityFilter === "today";
               const actDate = new Date(a.createdAt);
               if (activityFilter === "today") {

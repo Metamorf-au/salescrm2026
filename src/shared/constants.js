@@ -92,17 +92,17 @@ export function contactStatusStyle(status) {
 
 export function activityTypeConfig(type) {
   const map = {
-    call: { bg: "bg-sky-100", color: "text-sky-600", icon: Phone, label: "Call" },
-    new_contact: { bg: "bg-sky-100", color: "text-sky-600", icon: UserPlus, label: "New Contact" },
+    call: { bg: "bg-amber-100", color: "text-amber-600", icon: Phone, label: "Call" },
+    new_contact: { bg: "bg-violet-100", color: "text-violet-600", icon: UserPlus, label: "New Contact" },
     new_deal: { bg: "bg-emerald-100", color: "text-emerald-600", icon: Briefcase, label: "New Deal" },
     deal_won: { bg: "bg-emerald-100", color: "text-emerald-600", icon: Trophy, label: "Deal Won" },
     deal_lost: { bg: "bg-rose-100", color: "text-rose-600", icon: XCircle, label: "Deal Lost" },
     deal_voided: { bg: "bg-slate-100", color: "text-slate-500", icon: XCircle, label: "Voided" },
-    quote_sent: { bg: "bg-amber-100", color: "text-amber-600", icon: Send, label: "Quote Sent" },
-    quote_requested: { bg: "bg-violet-100", color: "text-violet-600", icon: Phone, label: "Quote Requested" },
+    quote_sent: { bg: "bg-emerald-100", color: "text-emerald-600", icon: Send, label: "Quote Sent" },
+    quote_requested: { bg: "bg-emerald-100", color: "text-emerald-600", icon: Phone, label: "Quote Requested" },
     note_added: { bg: "bg-sky-100", color: "text-sky-600", icon: MessageSquare, label: "Note Added" },
-    contact_updated: { bg: "bg-slate-100", color: "text-slate-500", icon: UserPlus, label: "Updated" },
-    deal_updated: { bg: "bg-amber-100", color: "text-amber-600", icon: DollarSign, label: "Deal Updated" },
+    contact_updated: { bg: "bg-violet-100", color: "text-violet-600", icon: UserPlus, label: "Updated" },
+    deal_updated: { bg: "bg-emerald-100", color: "text-emerald-600", icon: DollarSign, label: "Deal Updated" },
     todo_completed: { bg: "bg-emerald-100", color: "text-emerald-600", icon: CheckCircle, label: "To-Do Done" },
   };
   return map[type] || { bg: "bg-slate-100", color: "text-slate-500", icon: Activity, label: type };
