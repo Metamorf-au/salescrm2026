@@ -232,9 +232,11 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
                 <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
               {/* Export CSV */}
-              <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium hover:bg-stone-50 transition">
-                <Download size={15} />Export
-              </button>
+              {!isMobile && (
+                <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 bg-white border border-stone-200 rounded-xl text-sm text-slate-600 font-medium hover:bg-stone-50 transition">
+                  <Download size={15} />Export
+                </button>
+              )}
             </>
           )}
         </div>
@@ -261,13 +263,13 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
           <div className="bg-white rounded-xl border border-stone-200 p-5">
             <h2 className="text-base font-semibold text-slate-700 mb-3">Calls {isToday ? "Today" : `(${rangeLabel})`} {callsTarget ? "vs Target" : "by Rep"}</h2>
             <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={chartData} barCategoryGap="25%">
+              <BarChart data={chartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5 } : undefined}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                {!isMobile && <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
                 <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
                 {callsTarget && <ReferenceLine y={callsTarget} stroke="#d97706" strokeDasharray="6 4" label={{ value: "Target", position: "right", fill: "#d97706", fontSize: 11 }} />}
-                <Bar dataKey="calls" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                <Bar dataKey="calls" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 60 : 40}>
                   {chartData.map((d, i) => (
                     <Cell key={i} fill={callsTarget ? (d.calls >= callsTarget ? "#16a34a" : d.calls >= callsTarget * 0.8 ? "#d97706" : "#e11d48") : "#0284c7"} />
                   ))}
@@ -278,12 +280,12 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
           <div className="bg-white rounded-xl border border-stone-200 p-5">
             <h2 className="text-base font-semibold text-slate-700 mb-3">Quotes Sent ({rangeLabel}) by Rep</h2>
             <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={quotesChartData} barCategoryGap="25%">
+              <BarChart data={quotesChartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5 } : undefined}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                {!isMobile && <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
                 <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
-                <Bar dataKey="quotes" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                <Bar dataKey="quotes" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 60 : 40}>
                   {quotesChartData.map((d, i) => (
                     <Cell key={i} fill="#8b5cf6" />
                   ))}
