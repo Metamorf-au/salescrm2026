@@ -265,7 +265,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
             <div className={isMobile ? "overflow-x-auto -mx-5 px-5" : ""}>
               <div style={isMobile ? { minWidth: Math.max(300, chartData.length * 60) } : undefined}>
                 <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={chartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5 } : undefined}>
+                  <BarChart data={chartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: 10, right: 5 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
                     <XAxis dataKey="name" interval={0} tick={{ fontSize: isMobile ? 11 : 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
                     {!isMobile && <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
@@ -286,7 +286,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
             <div className={isMobile ? "overflow-x-auto -mx-5 px-5" : ""}>
               <div style={isMobile ? { minWidth: Math.max(300, quotesChartData.length * 60) } : undefined}>
                 <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={quotesChartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: -20, right: 5 } : undefined}>
+                  <BarChart data={quotesChartData} barCategoryGap={isMobile ? "15%" : "25%"} margin={isMobile ? { left: 10, right: 5 } : undefined}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e0" vertical={false} />
                     <XAxis dataKey="name" interval={0} tick={{ fontSize: isMobile ? 11 : 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
                     {!isMobile && <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
