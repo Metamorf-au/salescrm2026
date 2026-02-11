@@ -36,6 +36,7 @@
 3. Fixed Activity Log filters — 2x2 grid layout on mobile (Type, Date, Rep, Export)
 4. Custom date inputs span full width (col-span-2) when active in both filter areas
 5. Made bar charts horizontally scrollable on mobile — 60px min-width per bar, interval={0} forces all labels
+6. Fixed first rep name clipped on mobile charts — changed BarChart left margin from -20 to 10
 
 ## Working Preferences
 - **IMPORTANT**: Always check with the user before starting any work. They prefer to work in stages and want to review/approve each step before proceeding.
