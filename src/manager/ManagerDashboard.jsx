@@ -99,8 +99,8 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
   const isToday = datePreset === "today";
   const isThisWeek = datePreset === "this_week";
 
-  // Only show reps (not managers/admins) in the dashboard
-  const repList = reps.filter(r => r.role === "rep");
+  // Managers are player-coaches — they sell AND manage, so include them alongside reps
+  const repList = reps.filter(r => r.role === "rep" || r.role === "manager");
   const filteredReps = selectedRep === "all" ? repList : repList.filter(r => r.id === selectedRep);
   const isFiltered = selectedRep !== "all";
 

@@ -111,6 +111,7 @@ export default function ActivityLogExplorer({ isMobile }) {
         .from("profiles")
         .select("id, name, role")
         .eq("status", "active")
+        .in("role", ["rep", "manager"])
         .order("name");
       if (data) setReps(data);
     }
@@ -215,7 +216,7 @@ export default function ActivityLogExplorer({ isMobile }) {
                 onChange={e => setRepFilter(e.target.value)}
                 className="appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer"
               >
-                <option value="all">All Users</option>
+                <option value="all">All Reps</option>
                 {reps.map(r => (
                   <option key={r.id} value={r.id}>{r.name}</option>
                 ))}
