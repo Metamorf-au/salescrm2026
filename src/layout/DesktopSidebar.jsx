@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Target, User, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
+import logo from "../assets/my-day-logo.svg";
 
 export default function DesktopSidebar({ navItems, activeView, setActiveView, currentUser, onMyProfile, onLogout }) {
   const [showMenu, setShowMenu] = useState(false);
@@ -8,9 +9,7 @@ export default function DesktopSidebar({ navItems, activeView, setActiveView, cu
     <nav className="w-56 bg-slate-900 flex flex-col flex-shrink-0">
       <div className="px-5 py-5">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
-            <Target size={18} className="text-white" />
-          </div>
+          <img src={logo} alt="Precision" className="w-8 h-8 rounded-lg" />
           <div>
             <p className="text-white font-bold text-sm leading-tight">Precision</p>
             <p className="text-slate-400 text-xs leading-tight">Sales CRM</p>
