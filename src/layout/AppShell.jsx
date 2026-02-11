@@ -497,26 +497,20 @@ export default function AppShell() {
 
   async function handleCompleteTodo(todo) {
     try {
-      // Notes: write completed_at to DB immediately so it persists across refresh
-      if (todo.type !== "deal") {
+      if (todo.type === "deal") {
+        await completeDealTodo(todo.dealId);
+      } else {
         await completeNote(todo.noteId);
       }
     } catch (err) {
       console.error("Error completing todo:", err);
     }
-    // Sync DB data so Clear Done can filter by completedAt timestamp
     await loadAllData();
   }
 
-  async function handleClearCompleted(dealTodos) {
-    try {
-      // Only deal to-dos need DB writes on clear (notes already have completed_at)
-      for (const todo of dealTodos) {
-        await completeDealTodo(todo.dealId);
-      }
-    } catch (err) {
-      console.error("Error clearing completed todos:", err);
-    }
+  async function handleClearCompleted() {
+    // Both notes and deals now have completed_at in DB — no extra writes needed.
+    // RepView updates lastCleared timestamp so completed items stay hidden after reload.
     await loadAllData();
   }
 

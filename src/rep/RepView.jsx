@@ -23,17 +23,12 @@ const ACTIVITY_FILTERS = [
 const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
 export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, onCompleteTodo, onClearCompleted, isMobile }) {
-  // localStorage keys for this user
-  const dealDoneKey = `crm_todo_deals_${currentUser.id}`;
+  // localStorage key for "Clear Done" timestamp (shared for notes + deals)
   const clearedKey = `crm_todo_cleared_${currentUser.id}`;
 
-  // Deal completion tracking (localStorage with timestamps)
-  const [completedDeals, setCompletedDeals] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(dealDoneKey) || "{}"); } catch { return {}; }
-  });
-
-  // Note completion tracking (local state for instant UI feedback; DB is source of truth)
+  // Local state for instant UI feedback on check (DB is source of truth after reload)
   const [completedNotes, setCompletedNotes] = useState({});
+  const [completedDeals, setCompletedDeals] = useState({});
 
   // Timestamp of last "Clear Done" click
   const [lastCleared, setLastCleared] = useState(() => {
@@ -79,33 +74,6 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     summaryTimerRef.current = setTimeout(() => saveWeeklySummary(text), 1500);
   }
 
-  // Auto-expire deal to-dos older than 14 days (on mount)
-  const hasAutoExpired = useRef(false);
-  useEffect(() => {
-    if (hasAutoExpired.current) return;
-    hasAutoExpired.current = true;
-    const nowMs = Date.now();
-    const expired = [];
-    const remaining = {};
-    for (const [uid, ts] of Object.entries(completedDeals)) {
-      if (nowMs - ts > FOURTEEN_DAYS_MS) {
-        expired.push(uid);
-      } else {
-        remaining[uid] = ts;
-      }
-    }
-    if (expired.length > 0) {
-      // Find matching deal todos to commit to DB
-      const expiredDealTodos = myActiveDealsRef.current
-        .filter(d => expired.includes(`deal-${d.id}`))
-        .map(d => ({ type: "deal", dealId: d.id }));
-      if (expiredDealTodos.length > 0 && onClearCompleted) {
-        onClearCompleted(expiredDealTodos);
-      }
-      setCompletedDeals(remaining);
-      localStorage.setItem(dealDoneKey, JSON.stringify(remaining));
-    }
-  }, []);
 
   // Compute KPIs from real data
   const now = new Date();
@@ -146,13 +114,18 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     }
   }
 
-  // Active deals with next dates as to-dos
+  // Active deals with next dates as to-dos (same pattern as notes: use DB todoCompletedAt)
   const myActiveDeals = deals.filter(d => d.ownerId === currentUser.id && d.nextDate && !["won", "lost", "closed"].includes(d.stage));
-  const myActiveDealsRef = useRef(myActiveDeals);
-  myActiveDealsRef.current = myActiveDeals;
 
   for (const deal of myActiveDeals) {
-    myTodos.push({
+    if (deal.todoCompletedAt) {
+      const completedTime = new Date(deal.todoCompletedAt).getTime();
+      // Auto-expire: skip deals completed > 14 days ago
+      if (nowMs - completedTime > FOURTEEN_DAYS_MS) continue;
+      // Skip deals that were completed before last "Clear Done"
+      if (completedTime <= lastCleared) continue;
+    }
+    const todo = {
       uid: `deal-${deal.id}`,
       dealId: deal.id,
       type: "deal",
@@ -161,13 +134,15 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
       text: `${deal.title}${deal.nextAction ? ` – ${deal.nextAction}` : ""}`,
       reminder: deal.nextDate,
       dealStage: deal.stage,
-    });
+    };
+    if (deal.todoCompletedAt) todo.dbCompleted = true;
+    myTodos.push(todo);
   }
 
-  // Completion check: notes use DB completedAt or local state, deals use localStorage
+  // Completion check: DB completedAt is source of truth, local state for instant feedback
   function isCompleted(todo) {
     if (todo.dbCompleted) return true;
-    if (todo.type === "deal") return !!completedDeals[todo.uid];
+    if (todo.type === "deal" && completedDeals[todo.uid]) return true;
     if (todo.noteId && completedNotes[todo.noteId]) return true;
     return false;
   }
@@ -223,24 +198,17 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   function handleToggleTodo(todo) {
     if (isCompleted(todo)) return;
+    // Instant visual feedback (DB write happens via AppShell handler for both types)
     if (todo.type === "deal") {
-      // Store deal completion in localStorage with timestamp
-      const next = { ...completedDeals, [todo.uid]: Date.now() };
-      setCompletedDeals(next);
-      localStorage.setItem(dealDoneKey, JSON.stringify(next));
+      setCompletedDeals(prev => ({ ...prev, [todo.uid]: true }));
     } else if (todo.noteId) {
-      // Instant visual feedback for note todos
       setCompletedNotes(prev => ({ ...prev, [todo.noteId]: true }));
     }
-    // Notes: completed_at written to DB by AppShell handler
     if (onCompleteTodo) onCompleteTodo(todo);
   }
 
   function handleClearCompleted() {
-    // Collect deal todos that need DB writes
-    const dealTodosToCommit = myTodos.filter(t => t.type === "deal" && completedDeals[t.uid]);
-
-    // Set lastCleared timestamp so completed notes stay hidden after data reload
+    // Set lastCleared timestamp so completed items stay hidden after data reload
     const clearedTs = Date.now();
     setLastCleared(clearedTs);
     localStorage.setItem(clearedKey, String(clearedTs));
@@ -252,13 +220,12 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     }
     setClearedUIDs(uidsToRemove);
 
-    // Clear local completion state (won't cause unchecking since items are now hidden)
+    // Clear local feedback state (items are now hidden via clearedUIDs)
     setCompletedDeals({});
-    localStorage.setItem(dealDoneKey, "{}");
     setCompletedNotes({});
 
-    // Commit deal fields to DB + reload
-    if (onClearCompleted) onClearCompleted(dealTodosToCommit);
+    // Reload data from DB
+    if (onClearCompleted) onClearCompleted();
   }
 
   const activeFilter = TODO_FILTERS.find(f => f.key === todoFilter);
