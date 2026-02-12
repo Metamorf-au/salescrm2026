@@ -258,7 +258,7 @@ export default function ActivityLogExplorer({ isMobile }) {
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {activities.slice(0, visibleCount).map(a => {
-                    const cfg = activityTypeConfig(a.activityType);
+                    const cfg = activityTypeConfig(a.activityType, a.outcome);
                     const Icon = cfg.icon;
                     return (
                       <tr key={a.id} className="hover:bg-stone-50 transition">
@@ -282,7 +282,7 @@ export default function ActivityLogExplorer({ isMobile }) {
             /* Mobile card list */
             <div className="divide-y divide-stone-100">
               {activities.slice(0, visibleCount).map(a => {
-                const cfg = activityTypeConfig(a.activityType);
+                const cfg = activityTypeConfig(a.activityType, a.outcome);
                 const Icon = cfg.icon;
                 return (
                   <div key={a.id} className="px-4 py-3">
