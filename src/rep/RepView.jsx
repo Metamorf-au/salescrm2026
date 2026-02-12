@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, Briefcase, ChevronDown, Trash2, Filter, Save } from "lucide-react";
-import { DAILY_TARGET, WEEKLY_TARGET, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
+import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, AlertTriangle, Bell, ChevronDown, Trash2, Filter, Save } from "lucide-react";
+import { DAILY_TARGET, WEEKLY_TARGET, noteTypeConfig, stageConfig } from "../shared/constants";
 import { formatReminderDate, isOverdue } from "../shared/formatters";
 import { fetchWeeklySummary, upsertWeeklySummary, getCurrentWeekStart } from "../supabaseData";
+import ActivityLogExplorer from "../shared/ActivityLogExplorer";
 
 const TODO_FILTERS = [
   { key: "today", label: "Due Today", days: 0 },
@@ -12,18 +13,8 @@ const TODO_FILTERS = [
   { key: "overdue", label: "Overdue", days: -1 },
 ];
 
-const ACTIVITY_FILTERS = [
-  { key: "today", label: "Today", days: 0 },
-  { key: "yesterday", label: "Yesterday", days: 1 },
-  { key: "3days", label: "Last 3 Days", days: 3 },
-  { key: "7days", label: "Last 7 Days", days: 7 },
-  { key: "14days", label: "Last 14 Days", days: 14 },
-];
-
 const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
-const PAGE_SIZE = 25;
-
-export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, onCompleteTodo, onClearCompleted, isMobile }) {
+export default function RepView({ currentUser, contacts, deals, notesByContact, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, onCompleteTodo, onClearCompleted, isMobile }) {
   // localStorage key for "Clear Done" timestamp (shared for notes + deals)
   const clearedKey = `crm_todo_cleared_${currentUser.id}`;
 
@@ -41,9 +32,6 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   const [todoFilter, setTodoFilter] = useState("3days");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [activityFilter, setActivityFilter] = useState("today");
-  const [showActivityDropdown, setShowActivityDropdown] = useState(false);
-  const [activityVisibleCount, setActivityVisibleCount] = useState(PAGE_SIZE);
 
   // Weekly summary persistence
   const [weeklySummary, setWeeklySummary] = useState("");
@@ -196,7 +184,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   // CRM compliance based on all todos
   const totalTodos = myTodos.length;
-  const crmCompliance = totalTodos > 0 ? Math.round((completedCount / totalTodos) * 100) : (activityLog.length > 0 ? 100 : 0);
+  const crmCompliance = totalTodos > 0 ? Math.round((completedCount / totalTodos) * 100) : (callsWeek > 0 ? 100 : 0);
 
   function handleToggleTodo(todo) {
     if (isCompleted(todo)) return;
@@ -379,120 +367,9 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
           )}
         </div>
 
-        {/* Activity Log */}
-        <div className="space-y-4">
-          {(() => {
-            // Filter activity log by selected date range
-            const activeActivityFilter = ACTIVITY_FILTERS.find(f => f.key === activityFilter);
-            const filteredActivity = activityLog.filter(a => {
-              if (a.activityType === "todo_completed") return false;
-              if (!a.createdAt) return activityFilter === "today";
-              const actDate = new Date(a.createdAt);
-              if (activityFilter === "today") {
-                return actDate >= todayStart;
-              }
-              if (activityFilter === "yesterday") {
-                const yesterdayStart = new Date(todayStart);
-                yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-                return actDate >= yesterdayStart && actDate < todayStart;
-              }
-              const cutoff = new Date(todayStart);
-              cutoff.setDate(cutoff.getDate() - activeActivityFilter.days);
-              return actDate >= cutoff;
-            });
-
-            // Format time/date label for each entry
-            function formatActivityTime(a) {
-              if (!a.createdAt) return a.time;
-              const actDate = new Date(a.createdAt);
-              if (actDate >= todayStart) return a.time;
-              const yesterday = new Date(todayStart);
-              yesterday.setDate(yesterday.getDate() - 1);
-              if (actDate >= yesterday) {
-                return "Yesterday " + a.time;
-              }
-              return actDate.toLocaleDateString("en-AU", { day: "numeric", month: "short" }) + " " + a.time;
-            }
-
-            return (
-              <>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Activity size={18} className="text-slate-400" />
-                  <h2 className="text-base font-semibold text-slate-700">My Activity</h2>
-                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full min-w-[24px] text-center ${filteredActivity.length > 0 ? "bg-sky-500 text-white" : "bg-stone-100 text-slate-400"}`}>
-                    {filteredActivity.length}
-                  </span>
-                  <div className="ml-auto relative">
-                    <button onClick={() => setShowActivityDropdown(!showActivityDropdown)}
-                      className="flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-stone-100 hover:bg-stone-200 px-2.5 py-1.5 rounded-lg transition">
-                      <Filter size={12} />{activeActivityFilter.label}<ChevronDown size={12} />
-                    </button>
-                    {showActivityDropdown && (
-                      <>
-                        <div className="fixed inset-0 z-10" onClick={() => setShowActivityDropdown(false)} />
-                        <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl border border-stone-200 shadow-lg z-20 py-1 overflow-hidden">
-                          {ACTIVITY_FILTERS.map(f => (
-                            <button key={f.key} onClick={() => { setActivityFilter(f.key); setActivityVisibleCount(PAGE_SIZE); setShowActivityDropdown(false); }}
-                              className={`w-full text-left px-3 py-2 text-xs font-medium transition ${activityFilter === f.key ? "bg-amber-50 text-amber-700" : "text-slate-600 hover:bg-stone-50"}`}>
-                              {f.label}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {filteredActivity.length > 0 ? (
-                  <>
-                  <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
-                    {filteredActivity.slice(0, activityVisibleCount).map(c => {
-                      const cfg = activityTypeConfig(c.activityType, c.outcome);
-                      if (!cfg) return null;
-                      const Icon = cfg.icon;
-                      return (
-                        <div key={c.id} className={`flex gap-3 px-4 py-3 ${isMobile ? "items-start" : "items-center"}`}>
-                          <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                            <Icon size={15} className={cfg.color} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
-                            <p className="text-xs text-slate-500 truncate">{c.summary}</p>
-                            {isMobile && (
-                              <div className="flex items-center justify-between mt-1">
-                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
-                                <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityTime(c)}</span>
-                              </div>
-                            )}
-                          </div>
-                          {!isMobile && (
-                            <>
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0 ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
-                              <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityTime(c)}</span>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {activityVisibleCount < filteredActivity.length && (
-                    <div className="text-center pt-2 pb-4">
-                      <button onClick={() => setActivityVisibleCount(prev => prev + PAGE_SIZE)}
-                        className="px-6 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
-                        Show more ({filteredActivity.length - activityVisibleCount} remaining)
-                      </button>
-                    </div>
-                  )}
-                  </>
-                ) : (
-                  <div className="bg-white rounded-xl border border-stone-200 p-6 text-center">
-                    <p className="text-sm text-slate-400">
-                      {activityFilter === "today" ? "No activity yet today. Log a call, add a contact, or create a deal to get started." : `No activity for ${activeActivityFilter.label.toLowerCase()}.`}
-                    </p>
-                  </div>
-                )}
-              </>
-            );
-          })()}
+        {/* Activity Log — reuse shared component, locked to current rep */}
+        <div>
+          <ActivityLogExplorer isMobile={isMobile} userId={currentUser.id} />
         </div>
       </div>
 
