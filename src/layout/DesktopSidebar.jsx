@@ -11,7 +11,7 @@ export default function DesktopSidebar({ navItems, activeView, setActiveView, cu
         <div className="flex items-center gap-2">
           <img src={logo} alt="Precision" className="w-8 h-8 rounded-lg" />
           <div>
-            <p className="text-white font-bold text-sm leading-tight">Precision</p>
+            <p className="text-white font-bold text-sm leading-tight">Precision Group</p>
             <p className="text-slate-400 text-xs leading-tight">Sales CRM</p>
           </div>
         </div>

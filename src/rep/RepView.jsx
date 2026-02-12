@@ -21,6 +21,7 @@ const ACTIVITY_FILTERS = [
 ];
 
 const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+const PAGE_SIZE = 25;
 
 export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, onCompleteTodo, onClearCompleted, isMobile }) {
   // localStorage key for "Clear Done" timestamp (shared for notes + deals)
@@ -40,8 +41,9 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   const [todoFilter, setTodoFilter] = useState("3days");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [activityFilter, setActivityFilter] = useState("3days");
+  const [activityFilter, setActivityFilter] = useState("today");
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
+  const [activityVisibleCount, setActivityVisibleCount] = useState(PAGE_SIZE);
 
   // Weekly summary persistence
   const [weeklySummary, setWeeklySummary] = useState("");
@@ -430,7 +432,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                         <div className="fixed inset-0 z-10" onClick={() => setShowActivityDropdown(false)} />
                         <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl border border-stone-200 shadow-lg z-20 py-1 overflow-hidden">
                           {ACTIVITY_FILTERS.map(f => (
-                            <button key={f.key} onClick={() => { setActivityFilter(f.key); setShowActivityDropdown(false); }}
+                            <button key={f.key} onClick={() => { setActivityFilter(f.key); setActivityVisibleCount(PAGE_SIZE); setShowActivityDropdown(false); }}
                               className={`w-full text-left px-3 py-2 text-xs font-medium transition ${activityFilter === f.key ? "bg-amber-50 text-amber-700" : "text-slate-600 hover:bg-stone-50"}`}>
                               {f.label}
                             </button>
@@ -441,8 +443,9 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                   </div>
                 </div>
                 {filteredActivity.length > 0 ? (
+                  <>
                   <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
-                    {filteredActivity.map(c => {
+                    {filteredActivity.slice(0, activityVisibleCount).map(c => {
                       const cfg = activityTypeConfig(c.activityType);
                       if (!cfg) return null;
                       const Icon = cfg.icon;
@@ -463,6 +466,15 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                       );
                     })}
                   </div>
+                  {activityVisibleCount < filteredActivity.length && (
+                    <div className="text-center pt-2 pb-4">
+                      <button onClick={() => setActivityVisibleCount(prev => prev + PAGE_SIZE)}
+                        className="px-6 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-slate-600 hover:border-amber-400 hover:text-amber-600 transition">
+                        Show more ({filteredActivity.length - activityVisibleCount} remaining)
+                      </button>
+                    </div>
+                  )}
+                  </>
                 ) : (
                   <div className="bg-white rounded-xl border border-stone-200 p-6 text-center">
                     <p className="text-sm text-slate-400">
