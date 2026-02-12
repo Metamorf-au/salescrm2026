@@ -22,6 +22,7 @@ const ACTIVITY_TYPES = [
 const DATE_RANGES = [
   { key: "today", label: "Today" },
   { key: "yesterday", label: "Yesterday" },
+  { key: "3days", label: "Last 3 Days" },
   { key: "7days", label: "Last 7 Days" },
   { key: "14days", label: "Last 14 Days" },
   { key: "30days", label: "Last 30 Days" },
@@ -30,6 +31,8 @@ const DATE_RANGES = [
   { key: "all", label: "All Time" },
   { key: "custom", label: "Custom" },
 ];
+
+const REP_DATE_KEYS = new Set(["today", "yesterday", "3days", "7days", "14days"]);
 
 function getDateRange(key, customFrom, customTo) {
   const now = new Date();
@@ -42,6 +45,11 @@ function getDateRange(key, customFrom, customTo) {
       const yStart = new Date(todayStart);
       yStart.setDate(yStart.getDate() - 1);
       return { startDate: yStart.toISOString(), endDate: todayStart.toISOString() };
+    }
+    case "3days": {
+      const d = new Date(todayStart);
+      d.setDate(d.getDate() - 3);
+      return { startDate: d.toISOString(), endDate: null };
     }
     case "7days": {
       const d = new Date(todayStart);
@@ -92,19 +100,20 @@ function formatActivityDateTime(dateStr) {
 
 const PAGE_SIZE = 25;
 
-export default function ActivityLogExplorer({ isMobile }) {
+export default function ActivityLogExplorer({ isMobile, userId }) {
   const [typeFilter, setTypeFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("7days");
+  const [dateFilter, setDateFilter] = useState(userId ? "today" : "7days");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
-  const [repFilter, setRepFilter] = useState("all");
+  const [repFilter, setRepFilter] = useState(userId || "all");
   const [activities, setActivities] = useState([]);
   const [reps, setReps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Load reps for filter dropdown
+  // Load reps for filter dropdown (skip when locked to a single user)
   useEffect(() => {
+    if (userId) return;
     async function loadReps() {
       const { data } = await supabase
         .from("profiles")
@@ -115,7 +124,7 @@ export default function ActivityLogExplorer({ isMobile }) {
       if (data) setReps(data);
     }
     loadReps();
-  }, []);
+  }, [userId]);
 
   const loadActivities = useCallback(async () => {
     setLoading(true);
@@ -189,7 +198,7 @@ export default function ActivityLogExplorer({ isMobile }) {
                 onChange={e => setDateFilter(e.target.value)}
                 className={`appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer${isMobile ? " w-full" : ""}`}
               >
-                {DATE_RANGES.map(d => (
+                {(userId ? DATE_RANGES.filter(d => REP_DATE_KEYS.has(d.key)) : DATE_RANGES).map(d => (
                   <option key={d.key} value={d.key}>{d.label}</option>
                 ))}
               </select>
@@ -197,8 +206,8 @@ export default function ActivityLogExplorer({ isMobile }) {
               <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
 
-            {/* Custom date inputs */}
-            {dateFilter === "custom" && (
+            {/* Custom date inputs (manager/admin only) */}
+            {!userId && dateFilter === "custom" && (
               <div className={isMobile ? "col-span-2 flex items-center gap-2" : "contents"}>
                 <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
                   className={`px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400${isMobile ? " flex-1" : " w-[120px]"}`} />
@@ -208,30 +217,34 @@ export default function ActivityLogExplorer({ isMobile }) {
               </div>
             )}
 
-            {/* Per-Rep Filter */}
-            <div className="relative">
-              <select
-                value={repFilter}
-                onChange={e => setRepFilter(e.target.value)}
-                className={`appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer${isMobile ? " w-full" : ""}`}
-              >
-                <option value="all">All Reps</option>
-                {reps.map(r => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
-              <User size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            </div>
+            {/* Per-Rep Filter (hidden when locked to a single user) */}
+            {!userId && (
+              <div className="relative">
+                <select
+                  value={repFilter}
+                  onChange={e => setRepFilter(e.target.value)}
+                  className={`appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer${isMobile ? " w-full" : ""}`}
+                >
+                  <option value="all">All Reps</option>
+                  {reps.map(r => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+                <User size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+            )}
 
-            {/* Export CSV */}
-            <button
-              onClick={handleExportCsv}
-              disabled={activities.length === 0}
-              className={`flex items-center gap-1.5 px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-stone-100 transition disabled:opacity-40 disabled:cursor-not-allowed${isMobile ? " w-full justify-center" : ""}`}
-            >
-              <Download size={13} />Export
-            </button>
+            {/* Export CSV (manager/admin only) */}
+            {!userId && (
+              <button
+                onClick={handleExportCsv}
+                disabled={activities.length === 0}
+                className={`flex items-center gap-1.5 px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-stone-100 transition disabled:opacity-40 disabled:cursor-not-allowed${isMobile ? " w-full justify-center" : ""}`}
+              >
+                <Download size={13} />Export
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -249,7 +262,7 @@ export default function ActivityLogExplorer({ isMobile }) {
                 <thead>
                   <tr className="bg-stone-50 text-slate-500 text-left text-xs font-medium uppercase tracking-wide">
                     <th className="px-5 py-2.5">Time</th>
-                    <th className="px-4 py-2.5">User</th>
+                    {!userId && <th className="px-4 py-2.5">User</th>}
                     <th className="px-4 py-2.5">Type</th>
                     <th className="px-4 py-2.5">Contact</th>
                     <th className="px-4 py-2.5">Company</th>
@@ -263,7 +276,7 @@ export default function ActivityLogExplorer({ isMobile }) {
                     return (
                       <tr key={a.id} className="hover:bg-stone-50 transition">
                         <td className="px-5 py-3 text-xs text-slate-400 whitespace-nowrap">{formatActivityDateTime(a.createdAt)}</td>
-                        <td className="px-4 py-3 text-sm font-medium text-slate-700 whitespace-nowrap">{a.userName}</td>
+                        {!userId && <td className="px-4 py-3 text-sm font-medium text-slate-700 whitespace-nowrap">{a.userName}</td>}
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${cfg.bg} ${cfg.color}`}>
                             <Icon size={12} />{cfg.label}
@@ -291,17 +304,17 @@ export default function ActivityLogExplorer({ isMobile }) {
                         <Icon size={15} className={cfg.color} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium text-slate-800 truncate">
-                            {a.contact}{a.company ? ` – ${a.company}` : ""}
-                          </p>
-                          <span className="text-[10px] text-slate-400 whitespace-nowrap">{formatActivityDateTime(a.createdAt)}</span>
+                        <p className="text-sm font-medium text-slate-800 truncate">
+                          {a.contact}{a.company ? ` – ${a.company}` : ""}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5 truncate">{a.summary}</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                            {!userId && <span className="text-xs text-slate-400">{a.userName}</span>}
+                          </div>
+                          <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityDateTime(a.createdAt)}</span>
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
-                          <span className="text-xs text-slate-400">{a.userName}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1 truncate">{a.summary}</p>
                       </div>
                     </div>
                   </div>
