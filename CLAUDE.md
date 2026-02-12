@@ -224,6 +224,13 @@ No test suite currently configured. Build verification (`npx vite build`) is use
 2. Enlarged sidebar logo ~12%
 3. Added Escape key to close modals
 
+### Session 6 (2026-02-12) — Mobile Activity Card Layout
+1. Restructured RepView "My Activity" cards for mobile — 3-line layout:
+   - Line 1: Contact name (full width to breathe)
+   - Line 2: Summary text
+   - Line 3: Badge left, time right (matches to-do card pattern)
+   Desktop layout unchanged (single row with icon, name+badge, summary, time)
+
 ## Working Preferences
 - **IMPORTANT**: Always check with the user before starting any work. They prefer to work in stages and want to review/approve each step before proceeding.
 - Commit and push after each logical change
