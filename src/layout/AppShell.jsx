@@ -605,7 +605,7 @@ export default function AppShell() {
                 {activeView === "rep" && (
                   <RepView
                     currentUser={currentUser} contacts={contacts} deals={deals}
-                    notesByContact={notesByContact} rawCalls={rawCalls}
+                    notesByContact={notesByContact} activityLog={activityLog} rawCalls={rawCalls}
                     onLogCall={() => setShowCallModal(true)}
                     onNewDeal={() => openDealModal()}
                     onAddNote={() => setShowNoteModal(true)}
