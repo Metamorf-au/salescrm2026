@@ -22,6 +22,7 @@ const ACTIVITY_TYPES = [
 const DATE_RANGES = [
   { key: "today", label: "Today" },
   { key: "yesterday", label: "Yesterday" },
+  { key: "3days", label: "Last 3 Days" },
   { key: "7days", label: "Last 7 Days" },
   { key: "14days", label: "Last 14 Days" },
   { key: "30days", label: "Last 30 Days" },
@@ -30,6 +31,8 @@ const DATE_RANGES = [
   { key: "all", label: "All Time" },
   { key: "custom", label: "Custom" },
 ];
+
+const REP_DATE_KEYS = new Set(["today", "yesterday", "3days", "7days", "14days"]);
 
 function getDateRange(key, customFrom, customTo) {
   const now = new Date();
@@ -42,6 +45,11 @@ function getDateRange(key, customFrom, customTo) {
       const yStart = new Date(todayStart);
       yStart.setDate(yStart.getDate() - 1);
       return { startDate: yStart.toISOString(), endDate: todayStart.toISOString() };
+    }
+    case "3days": {
+      const d = new Date(todayStart);
+      d.setDate(d.getDate() - 3);
+      return { startDate: d.toISOString(), endDate: null };
     }
     case "7days": {
       const d = new Date(todayStart);
@@ -190,7 +198,7 @@ export default function ActivityLogExplorer({ isMobile, userId }) {
                 onChange={e => setDateFilter(e.target.value)}
                 className={`appearance-none pl-7 pr-7 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent cursor-pointer${isMobile ? " w-full" : ""}`}
               >
-                {DATE_RANGES.map(d => (
+                {(userId ? DATE_RANGES.filter(d => REP_DATE_KEYS.has(d.key)) : DATE_RANGES).map(d => (
                   <option key={d.key} value={d.key}>{d.label}</option>
                 ))}
               </select>
@@ -198,8 +206,8 @@ export default function ActivityLogExplorer({ isMobile, userId }) {
               <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
 
-            {/* Custom date inputs */}
-            {dateFilter === "custom" && (
+            {/* Custom date inputs (manager/admin only) */}
+            {!userId && dateFilter === "custom" && (
               <div className={isMobile ? "col-span-2 flex items-center gap-2" : "contents"}>
                 <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
                   className={`px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400${isMobile ? " flex-1" : " w-[120px]"}`} />
