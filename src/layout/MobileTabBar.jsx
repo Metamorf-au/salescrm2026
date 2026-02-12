@@ -8,9 +8,8 @@ export default function MobileTabBar({ navItems, activeView, setActiveView, curr
   return (
     <nav className="bg-slate-900 border-b border-slate-800 flex-shrink-0">
       <div className="flex items-center px-3 py-2">
-        <div className="flex flex-col items-center gap-0.5 px-2 py-1.5 mr-auto">
-          <img src={logo} alt="Precision" className="w-5 h-5 rounded-md" />
-          <span className="text-[10px] font-bold text-white">Precision</span>
+        <div className="flex items-center px-2 py-1.5 mr-auto">
+          <img src={logo} alt="Precision Group" className="w-8 h-8 rounded-md" />
         </div>
         <div className="flex items-center gap-3">
           {navItems.map(item => {

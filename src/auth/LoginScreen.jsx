@@ -23,7 +23,7 @@ export default function LoginScreen() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img src={logo} alt="Precision Sales CRM" className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white">Precision</h1>
+          <h1 className="text-2xl font-bold text-white">Precision Group</h1>
           <p className="text-slate-400 text-sm mt-1">Sales CRM</p>
         </div>
         <form onSubmit={handleLogin} className="bg-white rounded-2xl p-6 shadow-2xl">

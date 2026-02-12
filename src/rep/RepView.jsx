@@ -40,7 +40,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
   const [todoFilter, setTodoFilter] = useState("3days");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [activityFilter, setActivityFilter] = useState("3days");
+  const [activityFilter, setActivityFilter] = useState("today");
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
 
   // Weekly summary persistence
