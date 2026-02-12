@@ -446,22 +446,30 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                   <>
                   <div className="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100">
                     {filteredActivity.slice(0, activityVisibleCount).map(c => {
-                      const cfg = activityTypeConfig(c.activityType);
+                      const cfg = activityTypeConfig(c.activityType, c.outcome);
                       if (!cfg) return null;
                       const Icon = cfg.icon;
                       return (
-                        <div key={c.id} className="flex items-center gap-3 px-4 py-3">
+                        <div key={c.id} className={`flex gap-3 px-4 py-3 ${isMobile ? "items-start" : "items-center"}`}>
                           <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
                             <Icon size={15} className={cfg.color} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
-                            </div>
+                            <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
                             <p className="text-xs text-slate-500 truncate">{c.summary}</p>
+                            {isMobile && (
+                              <div className="flex items-center justify-between mt-1">
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                                <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityTime(c)}</span>
+                              </div>
+                            )}
                           </div>
-                          <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityTime(c)}</span>
+                          {!isMobile && (
+                            <>
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0 ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                              <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityTime(c)}</span>
+                            </>
+                          )}
                         </div>
                       );
                     })}

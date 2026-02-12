@@ -90,9 +90,16 @@ export function contactStatusStyle(status) {
   return map[status] || map.active;
 }
 
-export function activityTypeConfig(type) {
+const CALL_OUTCOME_ICONS = {
+  connected: Phone,
+  voicemail: MessageSquare,
+  no_answer: XCircle,
+  meeting: Calendar,
+};
+
+export function activityTypeConfig(type, outcome) {
   const map = {
-    call: { bg: "bg-amber-100", color: "text-amber-600", icon: Phone, label: "Call" },
+    call: { bg: "bg-amber-100", color: "text-amber-600", icon: (outcome && CALL_OUTCOME_ICONS[outcome]) || Phone, label: "Call" },
     new_contact: { bg: "bg-violet-100", color: "text-violet-600", icon: UserPlus, label: "New Contact" },
     new_deal: { bg: "bg-emerald-100", color: "text-emerald-600", icon: Briefcase, label: "New Deal" },
     deal_won: { bg: "bg-emerald-100", color: "text-emerald-600", icon: Trophy, label: "Deal Won" },
