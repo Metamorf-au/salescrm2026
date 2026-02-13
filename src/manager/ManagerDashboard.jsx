@@ -413,18 +413,17 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
               const sc = getScorecard(m, getRepTargets(r.id));
               const cfg = statusConfig(sc.status);
               return (
-                <div key={r.id} className={`px-2.5 py-2 rounded-xl border ${cfg.border} ${cfg.bg}`}>
-                  <div className="grid gap-x-1.5" style={{ gridTemplateColumns: "1.75rem 1fr" }}>
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white row-span-2" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
-                      {r.initials}
-                    </div>
+                <div key={r.id} className={`px-2.5 py-2 rounded-xl border ${cfg.border} ${cfg.bg} flex gap-1.5`}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
+                    {r.initials}
+                  </div>
+                  <div style={{ width: "calc(100% - 2.25rem)" }}>
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold text-slate-800 truncate">{r.name}</p>
                       <div className="flex-shrink-0 ml-2"><StatusBadge status={sc.status} /></div>
                     </div>
-                    <div />
-                    <div className="flex items-center justify-between min-w-0">
-                      {sc.behind.length > 0 ? <p className="text-xs text-slate-500 truncate min-w-0">{`Behind: ${sc.behind.join(", ")}`}</p> : <span />}
+                    <div className="flex items-center justify-between">
+                      {sc.behind.length > 0 ? <p className="text-xs text-slate-500 truncate" style={{ maxWidth: "calc(100% - 2.5rem)" }}>{`Behind: ${sc.behind.join(", ")}`}</p> : <span />}
                       <span className="text-sm font-bold text-slate-700 flex-shrink-0 ml-2">{sc.onPaceCount}/5</span>
                     </div>
                   </div>
