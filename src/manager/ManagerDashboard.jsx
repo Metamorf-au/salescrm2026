@@ -150,10 +150,10 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
 
   const totalCallsInRange = filteredMetrics.reduce((s, m) => s + (m?.callsInRange || 0), 0);
   const totalCallsToday = filteredMetrics.reduce((s, m) => s + (m?.callsToday || 0), 0);
-  const avgCompliance = Math.round(filteredMetrics.reduce((s, m) => s + (m?.crmCompliance || 0), 0) / repCount);
+  const avgDealHealth = Math.round(filteredMetrics.reduce((s, m) => s + (m?.oppWithNext || 0), 0) / repCount);
   const totalMeetings = filteredMetrics.reduce((s, m) => s + (m?.meetingsSet || 0), 0);
   const totalNewContacts = filteredMetrics.reduce((s, m) => s + (m?.newContacts || 0), 0);
-  const greenCount = filteredReps.filter(r => getStatus(metricsMap[r.id], getRepDailyTarget(r.id)) === "green").length;
+  const greenCount = filteredReps.filter(r => getStatus(metricsMap[r.id], getRepTargets(r.id)) === "green").length;
 
   // Pipeline-derived metrics — filtered by date range
   const repIds = filteredReps.map(r => r.id);
@@ -169,10 +169,10 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
   const pipelineValue = activePipelineDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
 
   function handleExport() {
-    const headers = ["Rep", `Calls (${dateRange.label})`, "Meetings Set", "New Contacts", "CRM Discipline %", "Quote Turnaround (h)", "Opp Progression %", "Pipeline Clean", "Status"];
+    const headers = ["Rep", `Calls (${dateRange.label})`, "Meetings Set", "New Contacts", "Deal Health %", "Quote Turnaround (h)", "Opp Progression %", "Pipeline Clean", "Status"];
     const rows = filteredReps.map(r => {
       const m = metricsMap[r.id] || {};
-      const st = getStatus(m);
+      const st = getStatus(m, getRepTargets(r.id));
       const repTurnaroundDeals = deals.filter(d => d.ownerId === r.id && d.quoteRequestedAt && d.quoteSentAt && new Date(d.quoteSentAt) >= dateRange.start && new Date(d.quoteSentAt) < dateRange.end);
       const repTurnaround = repTurnaroundDeals.length > 0
         ? Math.round(repTurnaroundDeals.reduce((s, d) => s + (new Date(d.quoteSentAt) - new Date(d.quoteRequestedAt)) / 3600000, 0) / repTurnaroundDeals.length * 10) / 10
@@ -182,7 +182,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
         m.callsInRange || 0,
         m.meetingsSet || 0,
         m.newContacts || 0,
-        m.crmCompliance || 0,
+        m.oppWithNext || 0,
         repTurnaround,
         m.oppWithNext || 0,
         m.pipelineClean ? "Yes" : "No",
@@ -216,7 +216,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
     { label: isThisWeek ? "Weekly Calls" : "Total Calls", value: totalCallsInRange, sub: callsTargetTotal ? `Target: ${callsTargetTotal}` : rangeLabel, icon: Target, accent: "bg-sky-50 text-sky-600", pct: callsTargetTotal && callsTargetTotal > 0 ? (totalCallsInRange / callsTargetTotal) * 100 : null },
     { label: "Meetings Set", value: totalMeetings, sub: isThisWeek ? `Target: ${meetingsTargetAll}` : rangeLabel, icon: Calendar, accent: "bg-violet-50 text-violet-600", pct: isThisWeek && meetingsTargetAll > 0 ? (totalMeetings / meetingsTargetAll) * 100 : null },
     { label: "New Contacts", value: totalNewContacts, sub: isThisWeek ? `Target: ${contactsTargetAll}` : rangeLabel, icon: UserPlus, accent: "bg-sky-50 text-sky-600", pct: isThisWeek && contactsTargetAll > 0 ? (totalNewContacts / contactsTargetAll) * 100 : null },
-    { label: "CRM Compliance", value: `${avgCompliance}%`, sub: isFiltered ? "Individual" : "Team average", icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600", pct: avgCompliance },
+    { label: "Deal Health", value: `${avgDealHealth}%`, sub: isFiltered ? "Individual" : "Team average", icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600", pct: avgDealHealth },
     { label: "Quotes Requested", value: quotesRequested, sub: rangeLabel, icon: FileText, accent: "bg-violet-50 text-violet-600" },
     { label: "Quotes Sent", value: quotesSent, sub: isThisWeek ? `Target: ${quotesTargetAll}` : rangeLabel, icon: Send, accent: "bg-amber-50 text-amber-600", pct: isThisWeek && quotesTargetAll > 0 ? (quotesSent / quotesTargetAll) * 100 : null },
     { label: "Quote Turnaround", value: avgTurnaround !== null ? `${avgTurnaround}h` : "\u2013", sub: "Avg hours", icon: Clock, accent: "bg-amber-50 text-amber-600" },
@@ -343,7 +343,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           <div className="space-y-2">
             {filteredReps.map(r => {
               const m = metricsMap[r.id];
-              const st = getStatus(m, getRepDailyTarget(r.id));
+              const st = getStatus(m, getRepTargets(r.id));
               const cfg = statusConfig(st);
               return (
                 <div key={r.id} className={`flex items-center gap-3 p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
@@ -352,7 +352,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800">{r.name}</p>
-                    <p className="text-xs text-slate-500">{m?.callsToday || 0} calls · {m?.crmCompliance || 0}% CRM</p>
+                    <p className="text-xs text-slate-500">{m?.callsToday || 0} calls · {m?.oppWithNext || 0}% Deal Health</p>
                   </div>
                   <StatusBadge status={st} />
                 </div>
@@ -375,7 +375,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                 <th className="px-4 py-3 font-medium text-center">Calls</th>
                 <th className="px-4 py-3 font-medium text-center">Meetings</th>
                 <th className="px-4 py-3 font-medium text-center">New Contacts</th>
-                <th className="px-4 py-3 font-medium text-center">CRM Discipline</th>
+                <th className="px-4 py-3 font-medium text-center">Deal Health</th>
                 <th className="px-4 py-3 font-medium text-center">Quote Turnaround</th>
                 <th className="px-4 py-3 font-medium text-center">Opp. Progression</th>
                 <th className="px-4 py-3 font-medium text-center">Pipeline</th>
@@ -387,7 +387,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                 const m = metricsMap[r.id] || {};
                 const rt = getRepTargets(r.id);
                 const repCallTarget = isToday ? getRepDailyTarget(r.id) : isThisWeek ? rt.weeklyCalls : null;
-                const st = getStatus(m, getRepDailyTarget(r.id));
+                const st = getStatus(m, getRepTargets(r.id));
                 function cellColor(val, target) {
                   return val >= target ? "text-emerald-700 font-semibold" : val >= target * 0.8 ? "text-amber-600 font-semibold" : "text-rose-600 font-semibold";
                 }
@@ -401,7 +401,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                     <td className={`px-4 py-3 text-center ${repCallTarget ? cellColor(m.callsInRange || 0, repCallTarget) : "text-slate-700 font-semibold"}`}>{m.callsInRange || 0}</td>
                     <td className="px-4 py-3 text-center text-slate-700 font-semibold">{m.meetingsSet || 0}</td>
                     <td className="px-4 py-3 text-center text-slate-700 font-semibold">{m.newContacts || 0}</td>
-                    <td className={`px-4 py-3 text-center ${cellColor(m.crmCompliance || 0, 100)}`}>{m.crmCompliance || 0}%</td>
+                    <td className={`px-4 py-3 text-center ${cellColor(m.oppWithNext || 0, 100)}`}>{m.oppWithNext || 0}%</td>
                     <td className={`px-4 py-3 text-center ${repTurnaround !== null ? (repTurnaround <= 24 ? "text-emerald-700 font-semibold" : "text-rose-600 font-semibold") : "text-slate-400"}`}>{repTurnaround !== null ? `${repTurnaround}h` : "\u2013"}</td>
                     <td className={`px-4 py-3 text-center ${cellColor(m.oppWithNext || 0, 90)}`}>{m.oppWithNext || 0}%</td>
                     <td className="px-4 py-3 text-center">

@@ -49,12 +49,41 @@ export function noteTypeConfig(typeKey) {
   return NOTE_TYPES.find(t => t.key === typeKey) || NOTE_TYPES[0];
 }
 
-export function getStatus(m, dailyTarget) {
-  if (!m) return "red";
-  const dt = dailyTarget || DAILY_TARGET;
-  if (m.callsToday >= dt && m.crmCompliance >= 90 && m.oppWithNext >= 90 && m.pipelineClean) return "green";
-  if (m.callsToday >= dt * 0.8 && m.crmCompliance >= 75) return "amber";
-  return "red";
+// 5-KPI pro-rated scoring engine
+// Returns { status, onPaceCount, behind, kpis } for full scorecard detail
+export function getScorecard(m, kpiTargets) {
+  const allKpiNames = ["Calls", "Meetings", "Contacts", "Quotes", "Deal Health"];
+  if (!m) return { status: "red", onPaceCount: 0, behind: allKpiNames, kpis: allKpiNames.map(name => ({ name, actual: 0, target: 0 })) };
+
+  // Day of week: Mon=1 … Fri=5. Weekends use 5 (full weekly target).
+  const jsDay = new Date().getDay();
+  const dayOfWeek = jsDay === 0 || jsDay === 6 ? 5 : jsDay;
+
+  const t = (typeof kpiTargets === "object" && kpiTargets) ? kpiTargets : {};
+  const proRate = (weekly) => Math.round(weekly * dayOfWeek / 5);
+
+  const kpis = [
+    { name: "Calls", actual: m.callsWeek || 0, target: proRate(t.weeklyCalls || DEFAULT_KPI_TARGETS.weekly_calls) },
+    { name: "Meetings", actual: m.meetingsSet || 0, target: proRate(t.weeklyMeetings || DEFAULT_KPI_TARGETS.weekly_meetings) },
+    { name: "Contacts", actual: m.newContacts || 0, target: proRate(t.weeklyContacts || DEFAULT_KPI_TARGETS.weekly_contacts) },
+    { name: "Quotes", actual: m.quotesSentCount || 0, target: proRate(t.weeklyQuotes || DEFAULT_KPI_TARGETS.weekly_quotes) },
+    { name: "Deal Health", actual: m.dealsWithNextCount || 0, target: m.activeDealsCount || 0 },
+  ];
+
+  const behind = kpis.filter(k => k.actual < k.target).map(k => k.name);
+  const onPaceCount = 5 - behind.length;
+
+  let status;
+  if (onPaceCount === 5) status = "green";
+  else if (onPaceCount >= 3) status = "amber";
+  else status = "red";
+
+  return { status, onPaceCount, behind, kpis };
+}
+
+// Backward-compatible wrapper — returns just the traffic-light string
+export function getStatus(m, kpiTargets) {
+  return getScorecard(m, kpiTargets).status;
 }
 
 export function statusConfig(status) {
