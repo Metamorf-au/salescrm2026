@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, ChevronDown, Trash2, Filter, Save, FileText, DollarSign } from "lucide-react";
-import { DEFAULT_KPI_TARGETS, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
+import { DEFAULT_KPI_TARGETS, activityTypeConfig, noteTypeConfig, stageConfig, getScorecard } from "../shared/constants";
 import { formatReminderDate, isOverdue, formatCurrency } from "../shared/formatters";
 import { fetchWeeklySummary, upsertWeeklySummary, getCurrentWeekStart, computeRepMetrics } from "../supabaseData";
 
@@ -109,17 +109,33 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const activePipelineDeals = myDeals.filter(d => !["won", "lost", "closed"].includes(d.stage));
   const pipelineValue = activePipelineDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
 
-  const barColor = (pct) => pct >= 90 ? "#16a34a" : pct >= 75 ? "#d97706" : "#ef4444";
+  // My Scorecard — 5-KPI pro-rated scoring
+  const scorecard = getScorecard(myMetrics, myTargets);
+  const kpiOnPace = {};
+  for (const k of scorecard.kpis) {
+    kpiOnPace[k.name] = k.actual >= k.target;
+  }
+
+  // Green if on pace, amber if behind; fallback to pct-based for non-scored cards
+  const barColor = (pct, onPace) => {
+    if (onPace !== undefined) return onPace ? "#16a34a" : "#d97706";
+    return pct >= 90 ? "#16a34a" : pct >= 75 ? "#d97706" : "#ef4444";
+  };
+
+  const dealHealthSub = myMetrics.activeDealsCount === 0 ? "No active deals"
+    : myMetrics.oppWithNext >= 100 ? "All have next step"
+    : `${myMetrics.activeDealsCount - myMetrics.dealsWithNextCount} need next step`;
 
   const summaryCards = [
     { label: "Calls Today", value: myMetrics.callsToday, sub: `Target: ${dailyCallTarget}`, icon: Phone, accent: "bg-sky-50 text-sky-600", pct: dailyCallTarget > 0 ? (myMetrics.callsToday / dailyCallTarget) * 100 : null, mobile: true },
-    { label: "Weekly Calls", value: myMetrics.callsWeek, sub: `Target: ${weeklyCallTarget}`, icon: Target, accent: "bg-sky-50 text-sky-600", pct: weeklyCallTarget > 0 ? (myMetrics.callsWeek / weeklyCallTarget) * 100 : null },
-    { label: "Meetings Set", value: myMetrics.meetingsSet, sub: `Target: ${weeklyMeetingsTarget}`, icon: Calendar, accent: "bg-violet-50 text-violet-600", pct: weeklyMeetingsTarget > 0 ? (myMetrics.meetingsSet / weeklyMeetingsTarget) * 100 : null, mobile: true },
-    { label: "New Contacts", value: myMetrics.newContacts, sub: `Target: ${weeklyContactsTarget}`, icon: UserPlus, accent: "bg-sky-50 text-sky-600", pct: weeklyContactsTarget > 0 ? (myMetrics.newContacts / weeklyContactsTarget) * 100 : null, mobile: true },
-    { label: "Deal Health", value: `${myMetrics.oppWithNext}%`, sub: myMetrics.oppWithNext >= 90 ? "On track" : "Needs attention", icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600", pct: myMetrics.oppWithNext },
+    { label: "Weekly Calls", value: myMetrics.callsWeek, sub: `Target: ${weeklyCallTarget}`, icon: Target, accent: "bg-sky-50 text-sky-600", pct: weeklyCallTarget > 0 ? (myMetrics.callsWeek / weeklyCallTarget) * 100 : null, onPace: kpiOnPace["Calls"] },
+    { label: "Meetings Set", value: myMetrics.meetingsSet, sub: `Target: ${weeklyMeetingsTarget}`, icon: Calendar, accent: "bg-violet-50 text-violet-600", pct: weeklyMeetingsTarget > 0 ? (myMetrics.meetingsSet / weeklyMeetingsTarget) * 100 : null, mobile: true, onPace: kpiOnPace["Meetings"] },
+    { label: "New Contacts", value: myMetrics.newContacts, sub: `Target: ${weeklyContactsTarget}`, icon: UserPlus, accent: "bg-sky-50 text-sky-600", pct: weeklyContactsTarget > 0 ? (myMetrics.newContacts / weeklyContactsTarget) * 100 : null, mobile: true, onPace: kpiOnPace["Contacts"] },
+    { label: "Deal Health", value: `${myMetrics.dealsWithNextCount}/${myMetrics.activeDealsCount}`, sub: dealHealthSub, icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600", pct: myMetrics.oppWithNext, mobile: true, onPace: kpiOnPace["Deal Health"] },
     { label: "Quotes Requested", value: quotesRequested, sub: "This week", icon: FileText, accent: "bg-violet-50 text-violet-600" },
-    { label: "Quotes Sent", value: quotesSentCount, sub: `Target: ${weeklyQuotesTarget}`, icon: Send, accent: "bg-amber-50 text-amber-600", pct: weeklyQuotesTarget > 0 ? (quotesSentCount / weeklyQuotesTarget) * 100 : null, mobile: true },
+    { label: "Quotes Sent", value: quotesSentCount, sub: `Target: ${weeklyQuotesTarget}`, icon: Send, accent: "bg-amber-50 text-amber-600", pct: weeklyQuotesTarget > 0 ? (quotesSentCount / weeklyQuotesTarget) * 100 : null, mobile: true, onPace: kpiOnPace["Quotes"] },
     { label: "Pipeline Value", value: formatCurrency(pipelineValue), sub: "Weighted", icon: DollarSign, accent: "bg-emerald-50 text-emerald-600" },
+    { label: "My Scorecard", scorecard: true, mobile: true },
   ];
   const visibleCards = isMobile ? summaryCards.filter(c => c.mobile) : summaryCards;
 
@@ -276,6 +292,27 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
       {/* KPI Dashboard */}
       <div className={`grid grid-cols-2 ${isMobile ? "gap-3" : "lg:grid-cols-4 gap-4"}`}>
         {visibleCards.map((c, i) => {
+          if (c.scorecard) {
+            const statusBorder = { green: "border-emerald-300", amber: "border-amber-300", red: "border-rose-300" };
+            const statusAccent = { green: "bg-emerald-50 text-emerald-600", amber: "bg-amber-50 text-amber-600", red: "bg-rose-50 text-rose-600" };
+            return (
+              <div key={i} className={`bg-white rounded-xl border ${statusBorder[scorecard.status]} p-3 ${isMobile ? "" : "lg:col-span-2"}`}>
+                <div className="flex items-center gap-3 mb-1">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${statusAccent[scorecard.status]}`}><Activity size={16} /></div>
+                  <span className="text-sm text-slate-500">My Scorecard</span>
+                </div>
+                <p className="text-2xl font-bold text-slate-800">{scorecard.onPaceCount}/5</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {scorecard.onPaceCount === 5 ? "All on pace" : `Behind: ${scorecard.behind.join(", ")}`}
+                </p>
+                <div className="flex gap-0.5 mt-2">
+                  {scorecard.kpis.map((k, j) => (
+                    <div key={j} className="flex-1 h-1.5 rounded-full" style={{ background: k.actual >= k.target ? "#16a34a" : "#ef4444" }} />
+                  ))}
+                </div>
+              </div>
+            );
+          }
           const Icon = c.icon;
           return (
             <div key={i} className="bg-white rounded-xl border border-stone-200 p-3">
@@ -287,7 +324,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
               <p className="text-xs text-slate-400 mt-0.5">{c.sub}</p>
               {c.pct != null && (
                 <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mt-2">
-                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(c.pct, 100)}%`, background: barColor(c.pct) }} />
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(c.pct, 100)}%`, background: barColor(c.pct, c.onPace) }} />
                 </div>
               )}
             </div>
