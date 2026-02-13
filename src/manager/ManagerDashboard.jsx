@@ -404,7 +404,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
       {/* Team Scoreboard + Scorecard Table — side by side on desktop, stacked on mobile */}
       <div className={`${isMobile ? "space-y-4" : "lg:flex lg:gap-4"}`}>
         <div className={`bg-white rounded-xl border border-stone-200 overflow-hidden ${isMobile ? "" : "lg:w-[35%] lg:flex-shrink-0"}`}>
-          <div className="px-4 py-3 border-b border-stone-200">
+          <div className="px-5 py-4 border-b border-stone-200">
             <h2 className="text-base font-semibold text-slate-700">Team Scoreboard – {rangeLabel}</h2>
           </div>
           <div className="p-3 space-y-1.5">
