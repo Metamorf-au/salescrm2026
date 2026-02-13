@@ -401,82 +401,83 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
         </div>
       </div>
 
-      {/* Team Scoreboard */}
-      <div className="bg-white rounded-xl border border-stone-200 p-5">
-        <h2 className="text-base font-semibold text-slate-700 mb-4">Team Scoreboard</h2>
-        <div className="space-y-2">
-          {filteredReps.map(r => {
-            const m = metricsMap[r.id];
-            const sc = getScorecard(m, getRepTargets(r.id));
-            const cfg = statusConfig(sc.status);
-            return (
-              <div key={r.id} className={`p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
-                      {r.initials}
+      {/* Team Scoreboard + Scorecard Table — side by side on desktop, stacked on mobile */}
+      <div className={`${isMobile ? "space-y-4" : "lg:flex lg:gap-4"}`}>
+        <div className={`bg-white rounded-xl border border-stone-200 p-5 ${isMobile ? "" : "lg:w-[30%] lg:flex-shrink-0"}`}>
+          <h2 className="text-base font-semibold text-slate-700 mb-4">Team Scoreboard</h2>
+          <div className="space-y-2">
+            {filteredReps.map(r => {
+              const m = metricsMap[r.id];
+              const sc = getScorecard(m, getRepTargets(r.id));
+              const cfg = statusConfig(sc.status);
+              return (
+                <div key={r.id} className={`p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
+                        {r.initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800">{r.name}</p>
+                        {sc.behind.length > 0 && <p className="text-xs text-slate-500">Behind: {sc.behind.join(", ")}</p>}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800">{r.name}</p>
-                      {sc.behind.length > 0 && <p className="text-xs text-slate-500">Behind: {sc.behind.join(", ")}</p>}
+                    <div className="flex flex-col items-end gap-1">
+                      <StatusBadge status={sc.status} />
+                      <span className="text-sm font-bold text-slate-700">{sc.onPaceCount}/5</span>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <StatusBadge status={sc.status} />
-                    <span className="text-sm font-bold text-slate-700">{sc.onPaceCount}/5</span>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* Weekly Scorecard */}
-      <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-stone-200">
-          <h2 className="text-base font-semibold text-slate-700">Scorecard – {rangeLabel}</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-stone-50 text-slate-500 text-left">
-                <th className="px-5 py-3 font-medium">Rep</th>
-                <th className="px-4 py-3 font-medium text-center">Calls logged</th>
-                <th className="px-4 py-3 font-medium text-center">Meetings set</th>
-                <th className="px-4 py-3 font-medium text-center">New contacts</th>
-                <th className="px-4 py-3 font-medium text-center">Quotes sent</th>
-                <th className="px-4 py-3 font-medium text-center">Deal health</th>
-                <th className="px-4 py-3 font-medium text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {filteredReps.map(r => {
-                const m = metricsMap[r.id] || {};
-                const rt = getRepTargets(r.id);
-                const sc = getScorecard(m, rt);
-                const repCallTarget = isToday ? getRepDailyTarget(r.id) : isThisWeek ? proRate(rt.weeklyCalls) : null;
-                const meetingTarget = isThisWeek ? proRate(rt.weeklyMeetings) : null;
-                const contactTarget = isThisWeek ? proRate(rt.weeklyContacts) : null;
-                const quoteTarget = isThisWeek ? proRate(rt.weeklyQuotes) : null;
-                function cellColor(val, target) {
-                  if (target == null) return "text-slate-700 font-semibold";
-                  return val >= target ? "text-emerald-700 font-semibold" : "text-amber-600 font-semibold";
-                }
-                return (
-                  <tr key={r.id} className="hover:bg-stone-50 transition">
-                    <td className="px-5 py-3 font-medium text-slate-800">{r.name}</td>
-                    <td className={`px-4 py-3 text-center ${cellColor(m.callsInRange || 0, repCallTarget)}`}>{m.callsInRange || 0}</td>
-                    <td className={`px-4 py-3 text-center ${cellColor(m.meetingsSet || 0, meetingTarget)}`}>{m.meetingsSet || 0}</td>
-                    <td className={`px-4 py-3 text-center ${cellColor(m.newContacts || 0, contactTarget)}`}>{m.newContacts || 0}</td>
-                    <td className={`px-4 py-3 text-center ${cellColor(m.quotesSentCount || 0, quoteTarget)}`}>{m.quotesSentCount || 0}</td>
-                    <td className={`px-4 py-3 text-center ${cellColor(m.dealsWithNextCount || 0, m.activeDealsCount || 0)}`}>{m.dealsWithNextCount || 0}/{m.activeDealsCount || 0}</td>
-                    <td className="px-4 py-3 text-center"><StatusBadge status={sc.status} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className={`bg-white rounded-xl border border-stone-200 overflow-hidden ${isMobile ? "" : "lg:w-[70%]"}`}>
+          <div className="px-5 py-4 border-b border-stone-200">
+            <h2 className="text-base font-semibold text-slate-700">Scorecard – {rangeLabel}</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-stone-50 text-slate-500 text-left">
+                  <th className="px-5 py-3 font-medium">Rep</th>
+                  <th className="px-4 py-3 font-medium text-center">Calls logged</th>
+                  <th className="px-4 py-3 font-medium text-center">Meetings set</th>
+                  <th className="px-4 py-3 font-medium text-center">New contacts</th>
+                  <th className="px-4 py-3 font-medium text-center">Quotes sent</th>
+                  <th className="px-4 py-3 font-medium text-center">Deal health</th>
+                  <th className="px-4 py-3 font-medium text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {filteredReps.map(r => {
+                  const m = metricsMap[r.id] || {};
+                  const rt = getRepTargets(r.id);
+                  const sc = getScorecard(m, rt);
+                  const repCallTarget = isToday ? getRepDailyTarget(r.id) : isThisWeek ? proRate(rt.weeklyCalls) : null;
+                  const meetingTarget = isThisWeek ? proRate(rt.weeklyMeetings) : null;
+                  const contactTarget = isThisWeek ? proRate(rt.weeklyContacts) : null;
+                  const quoteTarget = isThisWeek ? proRate(rt.weeklyQuotes) : null;
+                  function cellColor(val, target) {
+                    if (target == null) return "text-slate-700 font-semibold";
+                    return val >= target ? "text-emerald-700 font-semibold" : "text-amber-600 font-semibold";
+                  }
+                  return (
+                    <tr key={r.id} className="hover:bg-stone-50 transition">
+                      <td className="px-5 py-3 font-medium text-slate-800">{r.name}</td>
+                      <td className={`px-4 py-3 text-center ${cellColor(m.callsInRange || 0, repCallTarget)}`}>{m.callsInRange || 0}</td>
+                      <td className={`px-4 py-3 text-center ${cellColor(m.meetingsSet || 0, meetingTarget)}`}>{m.meetingsSet || 0}</td>
+                      <td className={`px-4 py-3 text-center ${cellColor(m.newContacts || 0, contactTarget)}`}>{m.newContacts || 0}</td>
+                      <td className={`px-4 py-3 text-center ${cellColor(m.quotesSentCount || 0, quoteTarget)}`}>{m.quotesSentCount || 0}</td>
+                      <td className={`px-4 py-3 text-center ${cellColor(m.dealsWithNextCount || 0, m.activeDealsCount || 0)}`}>{m.dealsWithNextCount || 0}/{m.activeDealsCount || 0}</td>
+                      <td className="px-4 py-3 text-center"><StatusBadge status={sc.status} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
