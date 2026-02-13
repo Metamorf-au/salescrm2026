@@ -174,27 +174,16 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
   const pipelineValue = activePipelineDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
 
   function handleExport() {
-    const headers = ["Date Range", "Rep", "Calls Today", isThisWeek ? "Weekly Calls" : "Total Calls", "Meetings Set", "New Contacts", "Deal Health", "Quotes Requested", "Quotes Sent", "Quote Turnaround", "Pipeline Value", "Status"];
-    const rows = filteredReps.map(r => {
-      const m = metricsMap[r.id] || {};
-      const rt = getRepTargets(r.id);
-      const sc = getScorecard(m, rt);
-      const repDealsForExport = deals.filter(d => d.ownerId === r.id);
-      const repQuotesReq = repDealsForExport.filter(d => d.quoteRequestedAt && new Date(d.quoteRequestedAt) >= dateRange.start && new Date(d.quoteRequestedAt) < dateRange.end).length;
-      const repTurnaroundDeals = repDealsForExport.filter(d => d.quoteRequestedAt && d.quoteSentAt && new Date(d.quoteSentAt) >= dateRange.start && new Date(d.quoteSentAt) < dateRange.end);
-      const repTurnaround = repTurnaroundDeals.length > 0
-        ? Math.round(repTurnaroundDeals.reduce((s, d) => s + (new Date(d.quoteSentAt) - new Date(d.quoteRequestedAt)) / 3600000, 0) / repTurnaroundDeals.length * 10) / 10
-        : null;
-      const repActiveDeals = repDealsForExport.filter(d => !["won", "lost", "closed"].includes(d.stage));
-      const repPipelineVal = repActiveDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
-      return [
-        dateRange.label, r.name, m.callsToday || 0, m.callsInRange || 0, m.meetingsSet || 0,
-        m.newContacts || 0, `${m.dealsWithNextCount || 0}/${m.activeDealsCount || 0}`,
-        repQuotesReq, m.quotesSentCount || 0, repTurnaround !== null ? `${repTurnaround}h` : "\u2013",
-        formatCurrency(repPipelineVal), sc.status === "green" ? "On Track" : sc.status === "amber" ? "Needs Attention" : "At Risk",
-      ];
-    });
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const repLabel = selectedRep === "all" ? "All Reps" : (filteredReps[0]?.name || "Unknown");
+    const lines = [
+      [esc("Date Range"), esc(dateRange.label)].join(","),
+      [esc("Rep"), esc(repLabel)].join(","),
+      "",
+      summaryCards.map(c => esc(c.label)).join(","),
+      summaryCards.map(c => esc(c.value)).join(","),
+    ];
+    const csv = lines.join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
