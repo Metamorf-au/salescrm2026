@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, ChevronDown, Trash2, Filter, Save } from "lucide-react";
+import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, ChevronDown, Trash2, Filter, Save, FileText, DollarSign } from "lucide-react";
 import { DEFAULT_KPI_TARGETS, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
-import { formatReminderDate, isOverdue } from "../shared/formatters";
-import { fetchWeeklySummary, upsertWeeklySummary, getCurrentWeekStart } from "../supabaseData";
+import { formatReminderDate, isOverdue, formatCurrency } from "../shared/formatters";
+import { fetchWeeklySummary, upsertWeeklySummary, getCurrentWeekStart, computeRepMetrics } from "../supabaseData";
 
 const TODO_FILTERS = [
   { key: "today", label: "Due Today", days: 0 },
@@ -90,7 +90,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const weeklyContactsTarget = myTargets.weeklyContacts;
   const weeklyQuotesTarget = myTargets.weeklyQuotes;
 
-  // Compute KPIs from real data
+  // Date anchors (used by KPIs + to-do logic)
   const now = new Date();
   const nowMs = Date.now();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -98,15 +98,27 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const dayOfWeek = weekStart.getDay();
   weekStart.setDate(weekStart.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
 
-  const myCalls = rawCalls.filter(c => c.callerId === currentUser.id);
-  const callsToday = myCalls.filter(c => new Date(c.calledAt) >= todayStart).length;
-  const callsWeek = myCalls.filter(c => new Date(c.calledAt) >= weekStart).length;
-  const meetingsSet = myCalls.filter(c => c.outcome === "meeting" && new Date(c.calledAt) >= weekStart).length;
-  const newContactsCount = contacts.filter(c => c.ownerId === currentUser.id && c.createdAt && new Date(c.createdAt) >= weekStart).length;
-  const quotesSent = deals.filter(d => d.quoteSentAt && d.ownerId === currentUser.id).length;
+  // KPIs — same computeRepMetrics used by the manager dashboard (one source of truth)
+  const myMetrics = computeRepMetrics(currentUser.id, rawCalls, deals, contacts, { start: weekStart, end: new Date() });
 
-  const dailyPct = Math.min((callsToday / dailyCallTarget) * 100, 100);
-  const weeklyPct = Math.min((callsWeek / weeklyCallTarget) * 100, 100);
+  // Pipeline metrics (same logic as ManagerDashboard)
+  const myDeals = deals.filter(d => d.ownerId === currentUser.id);
+  const quotesRequested = myDeals.filter(d => d.quoteRequestedAt && new Date(d.quoteRequestedAt) >= weekStart).length;
+  const quotesSentCount = myDeals.filter(d => d.quoteSentAt && new Date(d.quoteSentAt) >= weekStart).length;
+  const stageWeights = { discovery: 0.10, quote_request: 0.25, quote_sent: 0.75 };
+  const activePipelineDeals = myDeals.filter(d => !["won", "lost", "closed"].includes(d.stage));
+  const pipelineValue = activePipelineDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
+
+  const summaryCards = [
+    { label: "Calls Today", value: myMetrics.callsToday, sub: `Target: ${dailyCallTarget}`, icon: Phone, accent: "bg-sky-50 text-sky-600" },
+    { label: "Weekly Calls", value: myMetrics.callsWeek, sub: `Target: ${weeklyCallTarget}`, icon: Target, accent: "bg-sky-50 text-sky-600" },
+    { label: "CRM Compliance", value: `${myMetrics.crmCompliance}%`, sub: myMetrics.crmCompliance >= 90 ? "On track" : "Needs attention", icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600" },
+    { label: "Meetings Set", value: myMetrics.meetingsSet, sub: `Target: ${weeklyMeetingsTarget}`, icon: Calendar, accent: "bg-violet-50 text-violet-600" },
+    { label: "New Contacts", value: myMetrics.newContacts, sub: `Target: ${weeklyContactsTarget}`, icon: UserPlus, accent: "bg-sky-50 text-sky-600" },
+    { label: "Quotes Requested", value: quotesRequested, sub: "This week", icon: FileText, accent: "bg-violet-50 text-violet-600" },
+    { label: "Quotes Sent", value: quotesSentCount, sub: `Target: ${weeklyQuotesTarget}`, icon: Send, accent: "bg-amber-50 text-amber-600" },
+    { label: "Pipeline Value", value: formatCurrency(pipelineValue), sub: "Weighted", icon: DollarSign, accent: "bg-emerald-50 text-emerald-600" },
+  ];
 
   // Build to-do list from follow_up/meeting notes + deal next dates
   const myTodos = [];
@@ -207,10 +219,6 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const pendingCount = visibleTodos.filter(t => !isCompleted(t)).length;
   const completedCount = visibleTodos.filter(t => isCompleted(t)).length;
 
-  // CRM compliance based on all todos
-  const totalTodos = myTodos.length;
-  const crmCompliance = totalTodos > 0 ? Math.round((completedCount / totalTodos) * 100) : (callsWeek > 0 ? 100 : 0);
-
   function handleToggleTodo(todo) {
     if (isCompleted(todo)) return;
     // Instant visual feedback (DB write happens via AppShell handler for both types)
@@ -262,42 +270,21 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
         </div>
       </div>
 
-      {/* KPI Strip */}
-      <div className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-6"} gap-3`}>
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <div className="flex items-center gap-2 mb-2"><Phone size={14} className="text-sky-500" /><span className="text-xs font-medium text-slate-500">Daily Calls</span></div>
-          <p className="text-xl font-bold text-slate-800">{callsToday}<span className="text-sm font-normal text-slate-400"> / {dailyCallTarget}</span></p>
-          <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mt-2">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${dailyPct}%`, background: dailyPct >= 100 ? "#16a34a" : dailyPct >= 75 ? "#d97706" : "#0ea5e9" }} />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <div className="flex items-center gap-2 mb-2"><Target size={14} className="text-amber-500" /><span className="text-xs font-medium text-slate-500">Weekly Calls</span></div>
-          <p className="text-xl font-bold text-slate-800">{callsWeek}<span className="text-sm font-normal text-slate-400"> / {weeklyCallTarget}</span></p>
-          <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mt-2">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${weeklyPct}%`, background: weeklyPct >= 100 ? "#16a34a" : weeklyPct >= 75 ? "#d97706" : "#0ea5e9" }} />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <div className="flex items-center gap-2 mb-2"><CheckCircle size={14} className="text-emerald-500" /><span className="text-xs font-medium text-slate-500">CRM Compliance</span></div>
-          <p className="text-xl font-bold text-slate-800">{crmCompliance}<span className="text-sm font-normal text-slate-400">%</span></p>
-          <p className="text-xs text-slate-400 mt-1">{crmCompliance >= 90 ? "On track" : "Needs attention"}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <div className="flex items-center gap-2 mb-2"><Calendar size={14} className="text-violet-500" /><span className="text-xs font-medium text-slate-500">Meetings Set</span></div>
-          <p className="text-xl font-bold text-slate-800">{meetingsSet}<span className="text-sm font-normal text-slate-400"> / {weeklyMeetingsTarget}</span></p>
-          <p className="text-xs text-slate-400 mt-1">This week</p>
-        </div>
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <div className="flex items-center gap-2 mb-2"><UserPlus size={14} className="text-sky-500" /><span className="text-xs font-medium text-slate-500">New Contacts</span></div>
-          <p className="text-xl font-bold text-slate-800">{newContactsCount}<span className="text-sm font-normal text-slate-400"> / {weeklyContactsTarget}</span></p>
-          <p className="text-xs text-slate-400 mt-1">This week</p>
-        </div>
-        <div className="bg-white rounded-xl border border-stone-200 p-4">
-          <div className="flex items-center gap-2 mb-2"><Send size={14} className="text-amber-500" /><span className="text-xs font-medium text-slate-500">Quotes Sent</span></div>
-          <p className="text-xl font-bold text-slate-800">{quotesSent}<span className="text-sm font-normal text-slate-400"> / {weeklyQuotesTarget}</span></p>
-          <p className="text-xs text-slate-400 mt-1">This week</p>
-        </div>
+      {/* KPI Dashboard */}
+      <div className={`grid grid-cols-2 ${isMobile ? "gap-3" : "lg:grid-cols-4 gap-4"}`}>
+        {summaryCards.map((c, i) => {
+          const Icon = c.icon;
+          return (
+            <div key={i} className="bg-white rounded-xl border border-stone-200 p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${c.accent}`}><Icon size={18} /></div>
+                <span className="text-sm text-slate-500">{c.label}</span>
+              </div>
+              <p className="text-2xl font-bold text-slate-800">{c.value}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{c.sub}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* To-Do's & Activity */}
