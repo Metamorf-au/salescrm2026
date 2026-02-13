@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, ChevronDown, Trash2, Filter, Save, FileText, DollarSign } from "lucide-react";
+import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, ChevronDown, Trash2, Filter, Save, FileText, DollarSign, Clock } from "lucide-react";
 import { DEFAULT_KPI_TARGETS, activityTypeConfig, noteTypeConfig, stageConfig, getScorecard } from "../shared/constants";
 import { formatReminderDate, isOverdue, formatCurrency } from "../shared/formatters";
 import { fetchWeeklySummary, upsertWeeklySummary, getCurrentWeekStart, computeRepMetrics } from "../supabaseData";
@@ -109,6 +109,12 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const activePipelineDeals = myDeals.filter(d => !["won", "lost", "closed"].includes(d.stage));
   const pipelineValue = activePipelineDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
 
+  // Quote turnaround — avg days from request to sent (this week's sent quotes)
+  const turnaroundDeals = myDeals.filter(d => d.quoteSentAt && d.quoteRequestedAt && new Date(d.quoteSentAt) >= weekStart);
+  const avgTurnaround = turnaroundDeals.length > 0
+    ? (turnaroundDeals.reduce((sum, d) => sum + (new Date(d.quoteSentAt) - new Date(d.quoteRequestedAt)) / 86400000, 0) / turnaroundDeals.length).toFixed(1)
+    : null;
+
   // My Scorecard — 5-KPI pro-rated scoring
   const scorecard = getScorecard(myMetrics, myTargets);
   const kpiOnPace = {};
@@ -134,6 +140,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     { label: "Deal Health", value: `${myMetrics.dealsWithNextCount}/${myMetrics.activeDealsCount}`, sub: dealHealthSub, icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600", pct: myMetrics.oppWithNext, mobile: true, onPace: kpiOnPace["Deal Health"] },
     { label: "Quotes Requested", value: quotesRequested, sub: "This week", icon: FileText, accent: "bg-violet-50 text-violet-600" },
     { label: "Quotes Sent", value: quotesSentCount, sub: `Target: ${weeklyQuotesTarget}`, icon: Send, accent: "bg-amber-50 text-amber-600", pct: weeklyQuotesTarget > 0 ? (quotesSentCount / weeklyQuotesTarget) * 100 : null, mobile: true, onPace: kpiOnPace["Quotes"] },
+    { label: "Quote Turnaround", value: avgTurnaround ? `${avgTurnaround}d` : "—", sub: turnaroundDeals.length > 0 ? `From ${turnaroundDeals.length} quote${turnaroundDeals.length !== 1 ? "s" : ""} this week` : "No quotes sent this week", icon: Clock, accent: "bg-amber-50 text-amber-600" },
     { label: "Pipeline Value", value: formatCurrency(pipelineValue), sub: "Weighted", icon: DollarSign, accent: "bg-emerald-50 text-emerald-600" },
     { label: "My Scorecard", scorecard: true, mobile: true },
   ];
@@ -290,13 +297,13 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
       </div>
 
       {/* KPI Dashboard */}
-      <div className={`grid grid-cols-2 ${isMobile ? "gap-3" : "lg:grid-cols-4 gap-4"}`}>
+      <div className={`grid grid-cols-2 ${isMobile ? "gap-3" : "lg:grid-cols-5 gap-4"}`}>
         {visibleCards.map((c, i) => {
           if (c.scorecard) {
             const statusBorder = { green: "border-emerald-300", amber: "border-amber-300", red: "border-rose-300" };
             const statusAccent = { green: "bg-emerald-50 text-emerald-600", amber: "bg-amber-50 text-amber-600", red: "bg-rose-50 text-rose-600" };
             return (
-              <div key={i} className={`bg-white rounded-xl border ${statusBorder[scorecard.status]} p-3 ${isMobile ? "" : "lg:col-span-2"}`}>
+              <div key={i} className={`bg-white rounded-xl border ${statusBorder[scorecard.status]} p-3`}>
                 <div className="flex items-center gap-3 mb-1">
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${statusAccent[scorecard.status]}`}><Activity size={16} /></div>
                   <span className="text-sm text-slate-500">My Scorecard</span>
