@@ -358,7 +358,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <StatusBadge status={sc.status} />
-                      <span className="text-xs font-medium text-slate-500">{sc.onPaceCount}/5</span>
+                      <span className="text-sm font-bold text-slate-700">{sc.onPaceCount}/5</span>
                     </div>
                   </div>
                 </div>
