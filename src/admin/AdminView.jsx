@@ -9,13 +9,14 @@ import { callAdminFn } from "./adminApi";
 import { DEFAULT_KPI_TARGETS } from "../shared/constants";
 import {
   CheckCircle, XCircle, X, Settings, Lock, Shield, Eye,
-  UserPlus, Users, Building2, Target, Phone, Calendar, Send
+  UserPlus, Users, Building2, Target, Phone, Calendar, Send, ChevronDown
 } from "lucide-react";
 
 export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onKpiTargetsSaved }) {
   const [showAddUser, setShowAddUser] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [editKpiUser, setEditKpiUser] = useState(null);
+  const [collapsed, setCollapsed] = useState({ users: false, kpi: false, import: true, security: true });
   const [userMenu, setUserMenu] = useState(null);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
@@ -95,6 +96,7 @@ export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onK
   };
 
   const isCurrentUser = (u) => u.id === currentUser?.id;
+  const toggleSection = (key) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? "space-y-4" : "space-y-6"}`}>
@@ -115,16 +117,19 @@ export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onK
 
       {/* User Management */}
       <div className="bg-white rounded-xl border border-stone-200 overflow-visible">
-        <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-slate-700">Users</h2>
-            <p className="text-xs text-slate-400 mt-0.5">{users.filter(u => u.status === "active").length} active of {users.length} total</p>
-          </div>
-          <button onClick={() => setShowAddUser(true)} className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-xl text-sm font-medium hover:bg-amber-600 transition shadow-md">
+        <div className={`px-5 py-4 ${collapsed.users ? "" : "border-b border-stone-200"} flex items-center justify-between`}>
+          <button onClick={() => toggleSection("users")} className="flex items-center gap-2 text-left flex-1 min-w-0">
+            <ChevronDown size={16} className={`text-slate-400 transition-transform ${collapsed.users ? "-rotate-90" : ""}`} />
+            <div>
+              <h2 className="text-base font-semibold text-slate-700">Users</h2>
+              <p className="text-xs text-slate-400 mt-0.5">{users.filter(u => u.status === "active").length} active of {users.length} total</p>
+            </div>
+          </button>
+          <button onClick={() => setShowAddUser(true)} className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-xl text-sm font-medium hover:bg-amber-600 transition shadow-md shrink-0">
             <UserPlus size={16} />Add User
           </button>
         </div>
-        <div className={isMobile ? "divide-y divide-stone-100" : ""}>
+        {!collapsed.users && <div className={isMobile ? "divide-y divide-stone-100" : ""}>
           {usersLoading ? (
             <div className="px-5 py-8 text-center text-sm text-slate-400">Loading users...</div>
           ) : users.length === 0 ? (
@@ -240,18 +245,21 @@ export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onK
               ))}
             </>
           )}
-        </div>
+        </div>}
       </div>
 
       {/* KPI Targets */}
       <div className="bg-white rounded-xl border border-stone-200 overflow-visible">
-        <div className="px-5 py-4 border-b border-stone-200">
-          <div>
-            <h2 className="text-base font-semibold text-slate-700 flex items-center gap-2"><Target size={16} className="text-amber-500" />KPI Targets</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Weekly targets per rep. Daily call target = weekly calls / 5.</p>
-          </div>
+        <div className={`px-5 py-4 ${collapsed.kpi ? "" : "border-b border-stone-200"}`}>
+          <button onClick={() => toggleSection("kpi")} className="flex items-center gap-2 text-left w-full">
+            <ChevronDown size={16} className={`text-slate-400 transition-transform ${collapsed.kpi ? "-rotate-90" : ""}`} />
+            <div>
+              <h2 className="text-base font-semibold text-slate-700 flex items-center gap-2"><Target size={16} className="text-amber-500" />KPI Targets</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Weekly targets per rep. Daily call target = weekly calls / 5.</p>
+            </div>
+          </button>
         </div>
-        {(() => {
+        {!collapsed.kpi && (() => {
           const kpiReps = (reps || []).filter(r => r.role === "rep" || r.role === "manager");
           const defaults = {
             weeklyCalls: DEFAULT_KPI_TARGETS.weekly_calls,
@@ -331,32 +339,42 @@ export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onK
 
       {/* Data Import */}
       <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-stone-200">
-          <h2 className="text-base font-semibold text-slate-700">Data Import</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Import contacts from CSV, Excel, or migrate from HubSpot</p>
+        <div className={`px-5 py-4 ${collapsed.import ? "" : "border-b border-stone-200"}`}>
+          <button onClick={() => toggleSection("import")} className="flex items-center gap-2 text-left w-full">
+            <ChevronDown size={16} className={`text-slate-400 transition-transform ${collapsed.import ? "-rotate-90" : ""}`} />
+            <div>
+              <h2 className="text-base font-semibold text-slate-700">Data Import</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Import contacts from CSV, Excel, or migrate from HubSpot</p>
+            </div>
+          </button>
         </div>
-        <div className={`p-5 ${isMobile ? "space-y-4" : "grid grid-cols-2 gap-5"}`}>
-          <div className="border-2 border-dashed border-stone-300 rounded-xl p-6 text-center hover:border-amber-400 hover:bg-amber-50/30 transition cursor-pointer">
-            <Users size={32} className="mx-auto text-stone-400 mb-3" />
-            <p className="text-sm font-medium text-slate-700">Upload Contacts</p>
-            <p className="text-xs text-slate-400 mt-1">Drag and drop or click to browse</p>
-            <p className="text-xs text-slate-400 mt-0.5">Supports .csv, .xlsx, .xls</p>
+        {!collapsed.import && (
+          <div className={`p-5 ${isMobile ? "space-y-4" : "grid grid-cols-2 gap-5"}`}>
+            <div className="border-2 border-dashed border-stone-300 rounded-xl p-6 text-center hover:border-amber-400 hover:bg-amber-50/30 transition cursor-pointer">
+              <Users size={32} className="mx-auto text-stone-400 mb-3" />
+              <p className="text-sm font-medium text-slate-700">Upload Contacts</p>
+              <p className="text-xs text-slate-400 mt-1">Drag and drop or click to browse</p>
+              <p className="text-xs text-slate-400 mt-0.5">Supports .csv, .xlsx, .xls</p>
+            </div>
+            <div className="border-2 border-dashed border-stone-300 rounded-xl p-6 text-center hover:border-amber-400 hover:bg-amber-50/30 transition cursor-pointer">
+              <Building2 size={32} className="mx-auto text-stone-400 mb-3" />
+              <p className="text-sm font-medium text-slate-700">Upload Companies</p>
+              <p className="text-xs text-slate-400 mt-1">Drag and drop or click to browse</p>
+              <p className="text-xs text-slate-400 mt-0.5">Supports .csv, .xlsx, .xls</p>
+            </div>
           </div>
-          <div className="border-2 border-dashed border-stone-300 rounded-xl p-6 text-center hover:border-amber-400 hover:bg-amber-50/30 transition cursor-pointer">
-            <Building2 size={32} className="mx-auto text-stone-400 mb-3" />
-            <p className="text-sm font-medium text-slate-700">Upload Companies</p>
-            <p className="text-xs text-slate-400 mt-1">Drag and drop or click to browse</p>
-            <p className="text-xs text-slate-400 mt-0.5">Supports .csv, .xlsx, .xls</p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Security */}
       <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-stone-200">
-          <h2 className="text-base font-semibold text-slate-700">Security</h2>
+        <div className={`px-5 py-4 ${collapsed.security ? "" : "border-b border-stone-200"}`}>
+          <button onClick={() => toggleSection("security")} className="flex items-center gap-2 text-left w-full">
+            <ChevronDown size={16} className={`text-slate-400 transition-transform ${collapsed.security ? "-rotate-90" : ""}`} />
+            <h2 className="text-base font-semibold text-slate-700">Security</h2>
+          </button>
         </div>
-        <div className="p-5 space-y-4">
+        {!collapsed.security && <div className="p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
@@ -399,7 +417,7 @@ export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onK
               <div className="w-5 h-5 bg-white rounded-full shadow mx-0.5" />
             </div>
           </div>
-        </div>
+        </div>}
       </div>
 
       {showAddUser && (
