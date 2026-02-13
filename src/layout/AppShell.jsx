@@ -609,6 +609,7 @@ export default function AppShell() {
                   <RepView
                     currentUser={currentUser} contacts={contacts} deals={deals}
                     notesByContact={notesByContact} activityLog={activityLog} rawCalls={rawCalls}
+                    kpiTargets={kpiTargets}
                     onLogCall={() => setShowCallModal(true)}
                     onNewDeal={() => openDealModal()}
                     onAddNote={() => setShowNoteModal(true)}
@@ -648,6 +649,7 @@ export default function AppShell() {
                 {activeView === "manager" && (
                   <ManagerDashboard
                     reps={reps} deals={deals} contacts={contacts} rawCalls={rawCalls}
+                    kpiTargets={kpiTargets}
                     currentUser={currentUser} isMobile={isMobile}
                   />
                 )}

@@ -49,10 +49,11 @@ export function noteTypeConfig(typeKey) {
   return NOTE_TYPES.find(t => t.key === typeKey) || NOTE_TYPES[0];
 }
 
-export function getStatus(m) {
+export function getStatus(m, dailyTarget) {
   if (!m) return "red";
-  if (m.callsToday >= DAILY_TARGET && m.crmCompliance >= 90 && m.oppWithNext >= 90 && m.pipelineClean) return "green";
-  if (m.callsToday >= DAILY_TARGET * 0.8 && m.crmCompliance >= 75) return "amber";
+  const dt = dailyTarget || DAILY_TARGET;
+  if (m.callsToday >= dt && m.crmCompliance >= 90 && m.oppWithNext >= 90 && m.pipelineClean) return "green";
+  if (m.callsToday >= dt * 0.8 && m.crmCompliance >= 75) return "amber";
   return "red";
 }
 

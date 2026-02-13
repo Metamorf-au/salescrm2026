@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, ChevronDown, Trash2, Filter, Save } from "lucide-react";
-import { DAILY_TARGET, WEEKLY_TARGET, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
+import { DEFAULT_KPI_TARGETS, activityTypeConfig, noteTypeConfig, stageConfig } from "../shared/constants";
 import { formatReminderDate, isOverdue } from "../shared/formatters";
 import { fetchWeeklySummary, upsertWeeklySummary, getCurrentWeekStart } from "../supabaseData";
 
@@ -23,7 +23,7 @@ const ACTIVITY_FILTERS = [
 const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 const PAGE_SIZE = 25;
 
-export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, onLogCall, onNewDeal, onAddNote, onNewContact, onCompleteTodo, onClearCompleted, isMobile }) {
+export default function RepView({ currentUser, contacts, deals, notesByContact, activityLog, rawCalls, kpiTargets, onLogCall, onNewDeal, onAddNote, onNewContact, onCompleteTodo, onClearCompleted, isMobile }) {
   // localStorage key for "Clear Done" timestamp (shared for notes + deals)
   const clearedKey = `crm_todo_cleared_${currentUser.id}`;
 
@@ -77,6 +77,19 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   }
 
 
+  // Per-rep KPI targets (fall back to defaults)
+  const myTargets = (kpiTargets || {})[currentUser.id] || {
+    weeklyCalls: DEFAULT_KPI_TARGETS.weekly_calls,
+    weeklyMeetings: DEFAULT_KPI_TARGETS.weekly_meetings,
+    weeklyContacts: DEFAULT_KPI_TARGETS.weekly_contacts,
+    weeklyQuotes: DEFAULT_KPI_TARGETS.weekly_quotes,
+  };
+  const weeklyCallTarget = myTargets.weeklyCalls;
+  const dailyCallTarget = Math.round(weeklyCallTarget / 5);
+  const weeklyMeetingsTarget = myTargets.weeklyMeetings;
+  const weeklyContactsTarget = myTargets.weeklyContacts;
+  const weeklyQuotesTarget = myTargets.weeklyQuotes;
+
   // Compute KPIs from real data
   const now = new Date();
   const nowMs = Date.now();
@@ -92,8 +105,8 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const newContactsCount = contacts.filter(c => c.ownerId === currentUser.id && c.createdAt && new Date(c.createdAt) >= weekStart).length;
   const quotesSent = deals.filter(d => d.quoteSentAt && d.ownerId === currentUser.id).length;
 
-  const dailyPct = Math.min((callsToday / DAILY_TARGET) * 100, 100);
-  const weeklyPct = Math.min((callsWeek / WEEKLY_TARGET) * 100, 100);
+  const dailyPct = Math.min((callsToday / dailyCallTarget) * 100, 100);
+  const weeklyPct = Math.min((callsWeek / weeklyCallTarget) * 100, 100);
 
   // Build to-do list from follow_up/meeting notes + deal next dates
   const myTodos = [];
@@ -253,14 +266,14 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
       <div className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-6"} gap-3`}>
         <div className="bg-white rounded-xl border border-stone-200 p-4">
           <div className="flex items-center gap-2 mb-2"><Phone size={14} className="text-sky-500" /><span className="text-xs font-medium text-slate-500">Daily Calls</span></div>
-          <p className="text-xl font-bold text-slate-800">{callsToday}<span className="text-sm font-normal text-slate-400"> / {DAILY_TARGET}</span></p>
+          <p className="text-xl font-bold text-slate-800">{callsToday}<span className="text-sm font-normal text-slate-400"> / {dailyCallTarget}</span></p>
           <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mt-2">
             <div className="h-full rounded-full transition-all duration-500" style={{ width: `${dailyPct}%`, background: dailyPct >= 100 ? "#16a34a" : dailyPct >= 75 ? "#d97706" : "#0ea5e9" }} />
           </div>
         </div>
         <div className="bg-white rounded-xl border border-stone-200 p-4">
           <div className="flex items-center gap-2 mb-2"><Target size={14} className="text-amber-500" /><span className="text-xs font-medium text-slate-500">Weekly Calls</span></div>
-          <p className="text-xl font-bold text-slate-800">{callsWeek}<span className="text-sm font-normal text-slate-400"> / {WEEKLY_TARGET}</span></p>
+          <p className="text-xl font-bold text-slate-800">{callsWeek}<span className="text-sm font-normal text-slate-400"> / {weeklyCallTarget}</span></p>
           <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mt-2">
             <div className="h-full rounded-full transition-all duration-500" style={{ width: `${weeklyPct}%`, background: weeklyPct >= 100 ? "#16a34a" : weeklyPct >= 75 ? "#d97706" : "#0ea5e9" }} />
           </div>
@@ -272,18 +285,18 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
         </div>
         <div className="bg-white rounded-xl border border-stone-200 p-4">
           <div className="flex items-center gap-2 mb-2"><Calendar size={14} className="text-violet-500" /><span className="text-xs font-medium text-slate-500">Meetings Set</span></div>
-          <p className="text-xl font-bold text-slate-800">{meetingsSet}</p>
+          <p className="text-xl font-bold text-slate-800">{meetingsSet}<span className="text-sm font-normal text-slate-400"> / {weeklyMeetingsTarget}</span></p>
           <p className="text-xs text-slate-400 mt-1">This week</p>
         </div>
         <div className="bg-white rounded-xl border border-stone-200 p-4">
           <div className="flex items-center gap-2 mb-2"><UserPlus size={14} className="text-sky-500" /><span className="text-xs font-medium text-slate-500">New Contacts</span></div>
-          <p className="text-xl font-bold text-slate-800">{newContactsCount}</p>
+          <p className="text-xl font-bold text-slate-800">{newContactsCount}<span className="text-sm font-normal text-slate-400"> / {weeklyContactsTarget}</span></p>
           <p className="text-xs text-slate-400 mt-1">This week</p>
         </div>
         <div className="bg-white rounded-xl border border-stone-200 p-4">
           <div className="flex items-center gap-2 mb-2"><Send size={14} className="text-amber-500" /><span className="text-xs font-medium text-slate-500">Quotes Sent</span></div>
-          <p className="text-xl font-bold text-slate-800">{quotesSent}</p>
-          <p className="text-xs text-slate-400 mt-1">Total</p>
+          <p className="text-xl font-bold text-slate-800">{quotesSent}<span className="text-sm font-normal text-slate-400"> / {weeklyQuotesTarget}</span></p>
+          <p className="text-xs text-slate-400 mt-1">This week</p>
         </div>
       </div>
 
