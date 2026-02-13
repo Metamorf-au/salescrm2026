@@ -403,9 +403,11 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
 
       {/* Team Scoreboard + Scorecard Table — side by side on desktop, stacked on mobile */}
       <div className={`${isMobile ? "space-y-4" : "lg:flex lg:gap-4"}`}>
-        <div className={`bg-white rounded-xl border border-stone-200 p-5 ${isMobile ? "" : "lg:w-[40%] lg:flex-shrink-0"}`}>
-          <h2 className="text-base font-semibold text-slate-700 mb-4">Team Scoreboard</h2>
-          <div className="space-y-2">
+        <div className={`bg-white rounded-xl border border-stone-200 overflow-hidden ${isMobile ? "" : "lg:w-[40%] lg:flex-shrink-0"}`}>
+          <div className="px-5 py-4 border-b border-stone-200">
+            <h2 className="text-base font-semibold text-slate-700">Team Scoreboard</h2>
+          </div>
+          <div className="p-5 space-y-2">
             {filteredReps.map(r => {
               const m = metricsMap[r.id];
               const sc = getScorecard(m, getRepTargets(r.id));
