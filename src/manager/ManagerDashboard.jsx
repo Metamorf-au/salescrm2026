@@ -134,18 +134,15 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
     return firstNameCounts[first] > 1 && parts.length > 1 ? `${first} ${parts[parts.length - 1][0]}.` : first;
   };
 
+  // Chart targets only shown when a single rep is selected — per-rep KPI targets
+  // don't make sense as a single reference line across all reps
   const chartData = filteredReps.map(r => {
     const rt = getRepTargets(r.id);
     return {
       name: shortName(r),
       calls: metricsMap[r.id]?.callsInRange || 0,
-      target: isToday ? getRepDailyTarget(r.id) : isThisWeek ? rt.weeklyCalls : null,
+      target: isFiltered ? (isToday ? getRepDailyTarget(r.id) : isThisWeek ? rt.weeklyCalls : null) : null,
     };
-  });
-
-  const quotesChartData = filteredReps.map(r => {
-    const count = deals.filter(d => d.ownerId === r.id && d.quoteSentAt && new Date(d.quoteSentAt) >= dateRange.start && new Date(d.quoteSentAt) < dateRange.end).length;
-    return { name: shortName(r), quotes: count };
   });
 
   const meetingsChartData = filteredReps.map(r => {
@@ -153,7 +150,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
     return {
       name: shortName(r),
       meetings: metricsMap[r.id]?.meetingsSet || 0,
-      target: isThisWeek ? rt.weeklyMeetings : null,
+      target: isFiltered && isThisWeek ? rt.weeklyMeetings : null,
     };
   });
 
@@ -162,7 +159,17 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
     return {
       name: shortName(r),
       contacts: metricsMap[r.id]?.newContacts || 0,
-      target: isThisWeek ? rt.weeklyContacts : null,
+      target: isFiltered && isThisWeek ? rt.weeklyContacts : null,
+    };
+  });
+
+  const quotesChartData = filteredReps.map(r => {
+    const rt = getRepTargets(r.id);
+    const count = deals.filter(d => d.ownerId === r.id && d.quoteSentAt && new Date(d.quoteSentAt) >= dateRange.start && new Date(d.quoteSentAt) < dateRange.end).length;
+    return {
+      name: shortName(r),
+      quotes: count,
+      target: isFiltered && isThisWeek ? rt.weeklyQuotes : null,
     };
   });
 
@@ -309,7 +316,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
       {/* 2x2 Chart Grid */}
       <div className={`grid grid-cols-1 ${isMobile ? "gap-4" : "lg:grid-cols-2 gap-4"}`}>
         <div className="bg-white rounded-xl border border-stone-200 p-5">
-          <h2 className="text-base font-semibold text-slate-700 mb-3">Calls {isToday ? "Today" : `(${rangeLabel})`} {(isToday || isThisWeek) ? "vs Target" : "by Rep"}</h2>
+          <h2 className="text-base font-semibold text-slate-700 mb-3">Calls {isToday ? "Today" : `(${rangeLabel})`} {isFiltered && (isToday || isThisWeek) ? "vs Target" : "by Rep"}</h2>
           <div className={isMobile ? "overflow-x-auto -mx-5 px-5" : ""}>
             <div style={isMobile ? { minWidth: Math.max(300, chartData.length * 60) } : undefined}>
               <ResponsiveContainer width="100%" height={160}>
@@ -330,7 +337,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           </div>
         </div>
         <div className="bg-white rounded-xl border border-stone-200 p-5">
-          <h2 className="text-base font-semibold text-slate-700 mb-3">Meetings Set ({rangeLabel}) {isThisWeek ? "vs Target" : "by Rep"}</h2>
+          <h2 className="text-base font-semibold text-slate-700 mb-3">Meetings Set ({rangeLabel}) {isFiltered && isThisWeek ? "vs Target" : "by Rep"}</h2>
           <div className={isMobile ? "overflow-x-auto -mx-5 px-5" : ""}>
             <div style={isMobile ? { minWidth: Math.max(300, meetingsChartData.length * 60) } : undefined}>
               <ResponsiveContainer width="100%" height={160}>
@@ -351,7 +358,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           </div>
         </div>
         <div className="bg-white rounded-xl border border-stone-200 p-5">
-          <h2 className="text-base font-semibold text-slate-700 mb-3">New Contacts ({rangeLabel}) {isThisWeek ? "vs Target" : "by Rep"}</h2>
+          <h2 className="text-base font-semibold text-slate-700 mb-3">New Contacts ({rangeLabel}) {isFiltered && isThisWeek ? "vs Target" : "by Rep"}</h2>
           <div className={isMobile ? "overflow-x-auto -mx-5 px-5" : ""}>
             <div style={isMobile ? { minWidth: Math.max(300, contactsChartData.length * 60) } : undefined}>
               <ResponsiveContainer width="100%" height={160}>
@@ -372,7 +379,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           </div>
         </div>
         <div className="bg-white rounded-xl border border-stone-200 p-5">
-          <h2 className="text-base font-semibold text-slate-700 mb-3">Quotes Sent ({rangeLabel}) by Rep</h2>
+          <h2 className="text-base font-semibold text-slate-700 mb-3">Quotes Sent ({rangeLabel}) {isFiltered && isThisWeek ? "vs Target" : "by Rep"}</h2>
           <div className={isMobile ? "overflow-x-auto -mx-5 px-5" : ""}>
             <div style={isMobile ? { minWidth: Math.max(300, quotesChartData.length * 60) } : undefined}>
               <ResponsiveContainer width="100%" height={160}>
@@ -381,9 +388,10 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                   <XAxis dataKey="name" interval={0} tick={{ fontSize: isMobile ? 11 : 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
                   {!isMobile && <YAxis width={30} tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
                   <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
+                  {isFiltered && quotesChartData[0]?.target && <ReferenceLine y={quotesChartData[0].target} stroke="#d97706" strokeDasharray="6 4" label={{ value: "Target", position: "right", fill: "#d97706", fontSize: 11 }} />}
                   <Bar dataKey="quotes" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 60 : 40}>
                     {quotesChartData.map((d, i) => (
-                      <Cell key={i} fill="#8b5cf6" />
+                      <Cell key={i} fill={d.target ? (d.quotes >= d.target ? "#16a34a" : d.quotes >= d.target * 0.8 ? "#d97706" : "#e11d48") : "#8b5cf6"} />
                     ))}
                   </Bar>
                 </BarChart>
