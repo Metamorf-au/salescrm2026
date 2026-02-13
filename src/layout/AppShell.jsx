@@ -4,7 +4,7 @@ import { User, BookOpen, Columns, LayoutDashboard, Settings } from "lucide-react
 import logo from "../assets/my-day-logo.svg";
 import {
   fetchContacts, fetchDeals, fetchAllNotes, fetchAllCalls, fetchReps,
-  fetchActivityLog, groupCallsByContact,
+  fetchActivityLog, groupCallsByContact, fetchKpiTargets,
   insertContact, updateContact, deleteContact, bulkDeleteContacts, bulkReassignContacts, bulkArchiveContacts, bulkUnarchiveContacts,
   insertCall, insertNote, insertDeal, updateDeal, insertActivity,
   completeNote, completeDealTodo,
@@ -67,6 +67,7 @@ export default function AppShell() {
   const [rawCalls, setRawCalls] = useState([]);
   const [reps, setReps] = useState([]);
   const [activityLog, setActivityLog] = useState([]);
+  const [kpiTargets, setKpiTargets] = useState({});
   const [dataLoading, setDataLoading] = useState(false);
 
   // Modal state
@@ -172,13 +173,14 @@ export default function AppShell() {
     if (!currentUser) return;
     setDataLoading(true);
     const isManagerOrAdmin = currentUser.role === "manager" || currentUser.role === "admin";
-    const [c, d, n, calls, r, a] = await Promise.all([
+    const [c, d, n, calls, r, a, kpi] = await Promise.all([
       fetchContacts(),
       fetchDeals(),
       fetchAllNotes(),
       fetchAllCalls(),
       fetchReps(),
       fetchActivityLog(currentUser.id, isManagerOrAdmin),
+      fetchKpiTargets(),
     ]);
     setContacts(c);
     setDeals(d);
@@ -186,6 +188,7 @@ export default function AppShell() {
     setRawCalls(calls);
     setReps(r);
     setActivityLog(a);
+    setKpiTargets(kpi);
     setDataLoading(false);
   }, [currentUser]);
 
@@ -649,7 +652,7 @@ export default function AppShell() {
                   />
                 )}
                 {activeView === "admin" && (
-                  <AdminView isMobile={isMobile} currentUser={currentUser} />
+                  <AdminView isMobile={isMobile} currentUser={currentUser} reps={reps} kpiTargets={kpiTargets} onKpiTargetsSaved={loadAllData} />
                 )}
               </>
             )}
