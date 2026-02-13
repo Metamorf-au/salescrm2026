@@ -254,7 +254,7 @@ export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onK
           <button onClick={() => toggleSection("kpi")} className="flex items-center gap-2 text-left w-full">
             <ChevronDown size={16} className={`text-slate-400 transition-transform ${collapsed.kpi ? "-rotate-90" : ""}`} />
             <div>
-              <h2 className="text-base font-semibold text-slate-700 flex items-center gap-2"><Target size={16} className="text-amber-500" />KPI Targets</h2>
+              <h2 className="text-base font-semibold text-slate-700">KPI Targets</h2>
               <p className="text-xs text-slate-400 mt-0.5">Weekly targets per rep. Daily call target = weekly calls / 5.</p>
             </div>
           </button>
