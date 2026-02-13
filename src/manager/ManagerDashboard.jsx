@@ -407,26 +407,26 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           <div className="px-5 py-4 border-b border-stone-200">
             <h2 className="text-base font-semibold text-slate-700">Team Scoreboard – {rangeLabel}</h2>
           </div>
-          <div className="p-5 space-y-2">
+          <div className="p-5 space-y-2 max-h-[28rem] overflow-y-auto">
             {filteredReps.map(r => {
               const m = metricsMap[r.id];
               const sc = getScorecard(m, getRepTargets(r.id));
               const cfg = statusConfig(sc.status);
               return (
                 <div key={r.id} className={`p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
-                        {r.initials}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 truncate">{r.name}</p>
-                        {sc.behind.length > 0 && <p className="text-xs text-slate-500 truncate">Behind: {sc.behind.join(", ")}</p>}
-                      </div>
+                  <div className="flex items-start gap-2">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
+                      {r.initials}
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <StatusBadge status={sc.status} />
-                      <span className="text-sm font-bold text-slate-700">{sc.onPaceCount}/5</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{r.name}</p>
+                        <div className="flex-shrink-0 ml-2"><StatusBadge status={sc.status} /></div>
+                      </div>
+                      <div className="flex items-end justify-between mt-1">
+                        {sc.behind.length > 0 ? <p className="text-xs text-slate-500 leading-snug">{`Behind: ${sc.behind.join(", ")}`}</p> : <span />}
+                        <span className="text-sm font-bold text-slate-700 flex-shrink-0 ml-2">{sc.onPaceCount}/5</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -440,9 +440,9 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
             <div className="px-5 py-4 border-b border-stone-200">
               <h2 className="text-base font-semibold text-slate-700">Scorecard – {rangeLabel}</h2>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[28rem] overflow-y-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="sticky top-0 z-10">
                   <tr className="bg-stone-50 text-slate-500 text-left">
                     <th className="px-5 py-3 font-medium">Rep</th>
                     <th className="px-4 py-3 font-medium text-center">Calls logged</th>
