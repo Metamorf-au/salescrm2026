@@ -174,14 +174,10 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
   const pipelineValue = activePipelineDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
 
   function handleExport() {
-    const headers = ["Rep", `Calls (${dateRange.label})`, "Meetings Set", "New Contacts", "Quotes Sent", "Deal Health", "Quote Turnaround (h)", "Status"];
+    const headers = ["Rep", `Calls logged (${dateRange.label})`, "Meetings set", "New contacts", "Quotes sent", "Deal health", "Status"];
     const rows = filteredReps.map(r => {
       const m = metricsMap[r.id] || {};
       const st = getStatus(m, getRepTargets(r.id));
-      const repTurnaroundDeals = deals.filter(d => d.ownerId === r.id && d.quoteRequestedAt && d.quoteSentAt && new Date(d.quoteSentAt) >= dateRange.start && new Date(d.quoteSentAt) < dateRange.end);
-      const repTurnaround = repTurnaroundDeals.length > 0
-        ? Math.round(repTurnaroundDeals.reduce((s, d) => s + (new Date(d.quoteSentAt) - new Date(d.quoteRequestedAt)) / 3600000, 0) / repTurnaroundDeals.length * 10) / 10
-        : "";
       return [
         r.name,
         m.callsInRange || 0,
@@ -189,7 +185,6 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
         m.newContacts || 0,
         m.quotesSentCount || 0,
         `${m.dealsWithNextCount || 0}/${m.activeDealsCount || 0}`,
-        repTurnaround,
         st === "green" ? "On Track" : st === "amber" ? "Needs Attention" : "At Risk",
       ];
     });
@@ -225,7 +220,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
     { label: "Quotes Sent", value: quotesSent, sub: isThisWeek ? `Target: ${quotesTargetAll}` : rangeLabel, icon: Send, accent: "bg-amber-50 text-amber-600", pct: isThisWeek && quotesTargetAll > 0 ? (quotesSent / quotesTargetAll) * 100 : null },
     { label: "Quote Turnaround", value: avgTurnaround !== null ? `${avgTurnaround}h` : "\u2013", sub: "Avg hours", icon: Clock, accent: "bg-amber-50 text-amber-600" },
     { label: "Pipeline Value", value: formatCurrency(pipelineValue), sub: "Weighted", icon: DollarSign, accent: "bg-emerald-50 text-emerald-600" },
-    { label: "Reps On Track", value: `${greenCount} / ${filteredReps.length}`, sub: "All 5 KPIs on pace", icon: Users, accent: "bg-violet-50 text-violet-600" },
+    { label: "Reps On Track", value: `${greenCount} / ${filteredReps.length}`, sub: "Rep KPI tracking", icon: Users, accent: "bg-violet-50 text-violet-600" },
   ];
 
   return (
@@ -350,15 +345,19 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
               const sc = getScorecard(m, getRepTargets(r.id));
               const cfg = statusConfig(sc.status);
               return (
-                <div key={r.id} className={`flex items-center gap-3 p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
-                    {r.initials}
+                <div key={r.id} className={`p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
+                        {r.initials}
+                      </div>
+                      <p className="text-sm font-semibold text-slate-800">{r.name}</p>
+                    </div>
+                    <StatusBadge status={sc.status} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">{r.name}</p>
-                    <p className="text-xs text-slate-500">{sc.onPaceCount}/5 on pace{sc.behind.length > 0 ? ` · Behind: ${sc.behind.join(", ")}` : ""}</p>
+                  <div className="flex justify-end mt-1">
+                    <span className="text-xs font-medium text-slate-500">{sc.onPaceCount}/5</span>
                   </div>
-                  <StatusBadge status={sc.status} />
                 </div>
               );
             })}
@@ -376,12 +375,11 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
             <thead>
               <tr className="bg-stone-50 text-slate-500 text-left">
                 <th className="px-5 py-3 font-medium">Rep</th>
-                <th className="px-4 py-3 font-medium text-center">Calls</th>
-                <th className="px-4 py-3 font-medium text-center">Meetings</th>
-                <th className="px-4 py-3 font-medium text-center">New Contacts</th>
-                <th className="px-4 py-3 font-medium text-center">Quotes Sent</th>
-                <th className="px-4 py-3 font-medium text-center">Deal Health</th>
-                <th className="px-4 py-3 font-medium text-center">Quote Turnaround</th>
+                <th className="px-4 py-3 font-medium text-center">Calls logged</th>
+                <th className="px-4 py-3 font-medium text-center">Meetings set</th>
+                <th className="px-4 py-3 font-medium text-center">New contacts</th>
+                <th className="px-4 py-3 font-medium text-center">Quotes sent</th>
+                <th className="px-4 py-3 font-medium text-center">Deal health</th>
                 <th className="px-4 py-3 font-medium text-center">Status</th>
               </tr>
             </thead>
@@ -398,10 +396,6 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                   if (target == null) return "text-slate-700 font-semibold";
                   return val >= target ? "text-emerald-700 font-semibold" : "text-amber-600 font-semibold";
                 }
-                const repTurnaroundDeals = deals.filter(d => d.ownerId === r.id && d.quoteRequestedAt && d.quoteSentAt && new Date(d.quoteSentAt) >= dateRange.start && new Date(d.quoteSentAt) < dateRange.end);
-                const repTurnaround = repTurnaroundDeals.length > 0
-                  ? Math.round(repTurnaroundDeals.reduce((s, d) => s + (new Date(d.quoteSentAt) - new Date(d.quoteRequestedAt)) / 3600000, 0) / repTurnaroundDeals.length * 10) / 10
-                  : null;
                 return (
                   <tr key={r.id} className="hover:bg-stone-50 transition">
                     <td className="px-5 py-3 font-medium text-slate-800">{r.name}</td>
@@ -410,7 +404,6 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                     <td className={`px-4 py-3 text-center ${cellColor(m.newContacts || 0, contactTarget)}`}>{m.newContacts || 0}</td>
                     <td className={`px-4 py-3 text-center ${cellColor(m.quotesSentCount || 0, quoteTarget)}`}>{m.quotesSentCount || 0}</td>
                     <td className={`px-4 py-3 text-center ${cellColor(m.dealsWithNextCount || 0, m.activeDealsCount || 0)}`}>{m.dealsWithNextCount || 0}/{m.activeDealsCount || 0}</td>
-                    <td className={`px-4 py-3 text-center ${repTurnaround !== null ? (repTurnaround <= 24 ? "text-emerald-700 font-semibold" : "text-rose-600 font-semibold") : "text-slate-400"}`}>{repTurnaround !== null ? `${repTurnaround}h` : "\u2013"}</td>
                     <td className="px-4 py-3 text-center"><StatusBadge status={sc.status} /></td>
                   </tr>
                 );
