@@ -638,19 +638,24 @@ export function computeRepMetrics(repId, rawCalls, deals, contacts, dateRange) {
   const oppWithNext = activeDeals.length > 0 ? Math.round((dealsWithNext.length / activeDeals.length) * 100) : 100;
   const pipelineClean = activeDeals.length === 0 || activeDeals.every(d => d.nextAction);
 
-  const crmCompliance = Math.min(100, Math.round(
-    ((callsToday > 0 ? 30 : 0) + (oppWithNext >= 90 ? 40 : oppWithNext * 0.4) + (pipelineClean ? 30 : 0))
-  ));
+  // Quotes sent within the date range
+  const quotesSentCount = repDeals.filter(d => {
+    if (!d.quoteSentAt) return false;
+    const sent = new Date(d.quoteSentAt);
+    return sent >= rangeStart && (!rangeEnd || sent < rangeEnd);
+  }).length;
 
   return {
     callsToday,
     callsWeek,
     callsInRange,
-    crmCompliance,
     meetingsSet,
     newContacts,
     oppWithNext,
     pipelineClean,
+    activeDealsCount: activeDeals.length,
+    dealsWithNextCount: dealsWithNext.length,
+    quotesSentCount,
     summaryDone: false,
   };
 }
