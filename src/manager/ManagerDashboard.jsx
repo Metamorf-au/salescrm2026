@@ -435,49 +435,51 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           </div>
         </div>
 
-        <div className={`bg-white rounded-xl border border-stone-200 overflow-hidden ${isMobile ? "" : "lg:w-[65%]"}`}>
-          <div className="px-5 py-4 border-b border-stone-200">
-            <h2 className="text-base font-semibold text-slate-700">Scorecard – {rangeLabel}</h2>
+        {!isMobile && (
+          <div className="bg-white rounded-xl border border-stone-200 overflow-hidden lg:w-[65%]">
+            <div className="px-5 py-4 border-b border-stone-200">
+              <h2 className="text-base font-semibold text-slate-700">Scorecard – {rangeLabel}</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-stone-50 text-slate-500 text-left">
+                    <th className="px-5 py-3 font-medium">Rep</th>
+                    <th className="px-4 py-3 font-medium text-center">Calls logged</th>
+                    <th className="px-4 py-3 font-medium text-center">Meetings set</th>
+                    <th className="px-4 py-3 font-medium text-center">New contacts</th>
+                    <th className="px-4 py-3 font-medium text-center">Quotes sent</th>
+                    <th className="px-4 py-3 font-medium text-center">Deal health</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {filteredReps.map(r => {
+                    const m = metricsMap[r.id] || {};
+                    const rt = getRepTargets(r.id);
+                    const repCallTarget = isToday ? getRepDailyTarget(r.id) : isThisWeek ? proRate(rt.weeklyCalls) : null;
+                    const meetingTarget = isThisWeek ? proRate(rt.weeklyMeetings) : null;
+                    const contactTarget = isThisWeek ? proRate(rt.weeklyContacts) : null;
+                    const quoteTarget = isThisWeek ? proRate(rt.weeklyQuotes) : null;
+                    function cellColor(val, target) {
+                      if (target == null) return "text-slate-700 font-semibold";
+                      return val >= target ? "text-emerald-700 font-semibold" : "text-amber-600 font-semibold";
+                    }
+                    return (
+                      <tr key={r.id} className="hover:bg-stone-50 transition">
+                        <td className="px-5 py-3 font-medium text-slate-800">{r.name}</td>
+                        <td className={`px-4 py-3 text-center ${cellColor(m.callsInRange || 0, repCallTarget)}`}>{m.callsInRange || 0}</td>
+                        <td className={`px-4 py-3 text-center ${cellColor(m.meetingsSet || 0, meetingTarget)}`}>{m.meetingsSet || 0}</td>
+                        <td className={`px-4 py-3 text-center ${cellColor(m.newContacts || 0, contactTarget)}`}>{m.newContacts || 0}</td>
+                        <td className={`px-4 py-3 text-center ${cellColor(m.quotesSentCount || 0, quoteTarget)}`}>{m.quotesSentCount || 0}</td>
+                        <td className={`px-4 py-3 text-center ${cellColor(m.dealsWithNextCount || 0, m.activeDealsCount || 0)}`}>{m.dealsWithNextCount || 0}/{m.activeDealsCount || 0}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-stone-50 text-slate-500 text-left">
-                  <th className="px-5 py-3 font-medium">Rep</th>
-                  <th className="px-4 py-3 font-medium text-center">Calls logged</th>
-                  <th className="px-4 py-3 font-medium text-center">Meetings set</th>
-                  <th className="px-4 py-3 font-medium text-center">New contacts</th>
-                  <th className="px-4 py-3 font-medium text-center">Quotes sent</th>
-                  <th className="px-4 py-3 font-medium text-center">Deal health</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {filteredReps.map(r => {
-                  const m = metricsMap[r.id] || {};
-                  const rt = getRepTargets(r.id);
-                  const repCallTarget = isToday ? getRepDailyTarget(r.id) : isThisWeek ? proRate(rt.weeklyCalls) : null;
-                  const meetingTarget = isThisWeek ? proRate(rt.weeklyMeetings) : null;
-                  const contactTarget = isThisWeek ? proRate(rt.weeklyContacts) : null;
-                  const quoteTarget = isThisWeek ? proRate(rt.weeklyQuotes) : null;
-                  function cellColor(val, target) {
-                    if (target == null) return "text-slate-700 font-semibold";
-                    return val >= target ? "text-emerald-700 font-semibold" : "text-amber-600 font-semibold";
-                  }
-                  return (
-                    <tr key={r.id} className="hover:bg-stone-50 transition">
-                      <td className="px-5 py-3 font-medium text-slate-800">{r.name}</td>
-                      <td className={`px-4 py-3 text-center ${cellColor(m.callsInRange || 0, repCallTarget)}`}>{m.callsInRange || 0}</td>
-                      <td className={`px-4 py-3 text-center ${cellColor(m.meetingsSet || 0, meetingTarget)}`}>{m.meetingsSet || 0}</td>
-                      <td className={`px-4 py-3 text-center ${cellColor(m.newContacts || 0, contactTarget)}`}>{m.newContacts || 0}</td>
-                      <td className={`px-4 py-3 text-center ${cellColor(m.quotesSentCount || 0, quoteTarget)}`}>{m.quotesSentCount || 0}</td>
-                      <td className={`px-4 py-3 text-center ${cellColor(m.dealsWithNextCount || 0, m.activeDealsCount || 0)}`}>{m.dealsWithNextCount || 0}/{m.activeDealsCount || 0}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Activity Log */}
