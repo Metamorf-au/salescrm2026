@@ -201,21 +201,24 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
 
   // Dynamic card labels based on selected date range
   const rangeLabel = dateRange.label;
-  // Per-rep call targets — sum across reps for aggregate view
-  const callsTargetTotal = isToday
-    ? (isFiltered ? getRepDailyTarget(filteredReps[0]?.id) : repList.reduce((s, r) => s + getRepDailyTarget(r.id), 0))
-    : isThisWeek
-    ? (isFiltered ? getRepTargets(filteredReps[0]?.id).weeklyCalls : repList.reduce((s, r) => s + getRepTargets(r.id).weeklyCalls, 0))
-    : null;
+  const barColor = (pct) => pct >= 90 ? "#16a34a" : pct >= 75 ? "#d97706" : "#ef4444";
+
+  // Aggregate targets — sum across reps (or individual when filtered)
+  const dailyTargetAll = isFiltered ? getRepDailyTarget(filteredReps[0]?.id) : repList.reduce((s, r) => s + getRepDailyTarget(r.id), 0);
+  const weeklyCallsTargetAll = isFiltered ? getRepTargets(filteredReps[0]?.id).weeklyCalls : repList.reduce((s, r) => s + getRepTargets(r.id).weeklyCalls, 0);
+  const callsTargetTotal = isToday ? dailyTargetAll : isThisWeek ? weeklyCallsTargetAll : null;
+  const meetingsTargetAll = isFiltered ? getRepTargets(filteredReps[0]?.id).weeklyMeetings : repList.reduce((s, r) => s + getRepTargets(r.id).weeklyMeetings, 0);
+  const contactsTargetAll = isFiltered ? getRepTargets(filteredReps[0]?.id).weeklyContacts : repList.reduce((s, r) => s + getRepTargets(r.id).weeklyContacts, 0);
+  const quotesTargetAll = isFiltered ? getRepTargets(filteredReps[0]?.id).weeklyQuotes : repList.reduce((s, r) => s + getRepTargets(r.id).weeklyQuotes, 0);
 
   const summaryCards = [
-    { label: isFiltered ? `Calls` : `Total Calls`, value: totalCallsInRange, sub: callsTargetTotal ? `Target: ${callsTargetTotal}` : rangeLabel, icon: Phone, accent: "bg-sky-50 text-sky-600" },
-    { label: "Calls Today", value: totalCallsToday, sub: `Target: ${isFiltered ? getRepDailyTarget(filteredReps[0]?.id) : repList.reduce((s, r) => s + getRepDailyTarget(r.id), 0)}`, icon: Target, accent: "bg-sky-50 text-sky-600" },
-    { label: "CRM Compliance", value: `${avgCompliance}%`, sub: isFiltered ? "Individual" : "Team average", icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600" },
-    { label: "Meetings Set", value: totalMeetings, sub: rangeLabel, icon: Calendar, accent: "bg-violet-50 text-violet-600" },
-    { label: "New Contacts", value: totalNewContacts, sub: rangeLabel, icon: UserPlus, accent: "bg-sky-50 text-sky-600" },
+    { label: "Calls Today", value: totalCallsToday, sub: `Target: ${dailyTargetAll}`, icon: Phone, accent: "bg-sky-50 text-sky-600", pct: dailyTargetAll > 0 ? (totalCallsToday / dailyTargetAll) * 100 : null },
+    { label: isThisWeek ? "Weekly Calls" : "Total Calls", value: totalCallsInRange, sub: callsTargetTotal ? `Target: ${callsTargetTotal}` : rangeLabel, icon: Target, accent: "bg-sky-50 text-sky-600", pct: callsTargetTotal && callsTargetTotal > 0 ? (totalCallsInRange / callsTargetTotal) * 100 : null },
+    { label: "Meetings Set", value: totalMeetings, sub: isThisWeek ? `Target: ${meetingsTargetAll}` : rangeLabel, icon: Calendar, accent: "bg-violet-50 text-violet-600", pct: isThisWeek && meetingsTargetAll > 0 ? (totalMeetings / meetingsTargetAll) * 100 : null },
+    { label: "New Contacts", value: totalNewContacts, sub: isThisWeek ? `Target: ${contactsTargetAll}` : rangeLabel, icon: UserPlus, accent: "bg-sky-50 text-sky-600", pct: isThisWeek && contactsTargetAll > 0 ? (totalNewContacts / contactsTargetAll) * 100 : null },
+    { label: "CRM Compliance", value: `${avgCompliance}%`, sub: isFiltered ? "Individual" : "Team average", icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600", pct: avgCompliance },
     { label: "Quotes Requested", value: quotesRequested, sub: rangeLabel, icon: FileText, accent: "bg-violet-50 text-violet-600" },
-    { label: "Quotes Sent", value: quotesSent, sub: rangeLabel, icon: Send, accent: "bg-amber-50 text-amber-600" },
+    { label: "Quotes Sent", value: quotesSent, sub: isThisWeek ? `Target: ${quotesTargetAll}` : rangeLabel, icon: Send, accent: "bg-amber-50 text-amber-600", pct: isThisWeek && quotesTargetAll > 0 ? (quotesSent / quotesTargetAll) * 100 : null },
     { label: "Quote Turnaround", value: avgTurnaround !== null ? `${avgTurnaround}h` : "\u2013", sub: "Avg hours", icon: Clock, accent: "bg-amber-50 text-amber-600" },
     { label: "Pipeline Value", value: formatCurrency(pipelineValue), sub: "Weighted", icon: DollarSign, accent: "bg-emerald-50 text-emerald-600" },
     { label: "Reps On Track", value: `${greenCount} / ${filteredReps.length}`, sub: "All KPIs met (today)", icon: Users, accent: "bg-violet-50 text-violet-600" },
@@ -281,6 +284,11 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
               </div>
               <p className="text-2xl font-bold text-slate-800">{c.value}</p>
               <p className="text-xs text-slate-400 mt-0.5">{c.sub}</p>
+              {c.pct != null && (
+                <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mt-2">
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(c.pct, 100)}%`, background: barColor(c.pct) }} />
+                </div>
+              )}
             </div>
           );
         })}
