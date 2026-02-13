@@ -414,19 +414,18 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
               const cfg = statusConfig(sc.status);
               return (
                 <div key={r.id} className={`p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
-                  <div className="flex items-start gap-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
+                  <div className="grid gap-x-2" style={{ gridTemplateColumns: "2rem 1fr" }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white row-span-2 mt-0.5" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
                       {r.initials}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-slate-800 truncate">{r.name}</p>
-                        <div className="flex-shrink-0 ml-2"><StatusBadge status={sc.status} /></div>
-                      </div>
-                      <div className="flex items-end justify-between mt-1">
-                        {sc.behind.length > 0 ? <p className="text-xs text-slate-500 leading-snug">{`Behind: ${sc.behind.join(", ")}`}</p> : <span />}
-                        <span className="text-sm font-bold text-slate-700 flex-shrink-0 ml-2">{sc.onPaceCount}/5</span>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{r.name}</p>
+                      <div className="flex-shrink-0 ml-2"><StatusBadge status={sc.status} /></div>
+                    </div>
+                    <div />
+                    <div className="flex items-end justify-between">
+                      {sc.behind.length > 0 ? <p className="text-xs text-slate-500 leading-snug">{`Behind: ${sc.behind.join(", ")}`}</p> : <span />}
+                      <span className="text-sm font-bold text-slate-700 flex-shrink-0 ml-2">{sc.onPaceCount}/5</span>
                     </div>
                   </div>
                 </div>
