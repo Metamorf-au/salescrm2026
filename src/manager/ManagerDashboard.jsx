@@ -338,7 +338,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           </div>
         </div>
         <div className="lg:col-span-2 bg-white rounded-xl border border-stone-200 p-5">
-          <h2 className="text-base font-semibold text-slate-700 mb-4">Rep Scoreboard</h2>
+          <h2 className="text-base font-semibold text-slate-700 mb-4">Team Scoreboard</h2>
           <div className="space-y-2">
             {filteredReps.map(r => {
               const m = metricsMap[r.id];
@@ -351,12 +351,15 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
                         {r.initials}
                       </div>
-                      <p className="text-sm font-semibold text-slate-800">{r.name}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800">{r.name}</p>
+                        {sc.behind.length > 0 && <p className="text-xs text-slate-500">Behind: {sc.behind.join(", ")}</p>}
+                      </div>
                     </div>
-                    <StatusBadge status={sc.status} />
-                  </div>
-                  <div className="flex justify-end mt-1">
-                    <span className="text-xs font-medium text-slate-500">{sc.onPaceCount}/5</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <StatusBadge status={sc.status} />
+                      <span className="text-xs font-medium text-slate-500">{sc.onPaceCount}/5</span>
+                    </div>
                   </div>
                 </div>
               );
