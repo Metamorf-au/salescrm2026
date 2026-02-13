@@ -407,7 +407,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           <div className="px-4 py-3 border-b border-stone-200">
             <h2 className="text-base font-semibold text-slate-700">Team Scoreboard – {rangeLabel}</h2>
           </div>
-          <div className="p-3 space-y-1.5 max-h-[28rem] overflow-y-auto">
+          <div className="p-3 space-y-1.5">
             {filteredReps.map(r => {
               const m = metricsMap[r.id];
               const sc = getScorecard(m, getRepTargets(r.id));
@@ -417,14 +417,14 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                   <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
                     {r.initials}
                   </div>
-                  <div style={{ width: "calc(100% - 2.25rem)" }}>
-                    <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-slate-800 truncate">{r.name}</p>
-                      <div className="flex-shrink-0 ml-2"><StatusBadge status={sc.status} /></div>
+                      <div className="flex-shrink-0"><StatusBadge status={sc.status} /></div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      {sc.behind.length > 0 ? <p className="text-xs text-slate-500 truncate" style={{ maxWidth: "calc(100% - 2.5rem)" }}>{`Behind: ${sc.behind.join(", ")}`}</p> : <span />}
-                      <span className="text-sm font-bold text-slate-700 flex-shrink-0 ml-2">{sc.onPaceCount}/5</span>
+                    <div className="flex items-center justify-between gap-2">
+                      {sc.behind.length > 0 ? <p className="text-xs text-slate-500 truncate">{`Behind: ${sc.behind.join(", ")}`}</p> : <span />}
+                      <span className="text-sm font-bold text-slate-700 flex-shrink-0">{sc.onPaceCount}/5</span>
                     </div>
                   </div>
                 </div>
@@ -438,9 +438,9 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
             <div className="px-5 py-4 border-b border-stone-200">
               <h2 className="text-base font-semibold text-slate-700">Scorecard – {rangeLabel}</h2>
             </div>
-            <div className="overflow-x-auto max-h-[28rem] overflow-y-auto">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="sticky top-0 z-10">
+                <thead>
                   <tr className="bg-stone-50 text-slate-500 text-left">
                     <th className="px-5 py-3 font-medium">Rep</th>
                     <th className="px-4 py-3 font-medium text-center">Calls logged</th>
