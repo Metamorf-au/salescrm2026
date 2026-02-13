@@ -423,8 +423,8 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                       <div className="flex-shrink-0 ml-2"><StatusBadge status={sc.status} /></div>
                     </div>
                     <div />
-                    <div className="flex items-end justify-between">
-                      {sc.behind.length > 0 ? <p className="text-xs text-slate-500 leading-snug">{`Behind: ${sc.behind.join(", ")}`}</p> : <span />}
+                    <div className="flex items-center justify-between min-w-0">
+                      {sc.behind.length > 0 ? <p className="text-xs text-slate-500 truncate min-w-0">{`Behind: ${sc.behind.join(", ")}`}</p> : <span />}
                       <span className="text-sm font-bold text-slate-700 flex-shrink-0 ml-2">{sc.onPaceCount}/5</span>
                     </div>
                   </div>
