@@ -559,6 +559,43 @@ export async function fetchAdminActivityLog({ activityType, startDate, endDate, 
 }
 
 // ============================================================
+// KPI TARGETS (per-rep weekly targets)
+// ============================================================
+
+export async function fetchKpiTargets() {
+  const { data, error } = await supabase
+    .from("kpi_targets")
+    .select("user_id, weekly_calls, weekly_meetings, weekly_contacts, weekly_quotes");
+  if (error) { console.error("Error loading KPI targets:", error); return {}; }
+  const map = {};
+  for (const row of (data || [])) {
+    map[row.user_id] = {
+      weeklyCalls: row.weekly_calls,
+      weeklyMeetings: row.weekly_meetings,
+      weeklyContacts: row.weekly_contacts,
+      weeklyQuotes: row.weekly_quotes,
+    };
+  }
+  return map;
+}
+
+export async function upsertKpiTargets(userId, targets) {
+  const { error } = await supabase
+    .from("kpi_targets")
+    .upsert(
+      {
+        user_id: userId,
+        weekly_calls: targets.weeklyCalls,
+        weekly_meetings: targets.weeklyMeetings,
+        weekly_contacts: targets.weeklyContacts,
+        weekly_quotes: targets.weeklyQuotes,
+      },
+      { onConflict: "user_id" }
+    );
+  if (error) throw new Error(error.message);
+}
+
+// ============================================================
 // COMPUTE REP METRICS (for Manager Dashboard)
 // ============================================================
 
