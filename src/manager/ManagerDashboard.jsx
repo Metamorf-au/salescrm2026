@@ -277,9 +277,9 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
         {summaryCards.map((c, i) => {
           const Icon = c.icon;
           return (
-            <div key={i} className="bg-white rounded-xl border border-stone-200 p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${c.accent}`}><Icon size={18} /></div>
+            <div key={i} className="bg-white rounded-xl border border-stone-200 p-3">
+              <div className="flex items-center gap-3 mb-1">
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${c.accent}`}><Icon size={16} /></div>
                 <span className="text-sm text-slate-500">{c.label}</span>
               </div>
               <p className="text-2xl font-bold text-slate-800">{c.value}</p>

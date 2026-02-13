@@ -112,15 +112,16 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
   const barColor = (pct) => pct >= 90 ? "#16a34a" : pct >= 75 ? "#d97706" : "#ef4444";
 
   const summaryCards = [
-    { label: "Calls Today", value: myMetrics.callsToday, sub: `Target: ${dailyCallTarget}`, icon: Phone, accent: "bg-sky-50 text-sky-600", pct: dailyCallTarget > 0 ? (myMetrics.callsToday / dailyCallTarget) * 100 : null },
+    { label: "Calls Today", value: myMetrics.callsToday, sub: `Target: ${dailyCallTarget}`, icon: Phone, accent: "bg-sky-50 text-sky-600", pct: dailyCallTarget > 0 ? (myMetrics.callsToday / dailyCallTarget) * 100 : null, mobile: true },
     { label: "Weekly Calls", value: myMetrics.callsWeek, sub: `Target: ${weeklyCallTarget}`, icon: Target, accent: "bg-sky-50 text-sky-600", pct: weeklyCallTarget > 0 ? (myMetrics.callsWeek / weeklyCallTarget) * 100 : null },
-    { label: "Meetings Set", value: myMetrics.meetingsSet, sub: `Target: ${weeklyMeetingsTarget}`, icon: Calendar, accent: "bg-violet-50 text-violet-600", pct: weeklyMeetingsTarget > 0 ? (myMetrics.meetingsSet / weeklyMeetingsTarget) * 100 : null },
-    { label: "New Contacts", value: myMetrics.newContacts, sub: `Target: ${weeklyContactsTarget}`, icon: UserPlus, accent: "bg-sky-50 text-sky-600", pct: weeklyContactsTarget > 0 ? (myMetrics.newContacts / weeklyContactsTarget) * 100 : null },
+    { label: "Meetings Set", value: myMetrics.meetingsSet, sub: `Target: ${weeklyMeetingsTarget}`, icon: Calendar, accent: "bg-violet-50 text-violet-600", pct: weeklyMeetingsTarget > 0 ? (myMetrics.meetingsSet / weeklyMeetingsTarget) * 100 : null, mobile: true },
+    { label: "New Contacts", value: myMetrics.newContacts, sub: `Target: ${weeklyContactsTarget}`, icon: UserPlus, accent: "bg-sky-50 text-sky-600", pct: weeklyContactsTarget > 0 ? (myMetrics.newContacts / weeklyContactsTarget) * 100 : null, mobile: true },
     { label: "CRM Compliance", value: `${myMetrics.crmCompliance}%`, sub: myMetrics.crmCompliance >= 90 ? "On track" : "Needs attention", icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600", pct: myMetrics.crmCompliance },
     { label: "Quotes Requested", value: quotesRequested, sub: "This week", icon: FileText, accent: "bg-violet-50 text-violet-600" },
-    { label: "Quotes Sent", value: quotesSentCount, sub: `Target: ${weeklyQuotesTarget}`, icon: Send, accent: "bg-amber-50 text-amber-600", pct: weeklyQuotesTarget > 0 ? (quotesSentCount / weeklyQuotesTarget) * 100 : null },
+    { label: "Quotes Sent", value: quotesSentCount, sub: `Target: ${weeklyQuotesTarget}`, icon: Send, accent: "bg-amber-50 text-amber-600", pct: weeklyQuotesTarget > 0 ? (quotesSentCount / weeklyQuotesTarget) * 100 : null, mobile: true },
     { label: "Pipeline Value", value: formatCurrency(pipelineValue), sub: "Weighted", icon: DollarSign, accent: "bg-emerald-50 text-emerald-600" },
   ];
+  const visibleCards = isMobile ? summaryCards.filter(c => c.mobile) : summaryCards;
 
   // Build to-do list from follow_up/meeting notes + deal next dates
   const myTodos = [];
@@ -274,12 +275,12 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
 
       {/* KPI Dashboard */}
       <div className={`grid grid-cols-2 ${isMobile ? "gap-3" : "lg:grid-cols-4 gap-4"}`}>
-        {summaryCards.map((c, i) => {
+        {visibleCards.map((c, i) => {
           const Icon = c.icon;
           return (
-            <div key={i} className="bg-white rounded-xl border border-stone-200 p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${c.accent}`}><Icon size={18} /></div>
+            <div key={i} className="bg-white rounded-xl border border-stone-200 p-3">
+              <div className="flex items-center gap-3 mb-1">
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${c.accent}`}><Icon size={16} /></div>
                 <span className="text-sm text-slate-500">{c.label}</span>
               </div>
               <p className="text-2xl font-bold text-slate-800">{c.value}</p>
