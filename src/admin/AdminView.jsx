@@ -9,7 +9,7 @@ import { callAdminFn } from "./adminApi";
 import { DEFAULT_KPI_TARGETS } from "../shared/constants";
 import {
   CheckCircle, XCircle, X, Settings, Lock, Shield, Eye,
-  UserPlus, Users, Building2, Target, Phone, Calendar, Send, Pencil
+  UserPlus, Users, Building2, Target, Phone, Calendar, Send
 } from "lucide-react";
 
 export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onKpiTargetsSaved }) {
@@ -284,7 +284,7 @@ export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onK
                         <span className="text-sm font-medium text-slate-800">{r.name}</span>
                       </div>
                       <button onClick={() => setEditKpiUser(r)} className="p-1.5 rounded-lg hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition">
-                        <Pencil size={14} />
+                        <Settings size={14} />
                       </button>
                     </div>
                     <div className="grid grid-cols-4 gap-2 ml-9">
@@ -318,7 +318,7 @@ export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onK
                     <div className="col-span-2 text-center text-sm font-semibold text-slate-700">{t.weeklyQuotes}</div>
                     <div className="col-span-1 text-right">
                       <button onClick={() => setEditKpiUser(r)} className="p-1.5 rounded-lg hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition">
-                        <Pencil size={14} />
+                        <Settings size={14} />
                       </button>
                     </div>
                   </div>
