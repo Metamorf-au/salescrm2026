@@ -450,18 +450,36 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
                       if (!cfg) return null;
                       const Icon = cfg.icon;
                       return (
-                        <div key={c.id} className="flex items-center gap-3 px-4 py-3">
-                          <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                            <Icon size={15} className={cfg.color} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                        <div key={c.id} className={`${isMobile ? "px-4 py-3" : "flex items-center gap-3 px-4 py-3"}`}>
+                          {isMobile ? (
+                            <div className="flex items-start gap-3">
+                              <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                                <Icon size={15} className={cfg.color} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` – ${c.company}` : ""}</p>
+                                <p className="text-xs text-slate-500 mt-0.5 truncate">{c.summary}</p>
+                                <div className="flex items-center justify-between mt-1">
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                                  <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityTime(c)}</span>
+                                </div>
+                              </div>
                             </div>
-                            <p className="text-xs text-slate-500 truncate">{c.summary}</p>
-                          </div>
-                          <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityTime(c)}</span>
+                          ) : (
+                            <>
+                              <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+                                <Icon size={15} className={cfg.color} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-medium text-slate-800 truncate">{c.contact}{c.company ? ` - ${c.company}` : ""}</p>
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                                </div>
+                                <p className="text-xs text-slate-500 truncate">{c.summary}</p>
+                              </div>
+                              <span className="text-xs text-slate-400 whitespace-nowrap">{formatActivityTime(c)}</span>
+                            </>
+                          )}
                         </div>
                       );
                     })}
