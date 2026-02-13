@@ -407,7 +407,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           <div className="px-5 py-4 border-b border-stone-200">
             <h2 className="text-base font-semibold text-slate-700">Team Scoreboard – {rangeLabel}</h2>
           </div>
-          <div className="p-5 space-y-2">
+          <div className="p-5 space-y-2 max-h-[28rem] overflow-y-auto">
             {filteredReps.map(r => {
               const m = metricsMap[r.id];
               const sc = getScorecard(m, getRepTargets(r.id));
@@ -440,9 +440,9 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
             <div className="px-5 py-4 border-b border-stone-200">
               <h2 className="text-base font-semibold text-slate-700">Scorecard – {rangeLabel}</h2>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[28rem] overflow-y-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="sticky top-0 z-10">
                   <tr className="bg-stone-50 text-slate-500 text-left">
                     <th className="px-5 py-3 font-medium">Rep</th>
                     <th className="px-4 py-3 font-medium text-center">Calls logged</th>
