@@ -63,7 +63,8 @@ src/
 supabase/
 ├── schema.sql              # Complete database schema (8 tables, RLS, triggers)
 ├── migrations/
-│   └── 20260211_add_deal_completed_at.sql
+│   ├── 20260211_add_deal_completed_at.sql
+│   └── 20260213_add_composite_indexes.sql
 └── functions/
     └── admin-users/
         └── index.ts        # Deno Edge Function (invite, reset, disable, delete users)
@@ -231,62 +232,81 @@ No test suite currently configured. Build verification (`npx vite build`) is use
    - Line 3: Badge left, time right (matches to-do card pattern)
    Desktop layout unchanged (single row with icon, name+badge, summary, time)
 
-## Planned Work — My Scorecard & Rep Scoreboard
+### Session 7 (2026-02-13) — My Scorecard & Team Scoreboard
+Replaced opaque CRM Compliance score with a clear 5-KPI pro-rated scoring system.
 
-### Background
-CRM Compliance is a made-up composite score (30pts call today + 40pts opp progression + 30pts pipeline clean) that tries to measure rep engagement but is opaque and only checks 2 things (calls + pipeline housekeeping). Replacing it with a clear 5-KPI system that uses the per-rep targets already configured in admin settings.
+**Scoring engine** (`constants.js`, `supabaseData.js`):
+1. New `getScorecard()` function — scores reps on 5 KPIs (Calls, Meetings Set, New Contacts, Quotes Sent, Deal Health) pro-rated to the day of the week
+2. Rewrote `getStatus()` to use the 5-KPI system — green (5/5), amber (3–4/5), red (0–2/5)
+3. Added `activeDealsCount` and `dealsWithNextCount` to `computeRepMetrics()`
+
+**Rep view** (`RepView.jsx`):
+4. Removed CRM Compliance tile, added "Deal Health" tile (HeartHandshake icon, X/Y deals with next action)
+5. Added "My Scorecard" tile (Gauge icon, X/5 with 5 coloured segments)
+6. Added "Quote Turnaround" card, switched desktop KPIs to 5-column grid
+7. Colour-coded progress bars against pro-rated targets (green on pace, amber/red behind)
+8. Mobile layout: 3 rows of 2 tiles
+
+**Manager view** (`ManagerDashboard.jsx`):
+9. Renamed "Status Board" → "Team Scoreboard" with per-rep traffic light tiles showing initials, name, X/5 score, status badge, and "Behind: ..." detail
+10. Updated scorecard table — replaced CRM Compliance with Deal Health column, colour-coded cells against pro-rated targets
+11. CSV export matches scorecard table columns
+
+**Database**:
+12. Added 6 composite indexes for query performance at scale (`20260213_add_composite_indexes.sql`)
+
+## Planned Work — Manager Dashboard Polish
 
 ### What's Changing
 
-**Concept**: Replace CRM Compliance with **"My Scorecard"** (rep view) and **"Rep Scoreboard"** (manager view). Score reps on 5 KPIs, pro-rated to the day of the week so Tuesday isn't judged by Friday's targets.
+Three improvements to `ManagerDashboard.jsx`:
 
-**The 5 Scored KPIs:**
-| # | KPI | Target | Source |
-|---|-----|--------|--------|
-| 1 | Calls | Weekly target from `kpiTargets` (default 100) | `callsWeek` in `computeRepMetrics()` |
-| 2 | Meetings Set | Weekly target from `kpiTargets` (default 10) | `meetingsSet` in `computeRepMetrics()` |
-| 3 | New Contacts | Weekly target from `kpiTargets` (default 5) | `newContacts` in `computeRepMetrics()` |
-| 4 | Quotes Sent | Weekly target from `kpiTargets` (default 10) | `quotesSentCount` in RepView |
-| 5 | Deal Health | 100% of active deals have a next action | `oppWithNext` in `computeRepMetrics()` |
+### 1. Fix CSV Export — Export Metrics Cards (not Scorecard Table)
+The main CSV export button currently exports the scorecard table data. The intent is to export the **metrics cards/tiles** at the top of the page (the `summaryCards` array: Calls Today, Weekly Calls, Meetings Set, New Contacts, Deal Health, Quotes Requested, Quotes Sent, Quote Turnaround, Pipeline Value, Reps On Track).
 
-**Pro-rating logic**: If weekly call target is 100 and it's Wednesday (day 3 of 5), the pro-rated target is 60. Rep is "on pace" if actual >= pro-rated target.
+**Current behaviour**: `handleExport()` builds CSV from `filteredReps` with per-rep scorecard columns.
+**Desired behaviour**: `handleExport()` should export a single row of the summary card values — one column per card (label → value), plus the selected date range and rep filter as context. This is a team-level snapshot, not a per-rep breakdown.
 
-**Traffic light scoring:**
-- **Green** — on pace for all 5
-- **Amber** — on pace for 3 or 4
-- **Red** — on pace for 2 or fewer
+### 2. Add Meetings Set & New Contacts Bar Charts (2x2 Grid)
+Currently there are 2 bar charts (Calls by Rep, Quotes Sent by Rep) stacked vertically on the left side. Add two more:
+- **Meetings Set by Rep** — same pattern as the existing charts, using `meetingsSet` from metrics
+- **New Contacts by Rep** — same pattern, using `newContacts` from metrics
 
-### Files Affected (6 files)
+On desktop/tablet: arrange all 4 charts in a **2x2 grid** (no longer sharing space with Team Scoreboard).
+On mobile: stack vertically (1 column), each chart horizontally scrollable as per existing pattern.
+
+Colour logic for Meetings & Contacts charts: when `isThisWeek`, colour bars green/amber/red against pro-rated targets (same as Calls chart). Otherwise, use a neutral colour.
+
+### 3. Rearrange Layout — Team Scoreboard + Scorecard Table Side by Side
+Currently: charts (left 3/5) + Team Scoreboard (right 2/5), then scorecard table full width below.
+
+**New desktop/tablet layout** (below the 2x2 chart grid):
+- **Left ~30%**: Team Scoreboard (traffic light tiles)
+- **Right ~70%**: Scorecard table
+
+**Mobile**: keep stacked — Team Scoreboard above, Scorecard table below (1 column).
+
+### Files Affected (1 file)
 | File | Changes |
 |------|---------|
-| `src/shared/constants.js` | Rewrite `getStatus()` with 5-KPI pro-rated scoring logic |
-| `src/supabaseData.js` | Remove CRM compliance from `computeRepMetrics()`, add deal health fields (dealsWithNext count, activeDeals count) |
-| `src/rep/RepView.jsx` | Remove CRM Compliance tile, add "Deal Health" tile + "My Scorecard" tile, mobile layout becomes 3x2 grid (6 tiles) |
-| `src/manager/ManagerDashboard.jsx` | Rename "Status Board" → "Rep Scoreboard", update traffic light cards to show "X/5 on pace · behind on...", update "Reps On Track" card, clean up scorecard table (remove CRM Compliance column, add Deal Health) |
-| `src/deals/NewDealModal.jsx` | Rename label "Next Action" → "Next Step" |
-| `src/deals/EditDealModal.jsx` | Rename label "Next Action" → "Next Step" |
+| `src/manager/ManagerDashboard.jsx` | All 3 changes — CSV export, new charts, layout rearrangement |
 
 ### Implementation Phases
 
-**Phase 1 — Scoring Foundation** `[ ]`
-Rewrite `getStatus()` in `constants.js` and update `computeRepMetrics()` in `supabaseData.js`. New 5-KPI pro-rated scoring engine. No UI changes — this is the engine underneath everything else.
+**Phase 1 — CSV Export Fix** `[ ]`
+Rewrite `handleExport()` to export the summary cards data instead of the scorecard table. Single row with card labels as headers and card values as data.
 
-**Phase 2 — Rep Dashboard (My Scorecard)** `[ ]`
-Update `RepView.jsx`: Remove CRM Compliance tile. Add "Deal Health" tile (% of active deals with next action). Add "My Scorecard" tile (X/5 with segmented bar). Mobile becomes 3 rows of 2 tiles. Colour-code progress bars against pro-rated targets.
+**Phase 2 — Add Meetings & Contacts Charts** `[ ]`
+Add `meetingsChartData` and `contactsChartData` arrays. Render 4 charts in a 2x2 grid on desktop (`grid-cols-2`). Each chart follows the existing pattern (ResponsiveContainer, BarChart, mobile horizontal scroll). Apply target-based colouring when `isThisWeek`.
 
-**Phase 3 — Manager Dashboard (Rep Scoreboard)** `[ ]`
-Update `ManagerDashboard.jsx`: Rename "Status Board" → "Rep Scoreboard". Traffic light cards show "X/5 on pace · Calls, Quotes behind". Update "Reps On Track" card. Clean up scorecard table (swap CRM Compliance for Deal Health).
-
-**Phase 4 — Rename Next Action → Next Step** `[ ]`
-Quick label change in `NewDealModal.jsx` and `EditDealModal.jsx`.
+**Phase 3 — Rearrange Scoreboard + Table Layout** `[ ]`
+Remove the current 3/5 + 2/5 split. Place the 2x2 chart grid full width. Below it, a new flex/grid row: Team Scoreboard (~30%, `lg:w-[30%]`) on the left, Scorecard table (~70%, `lg:w-[70%]`) on the right. Mobile keeps single column.
 
 ### Key Implementation Details
-- **Pro-rating**: `dayOfWeek` = Mon=1 through Fri=5. Pro-rated target = `Math.round(weeklyTarget * dayOfWeek / 5)`. Weekends use Friday (day 5 = full target).
-- **Deal Health target** is always 100% (not configurable) — every active deal should have a next action set.
-- **No DB changes needed** — all calculation is client-side from existing metrics.
-- **Existing `kpiTargets`** per-rep settings stay as-is, no changes to admin settings.
-- **`computeRepMetrics()` changes**: Remove `crmCompliance` field. Add `activeDealsCount` and `dealsWithNextCount` for the Deal Health tile to show "8/10 deals".
-- **Mobile "My Scorecard" tile**: shows X/5 score with 5 coloured segments (green/amber/red per KPI). No labels — the 5 other tiles already show the detail.
+- **CSV export**: Headers from `summaryCards.map(c => c.label)`, single data row from `summaryCards.map(c => c.value)`. Include date range and rep filter as first two columns for context.
+- **Chart data arrays**: Follow the same `filteredReps.map(r => ...)` pattern as `chartData` and `quotesChartData`.
+- **Pro-rated chart colouring**: When `isThisWeek`, use `proRate(rt.weeklyMeetings)` / `proRate(rt.weeklyContacts)` as thresholds. Green if >= target, amber if >= 80%, red otherwise. When not `isThisWeek`, use a neutral colour (e.g. `#8b5cf6` for meetings, `#0284c7` for contacts).
+- **Layout CSS**: Use `lg:flex` with `lg:w-[30%]` and `lg:w-[70%]` for the scoreboard/table row, or `lg:grid lg:grid-cols-10` with `lg:col-span-3` / `lg:col-span-7`.
 
 ## Working Preferences
 - **IMPORTANT**: Always check with the user before starting any work. They prefer to work in stages and want to review/approve each step before proceeding.
