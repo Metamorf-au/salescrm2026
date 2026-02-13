@@ -231,6 +231,63 @@ No test suite currently configured. Build verification (`npx vite build`) is use
    - Line 3: Badge left, time right (matches to-do card pattern)
    Desktop layout unchanged (single row with icon, name+badge, summary, time)
 
+## Planned Work — My Scorecard & Rep Scoreboard
+
+### Background
+CRM Compliance is a made-up composite score (30pts call today + 40pts opp progression + 30pts pipeline clean) that tries to measure rep engagement but is opaque and only checks 2 things (calls + pipeline housekeeping). Replacing it with a clear 5-KPI system that uses the per-rep targets already configured in admin settings.
+
+### What's Changing
+
+**Concept**: Replace CRM Compliance with **"My Scorecard"** (rep view) and **"Rep Scoreboard"** (manager view). Score reps on 5 KPIs, pro-rated to the day of the week so Tuesday isn't judged by Friday's targets.
+
+**The 5 Scored KPIs:**
+| # | KPI | Target | Source |
+|---|-----|--------|--------|
+| 1 | Calls | Weekly target from `kpiTargets` (default 100) | `callsWeek` in `computeRepMetrics()` |
+| 2 | Meetings Set | Weekly target from `kpiTargets` (default 10) | `meetingsSet` in `computeRepMetrics()` |
+| 3 | New Contacts | Weekly target from `kpiTargets` (default 5) | `newContacts` in `computeRepMetrics()` |
+| 4 | Quotes Sent | Weekly target from `kpiTargets` (default 10) | `quotesSentCount` in RepView |
+| 5 | Deal Health | 100% of active deals have a next action | `oppWithNext` in `computeRepMetrics()` |
+
+**Pro-rating logic**: If weekly call target is 100 and it's Wednesday (day 3 of 5), the pro-rated target is 60. Rep is "on pace" if actual >= pro-rated target.
+
+**Traffic light scoring:**
+- **Green** — on pace for all 5
+- **Amber** — on pace for 3 or 4
+- **Red** — on pace for 2 or fewer
+
+### Files Affected (6 files)
+| File | Changes |
+|------|---------|
+| `src/shared/constants.js` | Rewrite `getStatus()` with 5-KPI pro-rated scoring logic |
+| `src/supabaseData.js` | Remove CRM compliance from `computeRepMetrics()`, add deal health fields (dealsWithNext count, activeDeals count) |
+| `src/rep/RepView.jsx` | Remove CRM Compliance tile, add "Deal Health" tile + "My Scorecard" tile, mobile layout becomes 3x2 grid (6 tiles) |
+| `src/manager/ManagerDashboard.jsx` | Rename "Status Board" → "Rep Scoreboard", update traffic light cards to show "X/5 on pace · behind on...", update "Reps On Track" card, clean up scorecard table (remove CRM Compliance column, add Deal Health) |
+| `src/deals/NewDealModal.jsx` | Rename label "Next Action" → "Next Step" |
+| `src/deals/EditDealModal.jsx` | Rename label "Next Action" → "Next Step" |
+
+### Implementation Phases
+
+**Phase 1 — Scoring Foundation** `[ ]`
+Rewrite `getStatus()` in `constants.js` and update `computeRepMetrics()` in `supabaseData.js`. New 5-KPI pro-rated scoring engine. No UI changes — this is the engine underneath everything else.
+
+**Phase 2 — Rep Dashboard (My Scorecard)** `[ ]`
+Update `RepView.jsx`: Remove CRM Compliance tile. Add "Deal Health" tile (% of active deals with next action). Add "My Scorecard" tile (X/5 with segmented bar). Mobile becomes 3 rows of 2 tiles. Colour-code progress bars against pro-rated targets.
+
+**Phase 3 — Manager Dashboard (Rep Scoreboard)** `[ ]`
+Update `ManagerDashboard.jsx`: Rename "Status Board" → "Rep Scoreboard". Traffic light cards show "X/5 on pace · Calls, Quotes behind". Update "Reps On Track" card. Clean up scorecard table (swap CRM Compliance for Deal Health).
+
+**Phase 4 — Rename Next Action → Next Step** `[ ]`
+Quick label change in `NewDealModal.jsx` and `EditDealModal.jsx`.
+
+### Key Implementation Details
+- **Pro-rating**: `dayOfWeek` = Mon=1 through Fri=5. Pro-rated target = `Math.round(weeklyTarget * dayOfWeek / 5)`. Weekends use Friday (day 5 = full target).
+- **Deal Health target** is always 100% (not configurable) — every active deal should have a next action set.
+- **No DB changes needed** — all calculation is client-side from existing metrics.
+- **Existing `kpiTargets`** per-rep settings stay as-is, no changes to admin settings.
+- **`computeRepMetrics()` changes**: Remove `crmCompliance` field. Add `activeDealsCount` and `dealsWithNextCount` for the Deal Health tile to show "8/10 deals".
+- **Mobile "My Scorecard" tile**: shows X/5 score with 5 coloured segments (green/amber/red per KPI). No labels — the 5 other tiles already show the detail.
+
 ## Working Preferences
 - **IMPORTANT**: Always check with the user before starting any work. They prefer to work in stages and want to review/approve each step before proceeding.
 - Commit and push after each logical change
