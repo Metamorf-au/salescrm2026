@@ -403,9 +403,11 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
 
       {/* Team Scoreboard + Scorecard Table — side by side on desktop, stacked on mobile */}
       <div className={`${isMobile ? "space-y-4" : "lg:flex lg:gap-4"}`}>
-        <div className={`bg-white rounded-xl border border-stone-200 p-5 ${isMobile ? "" : "lg:w-[30%] lg:flex-shrink-0"}`}>
-          <h2 className="text-base font-semibold text-slate-700 mb-4">Team Scoreboard</h2>
-          <div className="space-y-2">
+        <div className={`bg-white rounded-xl border border-stone-200 overflow-hidden ${isMobile ? "" : "lg:w-[40%] lg:flex-shrink-0"}`}>
+          <div className="px-5 py-4 border-b border-stone-200">
+            <h2 className="text-base font-semibold text-slate-700">Team Scoreboard – {rangeLabel}</h2>
+          </div>
+          <div className="p-5 space-y-2">
             {filteredReps.map(r => {
               const m = metricsMap[r.id];
               const sc = getScorecard(m, getRepTargets(r.id));
@@ -413,16 +415,16 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
               return (
                 <div key={r.id} className={`p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
                         {r.initials}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800">{r.name}</p>
-                        {sc.behind.length > 0 && <p className="text-xs text-slate-500">Behind: {sc.behind.join(", ")}</p>}
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{r.name}</p>
+                        {sc.behind.length > 0 && <p className="text-xs text-slate-500 truncate">Behind: {sc.behind.join(", ")}</p>}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <StatusBadge status={sc.status} />
                       <span className="text-sm font-bold text-slate-700">{sc.onPaceCount}/5</span>
                     </div>
@@ -433,7 +435,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
           </div>
         </div>
 
-        <div className={`bg-white rounded-xl border border-stone-200 overflow-hidden ${isMobile ? "" : "lg:w-[70%]"}`}>
+        <div className={`bg-white rounded-xl border border-stone-200 overflow-hidden ${isMobile ? "" : "lg:w-[60%]"}`}>
           <div className="px-5 py-4 border-b border-stone-200">
             <h2 className="text-base font-semibold text-slate-700">Scorecard – {rangeLabel}</h2>
           </div>
@@ -447,14 +449,12 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                   <th className="px-4 py-3 font-medium text-center">New contacts</th>
                   <th className="px-4 py-3 font-medium text-center">Quotes sent</th>
                   <th className="px-4 py-3 font-medium text-center">Deal health</th>
-                  <th className="px-4 py-3 font-medium text-center">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {filteredReps.map(r => {
                   const m = metricsMap[r.id] || {};
                   const rt = getRepTargets(r.id);
-                  const sc = getScorecard(m, rt);
                   const repCallTarget = isToday ? getRepDailyTarget(r.id) : isThisWeek ? proRate(rt.weeklyCalls) : null;
                   const meetingTarget = isThisWeek ? proRate(rt.weeklyMeetings) : null;
                   const contactTarget = isThisWeek ? proRate(rt.weeklyContacts) : null;
@@ -471,7 +471,6 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
                       <td className={`px-4 py-3 text-center ${cellColor(m.newContacts || 0, contactTarget)}`}>{m.newContacts || 0}</td>
                       <td className={`px-4 py-3 text-center ${cellColor(m.quotesSentCount || 0, quoteTarget)}`}>{m.quotesSentCount || 0}</td>
                       <td className={`px-4 py-3 text-center ${cellColor(m.dealsWithNextCount || 0, m.activeDealsCount || 0)}`}>{m.dealsWithNextCount || 0}/{m.activeDealsCount || 0}</td>
-                      <td className="px-4 py-3 text-center"><StatusBadge status={sc.status} /></td>
                     </tr>
                   );
                 })}
