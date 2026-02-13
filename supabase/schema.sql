@@ -94,6 +94,7 @@ create index idx_contacts_owner on public.contacts(owner_id);
 create index idx_contacts_company on public.contacts(company_id);
 create index idx_contacts_name on public.contacts(last_name, first_name);
 create index idx_contacts_email on public.contacts(email);
+create index idx_contacts_owner_status on public.contacts(owner_id, status);
 
 
 -- ============================================================
@@ -125,6 +126,8 @@ create index idx_deals_owner on public.deals(owner_id);
 create index idx_deals_stage on public.deals(stage);
 create index idx_deals_contact on public.deals(contact_id);
 create index idx_deals_company on public.deals(company_id);
+create index idx_deals_owner_stage on public.deals(owner_id, stage);
+create index idx_deals_owner_quote_sent on public.deals(owner_id, quote_sent_at desc) where quote_sent_at is not null;
 
 
 -- ============================================================
@@ -146,6 +149,7 @@ create table public.notes (
 create index idx_notes_contact on public.notes(contact_id);
 create index idx_notes_author on public.notes(author_id);
 create index idx_notes_reminder on public.notes(reminder_at) where reminder_at is not null;
+create index idx_notes_contact_reminder on public.notes(contact_id, reminder_at desc) where reminder_at is not null;
 
 
 -- ============================================================
@@ -165,6 +169,7 @@ create table public.calls (
 create index idx_calls_contact on public.calls(contact_id);
 create index idx_calls_caller on public.calls(caller_id);
 create index idx_calls_date on public.calls(called_at);
+create index idx_calls_caller_date on public.calls(caller_id, called_at desc);
 
 
 -- ============================================================
@@ -189,6 +194,7 @@ create table public.activity_log (
 create index idx_activity_user on public.activity_log(user_id);
 create index idx_activity_type on public.activity_log(activity_type);
 create index idx_activity_date on public.activity_log(created_at);
+create index idx_activity_user_date on public.activity_log(user_id, created_at desc);
 
 
 -- ============================================================
