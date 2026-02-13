@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, ChevronDown, Trash2, Filter, Save, FileText, DollarSign, Clock, HeartPulse, Gauge } from "lucide-react";
+import { Phone, Target, CheckCircle, Calendar, UserPlus, Send, Activity, AlertTriangle, Bell, ChevronDown, Trash2, Filter, Save, FileText, DollarSign, Clock, HeartHandshake, Gauge } from "lucide-react";
 import { DEFAULT_KPI_TARGETS, activityTypeConfig, noteTypeConfig, stageConfig, getScorecard } from "../shared/constants";
 import { formatReminderDate, isOverdue, formatCurrency } from "../shared/formatters";
 import { fetchWeeklySummary, upsertWeeklySummary, getCurrentWeekStart, computeRepMetrics } from "../supabaseData";
@@ -137,7 +137,7 @@ export default function RepView({ currentUser, contacts, deals, notesByContact, 
     { label: "Weekly Calls", value: myMetrics.callsWeek, sub: `Target: ${weeklyCallTarget}`, icon: Target, accent: "bg-sky-50 text-sky-600", pct: weeklyCallTarget > 0 ? (myMetrics.callsWeek / weeklyCallTarget) * 100 : null, onPace: kpiOnPace["Calls"] },
     { label: "Meetings Set", value: myMetrics.meetingsSet, sub: `Target: ${weeklyMeetingsTarget}`, icon: Calendar, accent: "bg-violet-50 text-violet-600", pct: weeklyMeetingsTarget > 0 ? (myMetrics.meetingsSet / weeklyMeetingsTarget) * 100 : null, mobile: true, onPace: kpiOnPace["Meetings"] },
     { label: "New Contacts", value: myMetrics.newContacts, sub: `Target: ${weeklyContactsTarget}`, icon: UserPlus, accent: "bg-sky-50 text-sky-600", pct: weeklyContactsTarget > 0 ? (myMetrics.newContacts / weeklyContactsTarget) * 100 : null, mobile: true, onPace: kpiOnPace["Contacts"] },
-    { label: "Deal Health", value: `${myMetrics.dealsWithNextCount}/${myMetrics.activeDealsCount}`, sub: dealHealthSub, icon: HeartPulse, accent: "bg-emerald-50 text-emerald-600", pct: myMetrics.oppWithNext, mobile: true, onPace: kpiOnPace["Deal Health"] },
+    { label: "Deal Health", value: `${myMetrics.dealsWithNextCount}/${myMetrics.activeDealsCount}`, sub: dealHealthSub, icon: HeartHandshake, accent: "bg-emerald-50 text-emerald-600", pct: myMetrics.oppWithNext, mobile: true, onPace: kpiOnPace["Deal Health"] },
     { label: "Quotes Requested", value: quotesRequested, sub: "This week", icon: FileText, accent: "bg-violet-50 text-violet-600" },
     { label: "Quotes Sent", value: quotesSentCount, sub: `Target: ${weeklyQuotesTarget}`, icon: Send, accent: "bg-amber-50 text-amber-600", pct: weeklyQuotesTarget > 0 ? (quotesSentCount / weeklyQuotesTarget) * 100 : null, mobile: true, onPace: kpiOnPace["Quotes"] },
     { label: "Quote Turnaround", value: avgTurnaround ? `${avgTurnaround}d` : "—", sub: turnaroundDeals.length > 0 ? `From ${turnaroundDeals.length} quote${turnaroundDeals.length !== 1 ? "s" : ""} this week` : "No quotes sent this week", icon: Clock, accent: "bg-amber-50 text-amber-600" },
