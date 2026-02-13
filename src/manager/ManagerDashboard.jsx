@@ -174,26 +174,15 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
   const pipelineValue = activePipelineDeals.reduce((s, d) => s + d.value * (stageWeights[d.stage] || 0), 0);
 
   function handleExport() {
-    const headers = ["Rep", `Calls logged (${dateRange.label})`, "Meetings set", "New contacts", "Quotes sent", "Deal health", "Status"];
-    const rows = filteredReps.map(r => {
-      const m = metricsMap[r.id] || {};
-      const st = getStatus(m, getRepTargets(r.id));
-      return [
-        r.name,
-        m.callsInRange || 0,
-        m.meetingsSet || 0,
-        m.newContacts || 0,
-        m.quotesSentCount || 0,
-        `${m.dealsWithNextCount || 0}/${m.activeDealsCount || 0}`,
-        st === "green" ? "On Track" : st === "amber" ? "Needs Attention" : "At Risk",
-      ];
-    });
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const repLabel = selectedRep === "all" ? "All Reps" : (filteredReps[0]?.name || "Unknown");
+    const headers = ["Date Range", "Rep Filter", ...summaryCards.map(c => c.label)];
+    const row = [dateRange.label, repLabel, ...summaryCards.map(c => String(c.value ?? ""))];
+    const csv = [headers, row].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `kpi-export-${datePreset}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `kpi-snapshot-${datePreset}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
