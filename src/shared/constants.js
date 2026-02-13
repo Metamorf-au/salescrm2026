@@ -11,6 +11,14 @@ import {
 export const DAILY_TARGET = 20;
 export const WEEKLY_TARGET = 100;
 
+// Per-rep KPI defaults (used as fallback when no kpi_targets row exists)
+export const DEFAULT_KPI_TARGETS = {
+  weekly_calls: 100,
+  weekly_meetings: 10,
+  weekly_contacts: 5,
+  weekly_quotes: 10,
+};
+
 export const PIPELINE_STAGES = ["discovery", "quote_request", "quote_sent", "won", "lost", "closed"];
 
 export const NOTE_TYPES = [

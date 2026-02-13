@@ -211,7 +211,41 @@ create index idx_weekly_summaries_week on public.weekly_summaries(week_start);
 
 
 -- ============================================================
--- 9. UPDATED_AT TRIGGER
+-- 9. KPI TARGETS TABLE (per-rep weekly targets)
+-- ============================================================
+-- Stores individual KPI targets for each rep/manager.
+-- Admins can customise these; defaults apply for new users.
+
+create table public.kpi_targets (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade unique,
+  weekly_calls integer not null default 100,
+  weekly_meetings integer not null default 10,
+  weekly_contacts integer not null default 5,
+  weekly_quotes integer not null default 10,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index idx_kpi_targets_user on public.kpi_targets(user_id);
+
+-- Auto-create KPI targets when a new profile is created
+create or replace function public.handle_new_kpi_targets()
+returns trigger as $$
+begin
+  insert into public.kpi_targets (user_id)
+  values (new.id);
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_profile_created_kpi_targets
+  after insert on public.profiles
+  for each row execute function public.handle_new_kpi_targets();
+
+
+-- ============================================================
+-- 10. UPDATED_AT TRIGGER
 -- ============================================================
 -- Automatically sets updated_at on any row change
 
@@ -229,10 +263,11 @@ create trigger set_contacts_updated_at before update on public.contacts for each
 create trigger set_deals_updated_at before update on public.deals for each row execute function public.set_updated_at();
 create trigger set_notes_updated_at before update on public.notes for each row execute function public.set_updated_at();
 create trigger set_weekly_summaries_updated_at before update on public.weekly_summaries for each row execute function public.set_updated_at();
+create trigger set_kpi_targets_updated_at before update on public.kpi_targets for each row execute function public.set_updated_at();
 
 
 -- ============================================================
--- 9. ROW LEVEL SECURITY — ENABLE ON ALL TABLES
+-- 11. ROW LEVEL SECURITY — ENABLE ON ALL TABLES
 -- ============================================================
 
 alter table public.profiles enable row level security;
@@ -243,6 +278,7 @@ alter table public.notes enable row level security;
 alter table public.calls enable row level security;
 alter table public.activity_log enable row level security;
 alter table public.weekly_summaries enable row level security;
+alter table public.kpi_targets enable row level security;
 
 
 -- ============================================================
@@ -433,3 +469,20 @@ create policy "weekly_summaries_insert" on public.weekly_summaries
 -- Users can update their own summaries
 create policy "weekly_summaries_update" on public.weekly_summaries
   for update using (user_id = auth.uid());
+
+
+-- ============================================================
+-- 19. RLS POLICIES — KPI TARGETS
+-- ============================================================
+
+-- Everyone can read KPI targets (needed for dashboard comparisons)
+create policy "kpi_targets_select" on public.kpi_targets
+  for select using (true);
+
+-- Only admins can insert KPI targets
+create policy "kpi_targets_insert" on public.kpi_targets
+  for insert with check (public.current_user_role() = 'admin');
+
+-- Only admins can update KPI targets
+create policy "kpi_targets_update" on public.kpi_targets
+  for update using (public.current_user_role() = 'admin');
