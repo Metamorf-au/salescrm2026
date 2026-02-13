@@ -4,15 +4,18 @@ import Modal from "../shared/Modal";
 import SuccessScreen from "../shared/SuccessScreen";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
+import EditKPIModal from "./EditKPIModal";
 import { callAdminFn } from "./adminApi";
+import { DEFAULT_KPI_TARGETS } from "../shared/constants";
 import {
   CheckCircle, XCircle, X, Settings, Lock, Shield, Eye,
-  UserPlus, Users, Building2
+  UserPlus, Users, Building2, Target, Phone, Calendar, Send, Pencil
 } from "lucide-react";
 
-export default function AdminView({ isMobile, currentUser }) {
+export default function AdminView({ isMobile, currentUser, reps, kpiTargets, onKpiTargetsSaved }) {
   const [showAddUser, setShowAddUser] = useState(false);
   const [editUser, setEditUser] = useState(null);
+  const [editKpiUser, setEditKpiUser] = useState(null);
   const [userMenu, setUserMenu] = useState(null);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
@@ -240,6 +243,92 @@ export default function AdminView({ isMobile, currentUser }) {
         </div>
       </div>
 
+      {/* KPI Targets */}
+      <div className="bg-white rounded-xl border border-stone-200 overflow-visible">
+        <div className="px-5 py-4 border-b border-stone-200">
+          <div>
+            <h2 className="text-base font-semibold text-slate-700 flex items-center gap-2"><Target size={16} className="text-amber-500" />KPI Targets</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Weekly targets per rep. Daily call target = weekly calls / 5.</p>
+          </div>
+        </div>
+        {(() => {
+          const kpiReps = (reps || []).filter(r => r.role === "rep" || r.role === "manager");
+          const defaults = {
+            weeklyCalls: DEFAULT_KPI_TARGETS.weekly_calls,
+            weeklyMeetings: DEFAULT_KPI_TARGETS.weekly_meetings,
+            weeklyContacts: DEFAULT_KPI_TARGETS.weekly_contacts,
+            weeklyQuotes: DEFAULT_KPI_TARGETS.weekly_quotes,
+          };
+          if (kpiReps.length === 0) {
+            return <div className="px-5 py-8 text-center text-sm text-slate-400">No reps found</div>;
+          }
+          return (
+            <>
+              {!isMobile && (
+                <div className="grid grid-cols-12 gap-4 px-5 py-2.5 bg-stone-50 text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  <div className="col-span-3">Rep</div>
+                  <div className="col-span-2 text-center">Weekly Calls</div>
+                  <div className="col-span-2 text-center">Meetings</div>
+                  <div className="col-span-2 text-center">Contacts</div>
+                  <div className="col-span-2 text-center">Quotes</div>
+                  <div className="col-span-1"></div>
+                </div>
+              )}
+              {kpiReps.map(r => {
+                const t = (kpiTargets || {})[r.id] || defaults;
+                return isMobile ? (
+                  <div key={r.id} className="px-4 py-3 border-b border-stone-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold">{r.initials}</div>
+                        <span className="text-sm font-medium text-slate-800">{r.name}</span>
+                      </div>
+                      <button onClick={() => setEditKpiUser(r)} className="p-1.5 rounded-lg hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition">
+                        <Pencil size={14} />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 ml-9">
+                      <div className="text-center">
+                        <p className="text-xs text-slate-400">Calls</p>
+                        <p className="text-sm font-semibold text-slate-700">{t.weeklyCalls}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-slate-400">Meetings</p>
+                        <p className="text-sm font-semibold text-slate-700">{t.weeklyMeetings}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-slate-400">Contacts</p>
+                        <p className="text-sm font-semibold text-slate-700">{t.weeklyContacts}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-slate-400">Quotes</p>
+                        <p className="text-sm font-semibold text-slate-700">{t.weeklyQuotes}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={r.id} className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-stone-100 items-center hover:bg-stone-50 transition">
+                    <div className="col-span-3 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold">{r.initials}</div>
+                      <span className="text-sm font-medium text-slate-800">{r.name}</span>
+                    </div>
+                    <div className="col-span-2 text-center text-sm font-semibold text-slate-700">{t.weeklyCalls}</div>
+                    <div className="col-span-2 text-center text-sm font-semibold text-slate-700">{t.weeklyMeetings}</div>
+                    <div className="col-span-2 text-center text-sm font-semibold text-slate-700">{t.weeklyContacts}</div>
+                    <div className="col-span-2 text-center text-sm font-semibold text-slate-700">{t.weeklyQuotes}</div>
+                    <div className="col-span-1 text-right">
+                      <button onClick={() => setEditKpiUser(r)} className="p-1.5 rounded-lg hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition">
+                        <Pencil size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          );
+        })()}
+      </div>
+
       {/* Data Import */}
       <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-stone-200">
@@ -319,6 +408,15 @@ export default function AdminView({ isMobile, currentUser }) {
 
       {editUser && (
         <EditUserModal user={editUser} currentUser={currentUser} onClose={() => { setEditUser(null); loadUsers(); }} />
+      )}
+
+      {editKpiUser && (
+        <EditKPIModal
+          user={editKpiUser}
+          targets={(kpiTargets || {})[editKpiUser.id]}
+          onClose={() => setEditKpiUser(null)}
+          onSaved={onKpiTargetsSaved}
+        />
       )}
 
       {/* Confirmation Modal */}
