@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell, CartesianGrid } from "recharts";
 import { Phone, Target, CheckCircle, XCircle, Calendar, Clock, UserPlus, FileText, Send, DollarSign, Users, User, Download, ChevronDown } from "lucide-react";
-import { DAILY_TARGET, WEEKLY_TARGET, getStatus, statusConfig } from "../shared/constants";
+import { DAILY_TARGET, WEEKLY_TARGET, DEFAULT_KPI_TARGETS, getStatus, statusConfig } from "../shared/constants";
 import { formatCurrency } from "../shared/formatters";
 import { computeRepMetrics } from "../supabaseData";
 import StatusBadge from "../shared/StatusBadge";
@@ -86,7 +86,7 @@ function getDateRange(presetKey, customFrom, customTo) {
   }
 }
 
-export default function ManagerDashboard({ reps, deals, contacts, rawCalls, currentUser, isMobile }) {
+export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiTargets, currentUser, isMobile }) {
   const isRepOnly = currentUser.role === "rep";
   const repUser = isRepOnly ? reps.find(r => r.name === currentUser.name) : null;
   const [selectedRep, setSelectedRep] = useState(isRepOnly && repUser ? repUser.id : "all");
@@ -103,6 +103,15 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
   const repList = reps.filter(r => r.role === "rep" || r.role === "manager");
   const filteredReps = selectedRep === "all" ? repList : repList.filter(r => r.id === selectedRep);
   const isFiltered = selectedRep !== "all";
+
+  // Per-rep KPI target lookup
+  const getRepTargets = (repId) => (kpiTargets || {})[repId] || {
+    weeklyCalls: DEFAULT_KPI_TARGETS.weekly_calls,
+    weeklyMeetings: DEFAULT_KPI_TARGETS.weekly_meetings,
+    weeklyContacts: DEFAULT_KPI_TARGETS.weekly_contacts,
+    weeklyQuotes: DEFAULT_KPI_TARGETS.weekly_quotes,
+  };
+  const getRepDailyTarget = (repId) => Math.round(getRepTargets(repId).weeklyCalls / 5);
 
   // Compute metrics for each rep using the selected date range
   const metricsMap = {};
@@ -125,11 +134,14 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
     return firstNameCounts[first] > 1 && parts.length > 1 ? `${first} ${parts[parts.length - 1][0]}.` : first;
   };
 
-  const chartData = filteredReps.map(r => ({
-    name: shortName(r),
-    calls: metricsMap[r.id]?.callsInRange || 0,
-    target: isToday ? DAILY_TARGET : isThisWeek ? WEEKLY_TARGET : null,
-  }));
+  const chartData = filteredReps.map(r => {
+    const rt = getRepTargets(r.id);
+    return {
+      name: shortName(r),
+      calls: metricsMap[r.id]?.callsInRange || 0,
+      target: isToday ? getRepDailyTarget(r.id) : isThisWeek ? rt.weeklyCalls : null,
+    };
+  });
 
   const quotesChartData = filteredReps.map(r => {
     const count = deals.filter(d => d.ownerId === r.id && d.quoteSentAt && new Date(d.quoteSentAt) >= dateRange.start && new Date(d.quoteSentAt) < dateRange.end).length;
@@ -141,7 +153,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
   const avgCompliance = Math.round(filteredMetrics.reduce((s, m) => s + (m?.crmCompliance || 0), 0) / repCount);
   const totalMeetings = filteredMetrics.reduce((s, m) => s + (m?.meetingsSet || 0), 0);
   const totalNewContacts = filteredMetrics.reduce((s, m) => s + (m?.newContacts || 0), 0);
-  const greenCount = filteredReps.filter(r => getStatus(metricsMap[r.id]) === "green").length;
+  const greenCount = filteredReps.filter(r => getStatus(metricsMap[r.id], getRepDailyTarget(r.id)) === "green").length;
 
   // Pipeline-derived metrics — filtered by date range
   const repIds = filteredReps.map(r => r.id);
@@ -189,12 +201,16 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
 
   // Dynamic card labels based on selected date range
   const rangeLabel = dateRange.label;
-  const callsTarget = isToday ? DAILY_TARGET : isThisWeek ? WEEKLY_TARGET : null;
-  const callsTargetTotal = callsTarget ? (isFiltered ? callsTarget : callsTarget * repList.length) : null;
+  // Per-rep call targets — sum across reps for aggregate view
+  const callsTargetTotal = isToday
+    ? (isFiltered ? getRepDailyTarget(filteredReps[0]?.id) : repList.reduce((s, r) => s + getRepDailyTarget(r.id), 0))
+    : isThisWeek
+    ? (isFiltered ? getRepTargets(filteredReps[0]?.id).weeklyCalls : repList.reduce((s, r) => s + getRepTargets(r.id).weeklyCalls, 0))
+    : null;
 
   const summaryCards = [
     { label: isFiltered ? `Calls` : `Total Calls`, value: totalCallsInRange, sub: callsTargetTotal ? `Target: ${callsTargetTotal}` : rangeLabel, icon: Phone, accent: "bg-sky-50 text-sky-600" },
-    { label: "Calls Today", value: totalCallsToday, sub: `Target: ${isFiltered ? DAILY_TARGET : DAILY_TARGET * repList.length}`, icon: Target, accent: "bg-sky-50 text-sky-600" },
+    { label: "Calls Today", value: totalCallsToday, sub: `Target: ${isFiltered ? getRepDailyTarget(filteredReps[0]?.id) : repList.reduce((s, r) => s + getRepDailyTarget(r.id), 0)}`, icon: Target, accent: "bg-sky-50 text-sky-600" },
     { label: "CRM Compliance", value: `${avgCompliance}%`, sub: isFiltered ? "Individual" : "Team average", icon: CheckCircle, accent: "bg-emerald-50 text-emerald-600" },
     { label: "Meetings Set", value: totalMeetings, sub: rangeLabel, icon: Calendar, accent: "bg-violet-50 text-violet-600" },
     { label: "New Contacts", value: totalNewContacts, sub: rangeLabel, icon: UserPlus, accent: "bg-sky-50 text-sky-600" },
@@ -273,7 +289,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
       <div className={`grid grid-cols-1 ${isMobile ? "gap-4" : "lg:grid-cols-5 gap-6"}`}>
         <div className="lg:col-span-3 flex flex-col gap-4">
           <div className="bg-white rounded-xl border border-stone-200 p-5">
-            <h2 className="text-base font-semibold text-slate-700 mb-3">Calls {isToday ? "Today" : `(${rangeLabel})`} {callsTarget ? "vs Target" : "by Rep"}</h2>
+            <h2 className="text-base font-semibold text-slate-700 mb-3">Calls {isToday ? "Today" : `(${rangeLabel})`} {(isToday || isThisWeek) ? "vs Target" : "by Rep"}</h2>
             <div className={isMobile ? "overflow-x-auto -mx-5 px-5" : ""}>
               <div style={isMobile ? { minWidth: Math.max(300, chartData.length * 60) } : undefined}>
                 <ResponsiveContainer width="100%" height={160}>
@@ -282,10 +298,10 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
                     <XAxis dataKey="name" interval={0} tick={{ fontSize: isMobile ? 11 : 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
                     {!isMobile && <YAxis width={30} tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} allowDecimals={false} />}
                     <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e5e5e0", fontSize: "13px" }} />
-                    {callsTarget && <ReferenceLine y={callsTarget} stroke="#d97706" strokeDasharray="6 4" label={{ value: "Target", position: "right", fill: "#d97706", fontSize: 11 }} />}
+                    {isFiltered && chartData[0]?.target && <ReferenceLine y={chartData[0].target} stroke="#d97706" strokeDasharray="6 4" label={{ value: "Target", position: "right", fill: "#d97706", fontSize: 11 }} />}
                     <Bar dataKey="calls" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 60 : 40}>
                       {chartData.map((d, i) => (
-                        <Cell key={i} fill={callsTarget ? (d.calls >= callsTarget ? "#16a34a" : d.calls >= callsTarget * 0.8 ? "#d97706" : "#e11d48") : "#0284c7"} />
+                        <Cell key={i} fill={d.target ? (d.calls >= d.target ? "#16a34a" : d.calls >= d.target * 0.8 ? "#d97706" : "#e11d48") : "#0284c7"} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -319,7 +335,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
           <div className="space-y-2">
             {filteredReps.map(r => {
               const m = metricsMap[r.id];
-              const st = getStatus(m);
+              const st = getStatus(m, getRepDailyTarget(r.id));
               const cfg = statusConfig(st);
               return (
                 <div key={r.id} className={`flex items-center gap-3 p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
@@ -361,7 +377,9 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
             <tbody className="divide-y divide-stone-100">
               {filteredReps.map(r => {
                 const m = metricsMap[r.id] || {};
-                const st = getStatus(m);
+                const rt = getRepTargets(r.id);
+                const repCallTarget = isToday ? getRepDailyTarget(r.id) : isThisWeek ? rt.weeklyCalls : null;
+                const st = getStatus(m, getRepDailyTarget(r.id));
                 function cellColor(val, target) {
                   return val >= target ? "text-emerald-700 font-semibold" : val >= target * 0.8 ? "text-amber-600 font-semibold" : "text-rose-600 font-semibold";
                 }
@@ -372,7 +390,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, curr
                 return (
                   <tr key={r.id} className="hover:bg-stone-50 transition">
                     <td className="px-5 py-3 font-medium text-slate-800">{r.name}</td>
-                    <td className={`px-4 py-3 text-center ${callsTarget ? cellColor(m.callsInRange || 0, callsTarget) : "text-slate-700 font-semibold"}`}>{m.callsInRange || 0}</td>
+                    <td className={`px-4 py-3 text-center ${repCallTarget ? cellColor(m.callsInRange || 0, repCallTarget) : "text-slate-700 font-semibold"}`}>{m.callsInRange || 0}</td>
                     <td className="px-4 py-3 text-center text-slate-700 font-semibold">{m.meetingsSet || 0}</td>
                     <td className="px-4 py-3 text-center text-slate-700 font-semibold">{m.newContacts || 0}</td>
                     <td className={`px-4 py-3 text-center ${cellColor(m.crmCompliance || 0, 100)}`}>{m.crmCompliance || 0}%</td>
