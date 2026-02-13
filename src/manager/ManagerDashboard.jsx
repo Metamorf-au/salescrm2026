@@ -403,19 +403,19 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
 
       {/* Team Scoreboard + Scorecard Table — side by side on desktop, stacked on mobile */}
       <div className={`${isMobile ? "space-y-4" : "lg:flex lg:gap-4"}`}>
-        <div className={`bg-white rounded-xl border border-stone-200 overflow-hidden ${isMobile ? "" : "lg:w-[35%] lg:flex-shrink-0"}`}>
-          <div className="px-5 py-4 border-b border-stone-200">
+        <div className={`bg-white rounded-xl border border-stone-200 overflow-hidden ${isMobile ? "" : "lg:w-[40%] lg:flex-shrink-0"}`}>
+          <div className="px-4 py-3 border-b border-stone-200">
             <h2 className="text-base font-semibold text-slate-700">Team Scoreboard – {rangeLabel}</h2>
           </div>
-          <div className="p-5 space-y-2 max-h-[28rem] overflow-y-auto">
+          <div className="p-3 space-y-1.5 max-h-[28rem] overflow-y-auto">
             {filteredReps.map(r => {
               const m = metricsMap[r.id];
               const sc = getScorecard(m, getRepTargets(r.id));
               const cfg = statusConfig(sc.status);
               return (
-                <div key={r.id} className={`p-3 rounded-xl border ${cfg.border} ${cfg.bg}`}>
-                  <div className="grid gap-x-2" style={{ gridTemplateColumns: "2rem 1fr" }}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white row-span-2 mt-0.5" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
+                <div key={r.id} className={`px-2.5 py-2 rounded-xl border ${cfg.border} ${cfg.bg}`}>
+                  <div className="grid gap-x-1.5" style={{ gridTemplateColumns: "1.75rem 1fr" }}>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white row-span-2" style={{ backgroundColor: sc.status === "green" ? "#16a34a" : sc.status === "amber" ? "#d97706" : "#dc2626" }}>
                       {r.initials}
                     </div>
                     <div className="flex items-center justify-between">
@@ -435,7 +435,7 @@ export default function ManagerDashboard({ reps, deals, contacts, rawCalls, kpiT
         </div>
 
         {!isMobile && (
-          <div className="bg-white rounded-xl border border-stone-200 overflow-hidden lg:w-[65%]">
+          <div className="bg-white rounded-xl border border-stone-200 overflow-hidden lg:w-[60%]">
             <div className="px-5 py-4 border-b border-stone-200">
               <h2 className="text-base font-semibold text-slate-700">Scorecard – {rangeLabel}</h2>
             </div>
